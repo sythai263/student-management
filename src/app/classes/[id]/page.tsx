@@ -1,10 +1,8 @@
+import Link from "next/link";
+import { CalendarCheck, FileUp, UserPlus } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { ClassHeader } from "@components/classes";
-import {
-  RegisterStudentForm,
-  StudentTable,
-  ImportStudentsForm,
-} from "@components/students";
-import { GroupAttendanceForm, SessionList } from "@components/attendance";
+import { StudentTable } from "@components/students";
 
 interface ClassDetailPageProps {
   params: Promise<{ id: string }>;
@@ -20,14 +18,27 @@ export default async function ClassDetailPage({
     <main className="mx-auto max-w-5xl space-y-8 p-8">
       <ClassHeader classId={id} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RegisterStudentForm classId={id} />
-        <GroupAttendanceForm classId={id} />
+      <div className="flex flex-wrap gap-3">
+        <Link
+          href={`/classes/${id}/students/new`}
+          className={buttonVariants({ variant: "default" })}
+        >
+          <UserPlus /> Đăng ký học sinh
+        </Link>
+        <Link
+          href={`/classes/${id}/students/import`}
+          className={buttonVariants({ variant: "secondary" })}
+        >
+          <FileUp /> Import CSV
+        </Link>
+        <Link
+          href={`/classes/${id}/attendance`}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          <CalendarCheck /> Buổi điểm danh
+        </Link>
       </div>
 
-      <SessionList classId={id} />
-
-      <ImportStudentsForm classId={id} />
       <StudentTable classId={id} />
     </main>
   );
