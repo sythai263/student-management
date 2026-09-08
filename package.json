@@ -34,7 +34,13 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "docker:up": "docker compose -f docker-compose.yaml up -d",
+    "docker:down": "docker compose -f docker-compose.yaml down",
+    "docker:logs": "docker compose -f docker-compose.yaml logs -f",
+    "docker:ps": "docker compose -f docker-compose.yaml ps",
+    "docker:reset": "docker compose -f docker-compose.yaml down -v",
+    "gen:keys": "sh scripts/generate-key.sh"
   },
   "version": "0.1.0"
 }
