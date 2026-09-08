@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, type SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     const file = fileRef.current?.files?.[0];
     if (!file) {
@@ -46,7 +46,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
         });
       }
     });
-  }
+  };
 
   return (
     <form onSubmit={onSubmit} className="flex items-end gap-3">

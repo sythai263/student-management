@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition, type SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,7 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
   const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     const form = e.currentTarget;
     const fileInput = form.elements.namedItem("image") as HTMLInputElement;
@@ -56,7 +56,7 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
         });
       }
     });
-  }
+  };
 
   return (
     <Card>
