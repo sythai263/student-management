@@ -2,10 +2,20 @@
 
 import { useRef, useState, useTransition, type SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { importStudents } from "@lib/actions";
+import { useClass } from "@hooks";
 
 interface ImportStudentsFormProps {
   classId: string;
@@ -14,9 +24,11 @@ interface ImportStudentsFormProps {
 export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { data: classData } = useClass(classId);
 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -36,7 +48,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
       setIsError(!result.success);
       setMessage(
         result.success
-          ? `Đã import ${result.data.inserted} học sinh`
+          ? `Đã thêm ${result.data.inserted}, cập nhật ${result.data.updated} học sinh`
           : result.error,
       );
       if (result.success) {
@@ -44,6 +56,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
         await queryClient.invalidateQueries({
           queryKey: ["students", classId],
         });
+        setOpen(false);
       }
     });
   };
@@ -67,30 +80,53 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3">
-      <div className="space-y-2">
-        <Label htmlFor="csv">Import CSV (maHS,ho,ten,yyyy-mm-dd)</Label>
-        <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
-      </div>
-      <Button type="submit" variant="secondary" disabled={isPending}>
-        {isPending ? "Đang import..." : "Import"}
-      </Button>
+    <>
       <Button
         type="button"
-        variant="outline"
-        onClick={downloadTemplate}
+        variant="secondary"
+        onClick={() => setOpen(true)}
       >
-        Tải mẫu CSV
+        <FileUp /> Import CSV
       </Button>
-      {message && (
-        <p
-          className={
-            isError ? "text-sm text-destructive" : "text-sm text-green-500"
-          }
-        >
-          {message}
-        </p>
-      )}
-    </form>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import học sinh</DialogTitle>
+            <DialogDescription>
+              {classData
+                ? `Lớp: ${classData.name} (${classData.classCode}) - Năm học ${classData.schoolYear}`
+                : "Tải lên file CSV để thêm nhiều học sinh cùng lúc"}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="csv">File CSV (maHS,ho,ten,ngay-sinh)</Label>
+              <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
+            </div>
+            {message && (
+              <p
+                className={
+                  isError ? "text-sm text-destructive" : "text-sm text-green-500"
+                }
+              >
+                {message}
+              </p>
+            )}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={downloadTemplate}
+              >
+                Tải mẫu CSV
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Đang import..." : "Import"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

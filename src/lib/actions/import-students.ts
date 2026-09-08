@@ -14,7 +14,7 @@ dayjs.extend(customParseFormat);
 
 export interface ImportStudentsSummary {
   inserted: number;
-  skipped: number;
+  updated: number;
 }
 
 interface CsvRow {
@@ -26,13 +26,18 @@ interface CsvRow {
 
 function parseDate(value: string | undefined): string | null {
   if (!value) return null;
-  const parsed = dayjs(value.trim(), ["YYYY-MM-DD", "MM/DD/YYYY"]);
+  const parsed = dayjs(value.trim(), [
+    "YYYY-MM-DD",
+    "YYYY-M-D",
+    "MM/DD/YYYY",
+    "M/D/YYYY",
+  ]);
   return parsed.isValid() ? parsed.format("YYYY-MM-DD") : null;
 }
 
 /**
  * Parse CSV text: studentCode,lastName,firstName,dateOfBirth(optional).
- * Accepted date formats: YYYY-MM-DD, MM/DD/YYYY.
+ * Accepted date formats: YYYY-MM-DD, YYYY-M-D, MM/DD/YYYY, M/D/YYYY.
  * Skips a header row if the first cell looks like a code label.
  */
 function parseCsv(text: string): CsvRow[] {
@@ -85,15 +90,25 @@ export async function importStudents(
       throw new Error("File CSV không có dữ liệu hợp lệ");
     }
 
-    const { data, error } = await supabase
+    const codes = rows.map((r) => r.studentCode);
+    const { data: existing, error: existingError } = await supabase
       .from("students")
-      .insert(rows.map((r) => ({ ...r, classId })))
-      .select("id");
+      .select("studentCode")
+      .eq("classId", classId)
+      .in("studentCode", codes);
+    if (existingError) throw new Error(existingError.message);
+
+    const existingCodes = new Set(existing?.map((s) => s.studentCode) ?? []);
+
+    const { error } = await supabase.from("students").upsert(
+      rows.map((r) => ({ ...r, classId })),
+      { onConflict: '"studentCode","classId"' },
+    );
     if (error) throw new Error(error.message);
 
     return {
-      inserted: (data as Pick<Student, "id">[] | null)?.length ?? 0,
-      skipped: 0,
+      inserted: rows.length - existingCodes.size,
+      updated: existingCodes.size,
     } satisfies ImportStudentsSummary;
   });
 

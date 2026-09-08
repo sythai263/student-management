@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { CalendarCheck, FileUp, UserPlus } from "lucide-react";
+import { CalendarCheck, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { ClassHeader } from "@components/classes";
-import { StudentTable } from "@components/students";
+import { StudentTable, ImportStudentsForm } from "@components/students";
 
 interface ClassDetailPageProps {
   params: Promise<{ id: string }>;
@@ -25,12 +25,7 @@ export default async function ClassDetailPage({
         >
           <UserPlus /> Đăng ký học sinh
         </Link>
-        <Link
-          href={`/classes/${id}/students/import`}
-          className={buttonVariants({ variant: "secondary" })}
-        >
-          <FileUp /> Import CSV
-        </Link>
+        <ImportStudentsForm classId={id} />
         <Link
           href={`/classes/${id}/attendance`}
           className={buttonVariants({ variant: "outline" })}

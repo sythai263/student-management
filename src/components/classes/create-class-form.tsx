@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { createClass } from "@lib/actions";
 
@@ -49,51 +48,53 @@ export function CreateClassForm() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button type="button">Tạo lớp mới</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Tạo lớp mới</DialogTitle>
-          <DialogDescription>
-            Nhập thông tin lớp học để bắt đầu quản lý.
-          </DialogDescription>
-        </DialogHeader>
-        <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="classCode">Mã lớp</Label>
-            <Input
-              id="classCode"
-              name="classCode"
-              placeholder="10A1"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="name">Tên lớp</Label>
-            <Input id="name" name="name" placeholder="10A1" required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="schoolYear">Năm học</Label>
-            <Input
-              id="schoolYear"
-              name="schoolYear"
-              placeholder="2025-2026"
-              required
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Hủy
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Đang tạo..." : "Tạo lớp"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button type="button" onClick={() => setOpen(true)}>
+        Tạo lớp mới
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tạo lớp mới</DialogTitle>
+            <DialogDescription>
+              Nhập thông tin lớp học để bắt đầu quản lý.
+            </DialogDescription>
+          </DialogHeader>
+          <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="classCode">Mã lớp</Label>
+              <Input
+                id="classCode"
+                name="classCode"
+                placeholder="10A1"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Tên lớp</Label>
+              <Input id="name" name="name" placeholder="10A1" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="schoolYear">Năm học</Label>
+              <Input
+                id="schoolYear"
+                name="schoolYear"
+                placeholder="2025-2026"
+                required
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Hủy
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Đang tạo..." : "Tạo lớp"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

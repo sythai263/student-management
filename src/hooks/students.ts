@@ -14,8 +14,7 @@ export function useStudents(classId: string) {
         .from("students")
         .select("*")
         .eq("classId", classId)
-        .order("lastName")
-        .order("firstName");
+        .order("studentCode");
       if (error) throw new Error(error.message);
       return (data ?? []) as Student[];
     },

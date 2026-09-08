@@ -33,8 +33,9 @@ export function StudentTable({ classId }: StudentTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Mã HS</TableHead>
-            <TableHead>Họ tên</TableHead>
+            <TableHead className="whitespace-nowrap">Mã HS</TableHead>
+            <TableHead className="w-max whitespace-nowrap">Họ</TableHead>
+            <TableHead className="w-max whitespace-nowrap">Tên</TableHead>
             <TableHead>Ngày sinh</TableHead>
             <TableHead>Face ID</TableHead>
           </TableRow>
@@ -43,9 +44,8 @@ export function StudentTable({ classId }: StudentTableProps) {
           {students?.map((s) => (
             <TableRow key={s.id}>
               <TableCell>{s.studentCode}</TableCell>
-              <TableCell>
-                {s.lastName} {s.firstName}
-              </TableCell>
+              <TableCell>{s.lastName}</TableCell>
+              <TableCell>{s.firstName}</TableCell>
               <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
               <TableCell>
                 {s.awsFaceId ? (
