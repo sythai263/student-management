@@ -7,40 +7,36 @@ import {
   useMarkAllPresent,
 } from "@hooks";
 import { AttendanceToolbar } from "./attendance-toolbar";
-import { AttendanceTable } from "./attendance-table";
+import { AttendanceGrid } from "./attendance-grid";
 import { RollCallModal } from "./roll-call-modal";
 
 interface AttendanceBoardProps {
   sessionId: string;
 }
 
-const STATUS_ORDER: Record<AttendanceStatus, number> = {
-  VANG: 0,
-  VANG_PHEP: 1,
-  CO_MAT: 2,
-};
-
 export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
-  const { data: records, isLoading, error } = useAttendanceRecords(sessionId);
-  const markAllMutation = useMarkAllPresent(sessionId);
-
+  // Status filter is applied server-side via the hook.
   const [filter, setFilter] = useState<AttendanceStatus | "ALL">("ALL");
   const [search, setSearch] = useState("");
   const [rollCallOpen, setRollCallOpen] = useState(false);
 
-  // Table view: absent-first so the teacher reviews exceptions first.
+  const {
+    data: records,
+    isLoading,
+    error,
+  } = useAttendanceRecords(sessionId, filter);
+  const markAllMutation = useMarkAllPresent(sessionId);
+
+  // Search stays client-side (name/code substring on the fetched subset).
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (records ?? [])
-      .filter((r) => filter === "ALL" || r.status === filter)
-      .filter((r) => {
-        if (!q) return true;
-        const s = r.students;
-        const name = `${s?.lastName ?? ""} ${s?.firstName ?? ""}`.toLowerCase();
-        return name.includes(q) || s?.studentCode?.toLowerCase().includes(q);
-      })
-      .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
-  }, [records, filter, search]);
+    if (!q) return records ?? [];
+    return (records ?? []).filter((r) => {
+      const s = r.students;
+      const name = `${s?.lastName ?? ""} ${s?.firstName ?? ""}`.toLowerCase();
+      return name.includes(q) || s?.studentCode?.toLowerCase().includes(q);
+    });
+  }, [records, search]);
 
   // Roll-call order: roster order (lastName, firstName) — top to bottom.
   const rollCallOrder = useMemo(
@@ -78,7 +74,7 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         </p>
       )}
 
-      <AttendanceTable records={visible} />
+      <AttendanceGrid sessionId={sessionId} records={visible} />
 
       <RollCallModal
         sessionId={sessionId}

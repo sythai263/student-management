@@ -31,16 +31,24 @@ export function useAttendanceSessions(classId: string) {
   });
 }
 
-/** Fetch all records of a session, joined with student info. */
-export function useAttendanceRecords(sessionId: string) {
+/**
+ * Fetch records of a session, joined with student info.
+ * Status filter is applied server-side (.eq) — pass "ALL" for everything.
+ */
+export function useAttendanceRecords(
+  sessionId: string,
+  status: AttendanceStatus | "ALL" = "ALL",
+) {
   return useQuery({
-    queryKey: ["attendance", sessionId],
+    queryKey: ["attendance", sessionId, status],
     queryFn: async (): Promise<AttendanceRecordWithStudent[]> => {
       const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
+      let query = supabase
         .from("attendanceRecords")
         .select("*, students(studentCode, lastName, firstName)")
         .eq("sessionId", sessionId);
+      if (status !== "ALL") query = query.eq("status", status);
+      const { data, error } = await query;
       if (error) throw new Error(error.message);
       return (data ?? []) as AttendanceRecordWithStudent[];
     },
@@ -53,6 +61,7 @@ interface UpdateAttendanceInput {
   note?: string;
 }
 
+// Partial key matches every status-filtered variant of the records query.
 const attendanceKey = (sessionId: string) => ["attendance", sessionId];
 
 /** Mutation: update a single record — optimistic cache update, no refetch. */
@@ -66,11 +75,11 @@ export function useUpdateAttendance(sessionId: string) {
     },
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: attendanceKey(sessionId) });
-      const previous = queryClient.getQueryData<AttendanceRecordWithStudent[]>(
-        attendanceKey(sessionId),
+      const previous = queryClient.getQueriesData<AttendanceRecordWithStudent[]>(
+        { queryKey: attendanceKey(sessionId) },
       );
-      queryClient.setQueryData<AttendanceRecordWithStudent[]>(
-        attendanceKey(sessionId),
+      queryClient.setQueriesData<AttendanceRecordWithStudent[]>(
+        { queryKey: attendanceKey(sessionId) },
         (old) =>
           old?.map((r) =>
             r.id === input.recordId
@@ -81,9 +90,9 @@ export function useUpdateAttendance(sessionId: string) {
       return { previous };
     },
     onError: (_err, _input, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(attendanceKey(sessionId), context.previous);
-      }
+      context?.previous?.forEach(([key, data]) => {
+        if (data) queryClient.setQueryData(key, data);
+      });
     },
   });
 }
@@ -98,20 +107,19 @@ export function useMarkAllPresent(sessionId: string) {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: attendanceKey(sessionId) });
-      const previous = queryClient.getQueryData<AttendanceRecordWithStudent[]>(
-        attendanceKey(sessionId),
+      const previous = queryClient.getQueriesData<AttendanceRecordWithStudent[]>(
+        { queryKey: attendanceKey(sessionId) },
       );
-      queryClient.setQueryData<AttendanceRecordWithStudent[]>(
-        attendanceKey(sessionId),
-        (old) =>
-          old?.map((r) => ({ ...r, status: "CO_MAT" as const })),
+      queryClient.setQueriesData<AttendanceRecordWithStudent[]>(
+        { queryKey: attendanceKey(sessionId) },
+        (old) => old?.map((r) => ({ ...r, status: "CO_MAT" as const })),
       );
       return { previous };
     },
     onError: (_err, _input, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(attendanceKey(sessionId), context.previous);
-      }
+      context?.previous?.forEach(([key, data]) => {
+        if (data) queryClient.setQueryData(key, data);
+      });
     },
   });
 }
