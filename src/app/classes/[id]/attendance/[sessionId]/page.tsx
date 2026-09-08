@@ -11,7 +11,7 @@ export default async function AttendanceSessionPage({
   const { sessionId } = await params;
 
   return (
-    <main className="mx-auto max-w-5xl space-y-6 p-8">
+    <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
       <h1 className="text-2xl font-semibold">Kết quả điểm danh</h1>
       <AttendanceBoard sessionId={sessionId} />
     </main>

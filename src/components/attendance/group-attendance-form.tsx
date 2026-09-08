@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ interface GroupAttendanceFormProps {
 export function GroupAttendanceForm({ classId }: GroupAttendanceFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [fileCount, setFileCount] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -30,8 +32,7 @@ export function GroupAttendanceForm({ classId }: GroupAttendanceFormProps) {
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
-    const fileInput = form.elements.namedItem("photos") as HTMLInputElement;
-    const files = Array.from(fileInput.files ?? []);
+    const files = Array.from(fileRef.current?.files ?? []);
     if (files.length === 0) {
       setIsError(true);
       setMessage("Chọn ít nhất 1 ảnh nhóm");
@@ -77,16 +78,32 @@ export function GroupAttendanceForm({ classId }: GroupAttendanceFormProps) {
             <Label htmlFor="sessionDate">Ngày điểm danh</Label>
             <Input id="sessionDate" name="sessionDate" type="date" />
           </div>
+          {/* Mobile-first: big touch target opens camera/gallery directly */}
           <div className="space-y-2">
-            <Label htmlFor="photos">Ảnh nhóm (nhiều ảnh)</Label>
+            <Label htmlFor="photos">Ảnh nhóm</Label>
             <Input
               id="photos"
               name="photos"
+              ref={fileRef}
               type="file"
               accept="image/*"
               multiple
               required
+              className="hidden"
+              onChange={(e) => setFileCount(e.target.files?.length ?? 0)}
             />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex min-h-28 w-full flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-muted-foreground/40 p-6 text-center transition-colors active:border-primary active:bg-accent"
+            >
+              <span className="text-base font-medium">
+                {fileCount > 0 ? `Đã chọn ${fileCount} ảnh` : "Chụp / chọn ảnh"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Chạm để mở camera hoặc thư viện ảnh
+              </span>
+            </button>
           </div>
           {message && (
             <p
@@ -97,7 +114,12 @@ export function GroupAttendanceForm({ classId }: GroupAttendanceFormProps) {
               {message}
             </p>
           )}
-          <Button type="submit" disabled={isPending}>
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={isPending}
+          >
             {isPending ? "Đang nhận diện..." : "Điểm danh"}
           </Button>
         </form>
