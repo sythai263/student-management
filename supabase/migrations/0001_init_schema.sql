@@ -41,6 +41,7 @@ create table if not exists public."attendanceSessions" (
   "classId"     uuid not null references public.classes(id) on delete cascade,
   "sessionDate" date not null default current_date,
   "imageUrls"   text[] not null default '{}',
+  "closed"      boolean not null default false,
   "createdAt"   timestamptz not null default now()
 );
 
@@ -318,7 +319,7 @@ create policy "attendanceRecords_insert_via_session" on public."attendanceRecord
       select 1
       from public."attendanceSessions" s
       join public.classes c on c."id" = s."classId"
-      where s."id" = "sessionId" and c."teacherId" = auth.uid()
+      where s."id" = "sessionId" and c."teacherId" = auth.uid() and not s."closed"
     )
   );
 
@@ -328,14 +329,14 @@ create policy "attendanceRecords_update_via_session" on public."attendanceRecord
       select 1
       from public."attendanceSessions" s
       join public.classes c on c."id" = s."classId"
-      where s."id" = "sessionId" and c."teacherId" = auth.uid()
+      where s."id" = "sessionId" and c."teacherId" = auth.uid() and not s."closed"
     )
   ) with check (
     exists (
       select 1
       from public."attendanceSessions" s
       join public.classes c on c."id" = s."classId"
-      where s."id" = "sessionId" and c."teacherId" = auth.uid()
+      where s."id" = "sessionId" and c."teacherId" = auth.uid() and not s."closed"
     )
   );
 
@@ -345,7 +346,7 @@ create policy "attendanceRecords_delete_via_session" on public."attendanceRecord
       select 1
       from public."attendanceSessions" s
       join public.classes c on c."id" = s."classId"
-      where s."id" = "sessionId" and c."teacherId" = auth.uid()
+      where s."id" = "sessionId" and c."teacherId" = auth.uid() and not s."closed"
     )
   );
 

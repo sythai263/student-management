@@ -1,10 +1,11 @@
 export { useClasses, useClass } from "./classes";
 export { useStudents } from "./students";
 export {
+  useAttendanceSession,
   useAttendanceSessions,
   useAttendanceRecords,
   useUpdateAttendance,
-  useMarkAllPresent,
+  useCloseSession,
   useCreateSession,
 } from "./attendance";
 export type { AttendanceRecordWithStudent } from "./attendance";

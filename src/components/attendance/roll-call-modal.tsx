@@ -155,12 +155,14 @@ export function RollCallModal({
             {timeLeft}
           </span>
         )}
-        <DialogHeader className="gap-6">
-          <DialogTitle className="text-8xl font-bold leading-tight">
+        <DialogHeader className="items-center gap-6 text-center">
+          <DialogDescription className="text-8xl font-bold leading-tight">
+            {s?.studentCode}
+          </DialogDescription>
+          <DialogTitle className="text-7xl font-bold leading-tight">
             {s?.lastName} {s?.firstName}
           </DialogTitle>
-          <DialogDescription className="flex items-center gap-4 text-3xl">
-            <span>{s?.studentCode}</span>
+          <div className="flex items-center gap-4 text-3xl text-muted-foreground">
             <Badge variant="secondary" className="text-xl">
               {index + 1}/{records.length}
             </Badge>
@@ -172,7 +174,7 @@ export function RollCallModal({
                 AI {record.confidence.toFixed(0)}%
               </Badge>
             )}
-          </DialogDescription>
+          </div>
         </DialogHeader>
 
         {pendingExcused ? (

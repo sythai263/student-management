@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import type { AttendanceStatus } from "@constants";
 import {
   useAttendanceRecords,
-  useMarkAllPresent,
+  useAttendanceSession,
+  useCloseSession,
 } from "@hooks";
 import { AttendanceToolbar } from "./attendance-toolbar";
 import { AttendanceGrid } from "./attendance-grid";
@@ -25,12 +26,13 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
     null,
   );
 
+  const { data: session, isLoading: sessionLoading } = useAttendanceSession(sessionId);
   const {
     data: records,
-    isLoading,
+    isLoading: recordsLoading,
     error,
   } = useAttendanceRecords(sessionId, filter);
-  const markAllMutation = useMarkAllPresent(sessionId);
+  const closeSessionMutation = useCloseSession(sessionId);
 
   // Search stays client-side (name/code substring on the fetched subset).
   const visible = useMemo(() => {
@@ -54,10 +56,11 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
     [records],
   );
 
-  if (isLoading) return <p className="text-muted-foreground">Đang tải...</p>;
+  if (sessionLoading || recordsLoading) return <p className="text-muted-foreground">Đang tải...</p>;
   if (error) return <p className="text-sm text-destructive">{error.message}</p>;
 
   const present = records?.filter((r) => r.status === "CO_MAT").length ?? 0;
+  const closed = session?.closed ?? false;
 
   return (
     <div className="space-y-4">
@@ -68,33 +71,36 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         onFilterChange={setFilter}
         present={present}
         total={records?.length ?? 0}
-        markingAll={markAllMutation.isPending}
-        onMarkAll={() => markAllMutation.mutate()}
+        closed={closed}
+        closing={closeSessionMutation.isPending}
+        onClose={() => closeSessionMutation.mutate()}
         onStartRollCall={() => setRollCallOpen(true)}
       />
 
-      {markAllMutation.error && (
+      {closeSessionMutation.error && (
         <p className="text-sm text-destructive">
-          {markAllMutation.error.message}
+          {closeSessionMutation.error.message}
         </p>
       )}
 
       <AttendanceGrid
         sessionId={sessionId}
         records={visible}
+        disabled={closed}
         onSelect={setEditing}
       />
 
       <RecordEditDialog
         sessionId={sessionId}
         record={editing}
+        readOnly={closed}
         onClose={() => setEditing(null)}
       />
 
       <RollCallModal
         sessionId={sessionId}
         records={rollCallOrder}
-        open={rollCallOpen}
+        open={rollCallOpen && !closed}
         onOpenChange={setRollCallOpen}
       />
     </div>

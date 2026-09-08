@@ -55,6 +55,9 @@ export function SessionList({ classId }: SessionListProps) {
                   ? `${s.imageUrls.length} ảnh`
                   : "Thủ công"}
               </Badge>
+              {s.closed && (
+                <Badge variant="outline">Đã đóng</Badge>
+              )}
             </Link>
           </li>
         ))}

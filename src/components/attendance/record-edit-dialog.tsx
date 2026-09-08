@@ -26,6 +26,7 @@ import {
 interface RecordEditDialogProps {
   sessionId: string;
   record: AttendanceRecordWithStudent | null;
+  readOnly?: boolean;
   onClose: () => void;
 }
 
@@ -33,6 +34,7 @@ interface RecordEditDialogProps {
 export function RecordEditDialog({
   sessionId,
   record,
+  readOnly = false,
   onClose,
 }: RecordEditDialogProps) {
   const updateMutation = useUpdateAttendance(sessionId);
@@ -52,7 +54,7 @@ export function RecordEditDialog({
   const needsNote = status === ATTENDANCE_STATUS.EXCUSED && !note.trim();
 
   function onSave() {
-    if (!record) return;
+    if (!record || readOnly) return;
     updateMutation.mutate(
       {
         recordId: record.id,
@@ -86,6 +88,7 @@ export function RecordEditDialog({
               <Button
                 key={st}
                 variant={status === st ? "default" : "outline"}
+                disabled={readOnly}
                 onClick={() => setStatus(st)}
               >
                 {ATTENDANCE_STATUS_LABEL[st]}
@@ -100,6 +103,7 @@ export function RecordEditDialog({
                 id="note"
                 autoFocus
                 value={note}
+                disabled={readOnly}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="VD: ốm, có đơn..."
               />
@@ -112,14 +116,16 @@ export function RecordEditDialog({
             </p>
           )}
 
-          <Button
-            className="w-full"
-            size="lg"
-            disabled={needsNote || updateMutation.isPending}
-            onClick={onSave}
-          >
-            {updateMutation.isPending ? "Đang lưu..." : "Lưu"}
-          </Button>
+          {!readOnly && (
+            <Button
+              className="w-full"
+              size="lg"
+              disabled={needsNote || updateMutation.isPending}
+              onClick={onSave}
+            >
+              {updateMutation.isPending ? "Đang lưu..." : "Lưu"}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

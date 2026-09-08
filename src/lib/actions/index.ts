@@ -6,7 +6,7 @@ export { importStudents } from "./import-students";
 export type { ImportStudentsSummary } from "./import-students";
 export {
   updateAttendanceRecord,
-  markAllPresent,
+  closeAttendanceSession,
   createManualSession,
 } from "./attendance";
 export type { GroupAttendanceSummary } from "./group-attendance";

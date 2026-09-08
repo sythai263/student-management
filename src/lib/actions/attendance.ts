@@ -50,16 +50,16 @@ export async function updateAttendanceRecord(
   });
 }
 
-/** Server Action: mark every record of a session as CO_MAT. */
-export async function markAllPresent(
+/** Server Action: close a session so its records can no longer be edited. */
+export async function closeAttendanceSession(
   sessionId: string,
 ): Promise<ActionResult<null>> {
   return withAction(async () => {
     const { supabase } = await requireTeacher();
     const { error } = await supabase
-      .from("attendanceRecords")
-      .update({ status: ATTENDANCE_STATUS.PRESENT })
-      .eq("sessionId", sessionId);
+      .from("attendanceSessions")
+      .update({ closed: true })
+      .eq("id", sessionId);
     if (error) throw new Error(error.message);
     return null;
   });

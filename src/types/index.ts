@@ -27,6 +27,7 @@ export interface AttendanceSession {
   classId: string;
   sessionDate: string;
   imageUrls: string[];
+  closed: boolean;
   createdAt: string;
 }
 

@@ -15,8 +15,9 @@ interface AttendanceToolbarProps {
   onFilterChange: (f: AttendanceStatus | "ALL") => void;
   present: number;
   total: number;
-  markingAll: boolean;
-  onMarkAll: () => void;
+  closed: boolean;
+  closing: boolean;
+  onClose: () => void;
   onStartRollCall: () => void;
 }
 
@@ -27,13 +28,28 @@ export function AttendanceToolbar({
   onFilterChange,
   present,
   total,
-  markingAll,
-  onMarkAll,
+  closed,
+  closing,
+  onClose,
   onStartRollCall,
 }: AttendanceToolbarProps) {
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Button size="lg" onClick={onStartRollCall}>
+      {closed ? (
+        <Button size="lg" variant="secondary" disabled>
+          Đã đóng điểm danh
+        </Button>
+      ) : (
+        <Button
+          size="lg"
+          variant="destructive"
+          disabled={closing}
+          onClick={onClose}
+        >
+          {closing ? "Đang đóng..." : "Đóng điểm danh"}
+        </Button>
+      )}
+      <Button size="lg" disabled={closed} onClick={onStartRollCall}>
         Bắt đầu điểm danh
       </Button>
       <Input
@@ -52,14 +68,6 @@ export function AttendanceToolbar({
           {ATTENDANCE_FILTER_LABEL[f]}
         </Button>
       ))}
-      <Button
-        size="sm"
-        variant="secondary"
-        disabled={markingAll}
-        onClick={onMarkAll}
-      >
-        Tất cả có mặt
-      </Button>
       <Badge variant="secondary">
         {present}/{total} có mặt
       </Badge>

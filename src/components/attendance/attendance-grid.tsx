@@ -19,6 +19,8 @@ import {
 interface AttendanceGridProps {
   sessionId: string;
   records: AttendanceRecordWithStudent[];
+  /** When true the grid is for viewing only (session is closed). */
+  disabled?: boolean;
   /** Open the per-student edit dialog when a card is clicked. */
   onSelect: (record: AttendanceRecordWithStudent) => void;
 }
@@ -26,18 +28,20 @@ interface AttendanceGridProps {
 const AttendanceCard = memo(function AttendanceCard({
   record: r,
   pending,
+  disabled,
   onMark,
   onSelect,
 }: {
   record: AttendanceRecordWithStudent;
   pending: boolean;
+  disabled?: boolean;
   onMark: (recordId: string, status: AttendanceStatus) => void;
   onSelect: (record: AttendanceRecordWithStudent) => void;
 }) {
   return (
     <div
-      className="flex cursor-pointer flex-col gap-1 rounded-md border p-2 transition-colors hover:border-primary"
-      onClick={() => onSelect(r)}
+      className={`group flex flex-col gap-1 rounded-md border p-2 transition-colors ${disabled ? "cursor-default" : "cursor-pointer hover:border-primary"}`}
+      onClick={() => !disabled && onSelect(r)}
     >
       <div className="flex items-center justify-between gap-1">
         <span className="truncate text-sm font-medium">
@@ -49,19 +53,18 @@ const AttendanceCard = memo(function AttendanceCard({
       </div>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{r.students?.studentCode}</span>
-        {r.confidence != null && <span>AI {r.confidence.toFixed(0)}%</span>}
       </div>
       {r.note && (
         <p className="truncate text-xs text-muted-foreground">{r.note}</p>
       )}
-      <div className="flex gap-1">
+      <div className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         {ATTENDANCE_STATUS_LIST.map((s) => (
           <Button
             key={s}
             size="sm"
-            variant={r.status === s ? "default" : "outline"}
+            variant={r.status === s ? ATTENDANCE_STATUS_VARIANT[s] : "outline"}
             className="h-7 flex-1 px-0 text-xs"
-            disabled={pending}
+            disabled={pending || disabled}
             onClick={(e) => {
               e.stopPropagation();
               onMark(r.id, s);
@@ -79,6 +82,7 @@ const AttendanceCard = memo(function AttendanceCard({
 export function AttendanceGrid({
   sessionId,
   records,
+  disabled = false,
   onSelect,
 }: AttendanceGridProps) {
   const updateMutation = useUpdateAttendance(sessionId);
@@ -94,6 +98,7 @@ export function AttendanceGrid({
           key={r.id}
           record={r}
           pending={updateMutation.isPending}
+          disabled={disabled}
           onMark={(recordId, status) =>
             updateMutation.mutate({ recordId, status })
           }
