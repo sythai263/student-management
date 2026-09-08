@@ -1,5 +1,6 @@
 export { useClasses, useClass, useDeleteClass } from "./classes";
-export { useStudents } from "./students";
+export { useStudents, usePaginatedStudents } from "./students";
+export { useDebounce } from "./use-debounce";
 export {
   useAttendanceSession,
   useAttendanceSessions,
