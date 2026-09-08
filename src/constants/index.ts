@@ -57,7 +57,7 @@ export const ATTENDANCE_FILTER_LABEL: Record<AttendanceStatus | "ALL", string> =
 };
 
 /** Seconds a student has to respond during roll-call before defaulting to VANG. */
-export const ROLL_CALL_SECONDS = 6;
+export const ROLL_CALL_SECONDS = 10;
 
 /** Grade score types (must match DB check constraint). */
 export const SCORE_TYPES = [

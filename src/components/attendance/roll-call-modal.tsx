@@ -145,29 +145,29 @@ export function RollCallModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-6 p-8 sm:max-w-3xl">
+      <DialogContent className="flex h-screen max-h-screen w-screen max-w-[100vw] flex-col justify-center gap-10 rounded-none border-0 p-12 sm:max-w-[100vw]">
         {/* Big countdown — top right corner */}
         {!pendingExcused && (
           <span
-            className={`absolute right-14 top-6 text-7xl font-bold tabular-nums ${timeLeft <= 2 ? "text-destructive" : "text-primary"
+            className={`absolute right-16 top-8 text-9xl font-bold tabular-nums ${timeLeft <= 2 ? "text-destructive" : "text-primary"
               }`}
           >
             {timeLeft}
           </span>
         )}
-        <DialogHeader>
-          <DialogTitle className="text-6xl font-bold leading-tight">
+        <DialogHeader className="gap-6">
+          <DialogTitle className="text-8xl font-bold leading-tight">
             {s?.lastName} {s?.firstName}
           </DialogTitle>
-          <DialogDescription className="flex items-center gap-3 text-2xl">
+          <DialogDescription className="flex items-center gap-4 text-3xl">
             <span>{s?.studentCode}</span>
-            <Badge variant="secondary" className="text-lg">
+            <Badge variant="secondary" className="text-xl">
               {index + 1}/{records.length}
             </Badge>
             {record.confidence != null && (
               <Badge
                 variant={record.confidence >= 90 ? "default" : "secondary"}
-                className="text-lg"
+                className="text-xl"
               >
                 AI {record.confidence.toFixed(0)}%
               </Badge>
@@ -176,17 +176,17 @@ export function RollCallModal({
         </DialogHeader>
 
         {pendingExcused ? (
-          <div className="space-y-3">
+          <div className="space-y-6">
             <Input
               autoFocus
-              className="h-14 text-xl"
+              className="h-20 text-2xl"
               placeholder="Lý do vắng (bắt buộc) — Enter để xác nhận"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <Button
-                className="h-14 flex-1 text-xl"
+                className="h-20 flex-1 text-2xl"
                 disabled={!note.trim() || updateMutation.isPending}
                 onClick={() => mark(ATTENDANCE_STATUS.EXCUSED)}
               >
@@ -194,7 +194,7 @@ export function RollCallModal({
               </Button>
               <Button
                 variant="outline"
-                className="h-14 text-xl"
+                className="h-20 text-2xl"
                 onClick={() => setPendingExcused(false)}
               >
                 Quay lại
@@ -202,17 +202,17 @@ export function RollCallModal({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-5 gap-6">
             {ATTENDANCE_STATUS_LIST.map((status) => (
               <Button
                 key={status}
                 variant={record.status === status ? "default" : "outline"}
-                className="h-20 text-2xl"
+                className="h-32 flex-col gap-2 text-3xl"
                 disabled={updateMutation.isPending}
                 onClick={() => mark(status)}
               >
                 {ATTENDANCE_STATUS_LABEL[status]}
-                <span className="ml-2 text-base opacity-60">
+                <span className="text-xl opacity-60">
                   ({ATTENDANCE_STATUS_SHORT_LABEL[status]})
                 </span>
               </Button>
@@ -220,7 +220,7 @@ export function RollCallModal({
           </div>
         )}
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-lg text-muted-foreground">
           Phím tắt: C = Có mặt · V = Vắng · P = Vắng phép · B = Bỏ tiết · M = Đi muộn
         </p>
       </DialogContent>
