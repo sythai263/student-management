@@ -1,3 +1,4 @@
+export { AttendanceActions } from "./attendance-actions";
 export { GroupAttendanceForm } from "./group-attendance-form";
 export { AttendanceBoard } from "./attendance-board";
 export { AttendanceToolbar } from "./attendance-toolbar";

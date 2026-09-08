@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { GroupAttendanceForm, SessionList } from "@components/attendance";
+import { AttendanceActions, SessionList } from "@components/attendance";
 
 interface AttendancePageProps {
   params: Promise<{ id: string }>;
@@ -18,7 +18,7 @@ export default async function AttendancePage({ params }: AttendancePageProps) {
       >
         <ArrowLeft /> Quay lại lớp học
       </Link>
-      <GroupAttendanceForm classId={id} />
+      <AttendanceActions classId={id} />
       <SessionList classId={id} />
     </main>
   );
