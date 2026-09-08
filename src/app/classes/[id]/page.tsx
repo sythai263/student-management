@@ -1,0 +1,35 @@
+import { redirect } from "next/navigation";
+import { createSupabaseServerClient } from "@lib/supabase";
+import { ClassHeader } from "@components/classes";
+import { RegisterStudentForm, StudentTable } from "@components/students";
+import { GroupAttendanceForm } from "@components/attendance";
+
+interface ClassDetailPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ClassDetailPage({
+  params,
+}: ClassDetailPageProps) {
+  const { id } = await params;
+
+  // Auth guard only — data fetching lives in client hooks (@hooks).
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  return (
+    <main className="mx-auto max-w-5xl space-y-8 p-8">
+      <ClassHeader classId={id} />
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <RegisterStudentForm classId={id} />
+        <GroupAttendanceForm classId={id} />
+      </div>
+
+      <StudentTable classId={id} />
+    </main>
+  );
+}
