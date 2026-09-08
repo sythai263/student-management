@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -90,56 +91,50 @@ export function StudentTable({ classId }: StudentTableProps) {
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16 whitespace-nowrap">STT</TableHead>
-            <TableHead className="whitespace-nowrap">Mã HS</TableHead>
-            <TableHead className="w-max whitespace-nowrap">Họ</TableHead>
-            <TableHead className="w-max whitespace-nowrap">Tên</TableHead>
-            <TableHead>Ngày sinh</TableHead>
-            <TableHead>Face ID</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
+      {isLoading ? (
+        <TableSkeleton columns={6} rows={pageSize} />
+      ) : error ? (
+        <p className="text-sm text-destructive">{error.message}</p>
+      ) : (
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
-                Đang tải...
-              </TableCell>
+              <TableHead className="w-16 whitespace-nowrap">STT</TableHead>
+              <TableHead className="whitespace-nowrap">Mã HS</TableHead>
+              <TableHead className="w-max whitespace-nowrap">Họ</TableHead>
+              <TableHead className="w-max whitespace-nowrap">Tên</TableHead>
+              <TableHead>Ngày sinh</TableHead>
+              <TableHead>Face ID</TableHead>
             </TableRow>
-          ) : error ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-destructive">
-                {error.message}
-              </TableCell>
-            </TableRow>
-          ) : students.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
-                Không có học sinh nào.
-              </TableCell>
-            </TableRow>
-          ) : (
-            students.map((s, index) => (
-              <TableRow key={s.id}>
-                <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
-                <TableCell>{s.studentCode}</TableCell>
-                <TableCell>{s.lastName}</TableCell>
-                <TableCell>{s.firstName}</TableCell>
-                <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
-                <TableCell>
-                  {s.awsFaceId ? (
-                    <Badge>Đã index</Badge>
-                  ) : (
-                    <Badge variant="secondary">Chưa có</Badge>
-                  )}
+          </TableHeader>
+          <TableBody>
+            {students.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  Không có học sinh nào.
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              students.map((s, index) => (
+                <TableRow key={s.id}>
+                  <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
+                  <TableCell>{s.studentCode}</TableCell>
+                  <TableCell>{s.lastName}</TableCell>
+                  <TableCell>{s.firstName}</TableCell>
+                  <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
+                  <TableCell>
+                    {s.awsFaceId ? (
+                      <Badge>Đã index</Badge>
+                    ) : (
+                      <Badge variant="secondary">Chưa có</Badge>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </section>
