@@ -10,6 +10,12 @@ import {
 } from "./action-utils";
 
 const createClassSchema = z.object({
+  classCode: z
+    .string()
+    .trim()
+    .min(1, "Mã lớp không được trống")
+    .max(20, "Mã lớp tối đa 20 ký tự")
+    .regex(/^[A-Za-z0-9]+$/, "Mã lớp chỉ gồm chữ và số"),
   name: z.string().trim().min(1, "Tên lớp không được trống"),
   schoolYear: z
     .string()

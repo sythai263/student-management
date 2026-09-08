@@ -11,6 +11,7 @@ create extension if not exists "pgcrypto";
 -- -------------------------------------------------------------
 create table if not exists public.classes (
   "id"         uuid primary key default gen_random_uuid(),
+  "classCode"  text not null unique,
   "name"       text not null,
   "schoolYear" text not null,
   "teacherId"  uuid not null references auth.users(id) on delete cascade,

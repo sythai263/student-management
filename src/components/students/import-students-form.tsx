@@ -51,7 +51,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   return (
     <form onSubmit={onSubmit} className="flex items-end gap-3">
       <div className="space-y-2">
-        <Label htmlFor="csv">Import CSV (maHS,ho,ten,yyyy-mm-dd)</Label>
+        <Label htmlFor="csv">Import CSV (maHS,ho,ten)</Label>
         <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
       </div>
       <Button type="submit" variant="secondary" disabled={isPending}>

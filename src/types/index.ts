@@ -4,6 +4,7 @@ import type { AttendanceStatus, ScoreType } from "@constants";
 
 export interface Class {
   id: string;
+  classCode: string;
   name: string;
   schoolYear: string;
   teacherId: string;

@@ -17,12 +17,11 @@ interface CsvRow {
   studentCode: string;
   lastName: string;
   firstName: string;
-  dateOfBirth: string | null;
 }
 
 /**
- * Parse CSV text: studentCode,lastName,firstName,dateOfBirth(optional).
- * Skips a header row if the first cell is not a plausible code.
+ * Parse CSV text: studentCode,lastName,firstName.
+ * Skips a header row if the first cell looks like a code label.
  */
 function parseCsv(text: string): CsvRow[] {
   return text
@@ -31,16 +30,18 @@ function parseCsv(text: string): CsvRow[] {
     .filter(Boolean)
     .flatMap((line, index) => {
       const cells = line.split(",").map((c) => c.trim());
-      if (index === 0 && cells[0]?.toLowerCase().includes("code")) return [];
-      if (cells.length < 3 || !cells[0]) return [];
+      if (
+        index === 0 &&
+        /^(ma|student)\s*(hs|code)?$/i.test(cells[0] ?? "")
+      ) {
+        return [];
+      }
+      if (cells.length < 3 || !cells[0] || !cells[1] || !cells[2]) return [];
       return [
         {
           studentCode: cells[0],
           lastName: cells[1],
           firstName: cells[2],
-          dateOfBirth: /^\d{4}-\d{2}-\d{2}$/.test(cells[3] ?? "")
-            ? cells[3]
-            : null,
         },
       ];
     });
@@ -73,7 +74,13 @@ export async function importStudents(
 
     const { data, error } = await supabase
       .from("students")
-      .insert(rows.map((r) => ({ ...r, classId })))
+      .insert(
+        rows.map((r) => ({
+          ...r,
+          classId,
+          dateOfBirth: null,
+        })),
+      )
       .select("id");
     if (error) throw new Error(error.message);
 

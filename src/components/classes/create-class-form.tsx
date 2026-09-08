@@ -19,6 +19,8 @@ export function CreateClassForm() {
     e.preventDefault();
     const form = e.currentTarget;
     const input = {
+      classCode: (form.elements.namedItem("classCode") as HTMLInputElement)
+        .value,
       name: (form.elements.namedItem("name") as HTMLInputElement).value,
       schoolYear: (form.elements.namedItem("schoolYear") as HTMLInputElement)
         .value,
@@ -41,6 +43,15 @@ export function CreateClassForm() {
       onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3"
     >
+      <div className="space-y-2">
+        <Label htmlFor="classCode">Mã lớp</Label>
+        <Input
+          id="classCode"
+          name="classCode"
+          placeholder="10A1"
+          required
+        />
+      </div>
       <div className="space-y-2">
         <Label htmlFor="name">Tên lớp</Label>
         <Input id="name" name="name" placeholder="10A1" required />
