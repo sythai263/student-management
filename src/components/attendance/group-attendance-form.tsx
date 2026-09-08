@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +21,8 @@ interface GroupAttendanceFormProps {
 }
 
 export function GroupAttendanceForm({ classId }: GroupAttendanceFormProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -47,11 +51,15 @@ export function GroupAttendanceForm({ classId }: GroupAttendanceFormProps) {
 
       const result = await groupAttendance(fd);
       setIsError(!result.success);
-      setMessage(
-        result.success
-          ? `Điểm danh xong: ${result.data.presentCount}/${result.data.totalCount} có mặt`
-          : result.error,
-      );
+      if (result.success) {
+        setMessage(
+          `Điểm danh xong: ${result.data.presentCount}/${result.data.totalCount} có mặt`,
+        );
+        await queryClient.invalidateQueries({ queryKey: ["sessions", classId] });
+        router.push(`/classes/${classId}/attendance/${result.data.sessionId}`);
+      } else {
+        setMessage(result.error);
+      }
     });
   }
 

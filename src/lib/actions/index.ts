@@ -4,5 +4,10 @@ export { groupAttendance } from "./group-attendance";
 export { createClass } from "./classes";
 export { importStudents } from "./import-students";
 export type { ImportStudentsSummary } from "./import-students";
+export {
+  updateAttendanceRecord,
+  markAllPresent,
+  createManualSession,
+} from "./attendance";
 export type { GroupAttendanceSummary } from "./group-attendance";
 export type { ActionResult } from "./action-utils";

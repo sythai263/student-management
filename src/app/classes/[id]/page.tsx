@@ -4,7 +4,7 @@ import {
   StudentTable,
   ImportStudentsForm,
 } from "@components/students";
-import { GroupAttendanceForm } from "@components/attendance";
+import { GroupAttendanceForm, SessionList } from "@components/attendance";
 
 interface ClassDetailPageProps {
   params: Promise<{ id: string }>;
@@ -24,6 +24,8 @@ export default async function ClassDetailPage({
         <RegisterStudentForm classId={id} />
         <GroupAttendanceForm classId={id} />
       </div>
+
+      <SessionList classId={id} />
 
       <ImportStudentsForm classId={id} />
       <StudentTable classId={id} />
