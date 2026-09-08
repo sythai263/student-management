@@ -53,7 +53,9 @@ interface UpdateAttendanceInput {
   note?: string;
 }
 
-/** Mutation: update a single record, then refresh the board. */
+const attendanceKey = (sessionId: string) => ["attendance", sessionId];
+
+/** Mutation: update a single record — optimistic cache update, no refetch. */
 export function useUpdateAttendance(sessionId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -62,12 +64,31 @@ export function useUpdateAttendance(sessionId: string) {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["attendance", sessionId] }),
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: attendanceKey(sessionId) });
+      const previous = queryClient.getQueryData<AttendanceRecordWithStudent[]>(
+        attendanceKey(sessionId),
+      );
+      queryClient.setQueryData<AttendanceRecordWithStudent[]>(
+        attendanceKey(sessionId),
+        (old) =>
+          old?.map((r) =>
+            r.id === input.recordId
+              ? { ...r, status: input.status, note: input.note ?? null }
+              : r,
+          ),
+      );
+      return { previous };
+    },
+    onError: (_err, _input, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(attendanceKey(sessionId), context.previous);
+      }
+    },
   });
 }
 
-/** Mutation: mark the whole session as present. */
+/** Mutation: mark the whole session as present — optimistic, no refetch. */
 export function useMarkAllPresent(sessionId: string) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -75,8 +96,23 @@ export function useMarkAllPresent(sessionId: string) {
       const result = await markAllPresent(sessionId);
       if (!result.success) throw new Error(result.error);
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["attendance", sessionId] }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: attendanceKey(sessionId) });
+      const previous = queryClient.getQueryData<AttendanceRecordWithStudent[]>(
+        attendanceKey(sessionId),
+      );
+      queryClient.setQueryData<AttendanceRecordWithStudent[]>(
+        attendanceKey(sessionId),
+        (old) =>
+          old?.map((r) => ({ ...r, status: "CO_MAT" as const })),
+      );
+      return { previous };
+    },
+    onError: (_err, _input, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(attendanceKey(sessionId), context.previous);
+      }
+    },
   });
 }
 

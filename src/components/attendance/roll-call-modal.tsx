@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,9 @@ const STATUS_LABEL: Record<AttendanceStatus, string> = {
   VANG_PHEP: "V. phép",
 };
 
+/** Seconds a student has to respond "Có" before defaulting to VANG. */
+const ROLL_CALL_SECONDS = 6;
+
 export function RollCallModal({
   sessionId,
   records,
@@ -41,6 +44,8 @@ export function RollCallModal({
   const [index, setIndex] = useState(0);
   const [note, setNote] = useState("");
   const [pendingExcused, setPendingExcused] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(ROLL_CALL_SECONDS);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const record = records[index];
   const isLast = index >= records.length - 1;
@@ -48,6 +53,7 @@ export function RollCallModal({
   const advance = useCallback(() => {
     setNote("");
     setPendingExcused(false);
+    setTimeLeft(ROLL_CALL_SECONDS);
     if (isLast) {
       onOpenChange(false);
     } else {
@@ -74,6 +80,31 @@ export function RollCallModal({
     },
     [record, pendingExcused, note, updateMutation, advance],
   );
+
+  // Countdown: each student has ROLL_CALL_SECONDS to respond.
+  // Timeout -> auto-mark VANG and move on. Paused while entering a note.
+  useEffect(() => {
+    if (!open || pendingExcused || !record) return;
+    setTimeLeft(ROLL_CALL_SECONDS);
+    timerRef.current = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          // Default to VANG; advance even if the mutation fails.
+          updateMutation.mutate(
+            { recordId: record.id, status: ATTENDANCE_STATUS.ABSENT },
+            { onSettled: advance },
+          );
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, index, pendingExcused]);
 
   // Keyboard shortcuts inside the modal: C / V / P, Enter confirms note.
   useEffect(() => {
@@ -115,6 +146,15 @@ export function RollCallModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
+        {/* Big countdown — top right corner */}
+        {!pendingExcused && (
+          <span
+            className={`absolute right-12 top-4 text-4xl font-bold tabular-nums ${timeLeft <= 2 ? "text-destructive" : "text-primary"
+              }`}
+          >
+            {timeLeft}
+          </span>
+        )}
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {s?.lastName} {s?.firstName}
