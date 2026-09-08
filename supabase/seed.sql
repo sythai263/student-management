@@ -93,52 +93,9 @@ insert into public."classSubjects" ("classId", "subjectId") values
   ('aaaaaaaa-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000001'),
   ('aaaaaaaa-0000-0000-0000-000000000002', 'bbbbbbbb-0000-0000-0000-000000000003');
 
--- -------------------------------------------------------------
--- 6. Attendance: 2 sessions cho lớp 10A1 + records
--- -------------------------------------------------------------
-insert into public."attendanceSessions" (id, "classId", "sessionDate") values
-  ('cccccccc-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', current_date - 1),
-  ('cccccccc-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', current_date);
-
--- Hôm qua: 6 có mặt, 1 vắng, 1 vắng phép
-insert into public."attendanceRecords" ("sessionId", "studentId", status, confidence, note)
-select 'cccccccc-0000-0000-0000-000000000001', s.id,
-  case
-    when s."studentCode" = 'HS005' then 'VANG'
-    when s."studentCode" = 'HS007' then 'VANG_PHEP'
-    else 'CO_MAT'
-  end,
-  case when s."studentCode" in ('HS005','HS007') then null else round((0.85 + random() * 0.14)::numeric, 4) end,
-  case when s."studentCode" = 'HS007' then 'Ốm, có đơn xin phép' else null end
-from public.students s
-where s."classId" = 'aaaaaaaa-0000-0000-0000-000000000001';
-
--- Hôm nay: 7 có mặt, 1 vắng
-insert into public."attendanceRecords" ("sessionId", "studentId", status, confidence)
-select 'cccccccc-0000-0000-0000-000000000002', s.id,
-  case when s."studentCode" = 'HS003' then 'VANG' else 'CO_MAT' end,
-  case when s."studentCode" = 'HS003' then null else round((0.85 + random() * 0.14)::numeric, 4) end
-from public.students s
-where s."classId" = 'aaaaaaaa-0000-0000-0000-000000000001';
-
--- -------------------------------------------------------------
--- 7. Grades: điểm Toán HK1 cho HS lớp 10A1
--- -------------------------------------------------------------
-insert into public.grades ("studentId", "subjectId", "classId", semester, "scoreType", score, weight)
-select s.id, 'bbbbbbbb-0000-0000-0000-000000000001', s."classId", 1,
-  st."scoreType", round((5 + random() * 5)::numeric, 2), st.weight
-from public.students s
-cross join (values
-  ('MIENG', 1), ('PHUT_15', 1), ('TIET_1', 2), ('GIUA_KY', 2), ('CUOI_KY', 3)
-) as st("scoreType", weight)
-where s."classId" = 'aaaaaaaa-0000-0000-0000-000000000001';
-
 commit;
 
 -- Kết quả
 select 'classes' as tbl, count(*) from public.classes
 union all select 'students', count(*) from public.students
-union all select 'subjects', count(*) from public.subjects
-union all select 'attendanceSessions', count(*) from public."attendanceSessions"
-union all select 'attendanceRecords', count(*) from public."attendanceRecords"
-union all select 'grades', count(*) from public.grades;
+union all select 'subjects', count(*) from public.subjects;

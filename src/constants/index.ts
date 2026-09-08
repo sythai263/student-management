@@ -3,6 +3,8 @@ export const ATTENDANCE_STATUS = {
   PRESENT: "CO_MAT",
   ABSENT: "VANG",
   EXCUSED: "VANG_PHEP",
+  SKIPPED: "BO_TIET",
+  LATE: "DI_MUON",
 } as const;
 
 export type AttendanceStatus =
@@ -13,6 +15,8 @@ export const ATTENDANCE_STATUS_LIST = [
   ATTENDANCE_STATUS.PRESENT,
   ATTENDANCE_STATUS.ABSENT,
   ATTENDANCE_STATUS.EXCUSED,
+  ATTENDANCE_STATUS.SKIPPED,
+  ATTENDANCE_STATUS.LATE,
 ] as const;
 
 /** Full Vietnamese labels per status. */
@@ -20,6 +24,8 @@ export const ATTENDANCE_STATUS_LABEL: Record<AttendanceStatus, string> = {
   CO_MAT: "Có mặt",
   VANG: "Vắng",
   VANG_PHEP: "Vắng phép",
+  BO_TIET: "Bỏ tiết",
+  DI_MUON: "Đi muộn",
 };
 
 /** Short labels for compact buttons (also the keyboard shortcut). */
@@ -27,6 +33,8 @@ export const ATTENDANCE_STATUS_SHORT_LABEL: Record<AttendanceStatus, string> = {
   CO_MAT: "C",
   VANG: "V",
   VANG_PHEP: "P",
+  BO_TIET: "B",
+  DI_MUON: "M",
 };
 
 /** Badge variant per status. */
@@ -37,6 +45,8 @@ export const ATTENDANCE_STATUS_VARIANT: Record<
   CO_MAT: "default",
   VANG: "destructive",
   VANG_PHEP: "secondary",
+  BO_TIET: "destructive",
+  DI_MUON: "secondary",
 };
 
 /** Filter-tab labels including the "all" option. */

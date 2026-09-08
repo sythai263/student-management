@@ -81,7 +81,7 @@ export function RecordEditDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {ATTENDANCE_STATUS_LIST.map((st) => (
               <Button
                 key={st}

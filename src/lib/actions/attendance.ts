@@ -17,6 +17,8 @@ const updateRecordSchema = z
       ATTENDANCE_STATUS.PRESENT,
       ATTENDANCE_STATUS.ABSENT,
       ATTENDANCE_STATUS.EXCUSED,
+      ATTENDANCE_STATUS.SKIPPED,
+      ATTENDANCE_STATUS.LATE,
     ]),
     note: z.string().trim().optional(),
   })

@@ -51,7 +51,7 @@ create table if not exists public."attendanceRecords" (
   "id"         uuid primary key default gen_random_uuid(),
   "sessionId"  uuid not null references public."attendanceSessions"(id) on delete cascade,
   "studentId"  uuid not null references public.students(id) on delete cascade,
-  "status"     text not null default 'VANG' check ("status" in ('CO_MAT', 'VANG', 'VANG_PHEP')),
+  "status"     text not null default 'VANG' check ("status" in ('CO_MAT', 'VANG', 'VANG_PHEP', 'BO_TIET', 'DI_MUON')),
   "confidence" double precision,
   "note"       text,
   "createdAt"  timestamptz not null default now(),
@@ -156,6 +156,20 @@ alter table public."attendanceSessions"  enable row level security;
 alter table public."attendanceRecords"   enable row level security;
 alter table public.subjects              enable row level security;
 alter table public.grades                enable row level security;
+
+-- Drop existing public policies so the script is idempotent when rerun.
+DO $$
+DECLARE
+  pol record;
+BEGIN
+  FOR pol IN
+    SELECT policyname, tablename
+    FROM pg_policies
+    WHERE schemaname = 'public'
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON public.%I', pol.policyname, pol.tablename);
+  END LOOP;
+END $$;
 
 -- -------------------------------------------------------------
 -- classes: owner-only access

@@ -124,6 +124,8 @@ export function RollCallModal({
       if (key === "c") mark(ATTENDANCE_STATUS.PRESENT);
       else if (key === "v") mark(ATTENDANCE_STATUS.ABSENT);
       else if (key === "p") mark(ATTENDANCE_STATUS.EXCUSED);
+      else if (key === "b") mark(ATTENDANCE_STATUS.SKIPPED);
+      else if (key === "m") mark(ATTENDANCE_STATUS.LATE);
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -200,7 +202,7 @@ export function RollCallModal({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             {ATTENDANCE_STATUS_LIST.map((status) => (
               <Button
                 key={status}
@@ -219,7 +221,7 @@ export function RollCallModal({
         )}
 
         <p className="text-center text-sm text-muted-foreground">
-          Phím tắt: C = Có mặt · V = Vắng · P = Vắng phép
+          Phím tắt: C = Có mặt · V = Vắng · P = Vắng phép · B = Bỏ tiết · M = Đi muộn
         </p>
       </DialogContent>
     </Dialog>

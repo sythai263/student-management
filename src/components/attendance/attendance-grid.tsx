@@ -75,7 +75,7 @@ const AttendanceCard = memo(function AttendanceCard({
   );
 });
 
-/** Grid view of attendance records — compact cards, quick C/V/P marking. */
+/** Grid view of attendance records — compact cards, quick C/V/P/B/M marking. */
 export function AttendanceGrid({
   sessionId,
   records,

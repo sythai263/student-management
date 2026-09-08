@@ -42,7 +42,7 @@ export function AttendanceToolbar({
         onChange={(e) => onSearchChange(e.target.value)}
         className="max-w-xs"
       />
-      {(["ALL", "CO_MAT", "VANG", "VANG_PHEP"] as const).map((f) => (
+      {(["ALL", "CO_MAT", "VANG", "VANG_PHEP", "BO_TIET", "DI_MUON"] as const).map((f) => (
         <Button
           key={f}
           size="sm"
