@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@lib/supabase";
 import { ClassHeader } from "@components/classes";
-import { RegisterStudentForm, StudentTable } from "@components/students";
+import {
+  RegisterStudentForm,
+  StudentTable,
+  ImportStudentsForm,
+} from "@components/students";
 import { GroupAttendanceForm } from "@components/attendance";
 
 interface ClassDetailPageProps {
@@ -29,6 +33,7 @@ export default async function ClassDetailPage({
         <GroupAttendanceForm classId={id} />
       </div>
 
+      <ImportStudentsForm classId={id} />
       <StudentTable classId={id} />
     </main>
   );

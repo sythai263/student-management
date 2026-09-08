@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ interface RegisterStudentFormProps {
 }
 
 export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
@@ -51,7 +51,9 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
       );
       if (result.success) {
         formRef.current?.reset();
-        router.refresh();
+        await queryClient.invalidateQueries({
+          queryKey: ["students", classId],
+        });
       }
     });
   }

@@ -1,12 +1,16 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClass } from "@lib/actions";
 
 export function CreateClassForm() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -23,7 +27,11 @@ export function CreateClassForm() {
     startTransition(async () => {
       const result = await createClass(input);
       setError(result.success ? null : result.error);
-      if (result.success) formRef.current?.reset();
+      if (result.success) {
+        formRef.current?.reset();
+        await queryClient.invalidateQueries({ queryKey: ["classes"] });
+        router.push(`/classes/${result.data.id}`);
+      }
     });
   }
 
@@ -31,7 +39,7 @@ export function CreateClassForm() {
     <form
       ref={formRef}
       onSubmit={onSubmit}
-      className="flex items-end gap-3"
+      className="flex flex-wrap items-end gap-3"
     >
       <div className="space-y-2">
         <Label htmlFor="name">Tên lớp</Label>
