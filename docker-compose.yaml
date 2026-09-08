@@ -23,7 +23,7 @@ services:
       JWT_EXP: 3600
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./supabase/migrations:/docker-entrypoint-initdb.d:ro
+      - ./supabase/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -58,6 +58,25 @@ services:
       timeout: 5s
       retries: 10
 
+  # Apply app schema AFTER gotrue has created auth.users (FK target).
+  migrate:
+    image: supabase/postgres:17.6.1.169
+    container_name: sm-migrate
+    depends_on:
+      auth:
+        condition: service_healthy
+    volumes:
+      - ./supabase/migrations:/migrations:ro
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: >
+      /bin/sh -c "
+      for f in /migrations/*.sql; do
+        echo \"Applying $$f\";
+        psql -v ON_ERROR_STOP=1 -h db -U supabase_admin -d postgres -f $$f;
+      done
+      "
+
   rest:
     image: postgrest/postgrest:v14.17
     container_name: sm-rest
@@ -65,6 +84,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
       PGRST_DB_SCHEMAS: public

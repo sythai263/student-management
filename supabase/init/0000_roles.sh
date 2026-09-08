@@ -21,11 +21,16 @@ psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<-SQL
     IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'supabase_auth_admin') THEN
       CREATE ROLE supabase_auth_admin NOINHERIT LOGIN CREATEROLE;
     END IF;
+    -- gotrue migrations grant to "postgres"; the image's superuser is supabase_admin
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'postgres') THEN
+      CREATE ROLE postgres LOGIN SUPERUSER;
+    END IF;
   END
   \$\$;
 
   ALTER ROLE authenticator WITH PASSWORD '$POSTGRES_PASSWORD';
   ALTER ROLE supabase_auth_admin WITH PASSWORD '$POSTGRES_PASSWORD';
+  ALTER ROLE postgres WITH PASSWORD '$POSTGRES_PASSWORD';
 
   GRANT anon TO authenticator;
   GRANT authenticated TO authenticator;
@@ -40,4 +45,23 @@ psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<-SQL
     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO anon, authenticated, service_role;
   ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT USAGE, SELECT ON SEQUENCES TO anon, authenticated, service_role;
+
+  -- auth.uid()/auth.role(): RLS policies depend on them. Owner must be
+  -- supabase_auth_admin so gotrue's own migrations can replace them.
+  CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
+    LANGUAGE sql STABLE AS \$\$
+    SELECT coalesce(
+      nullif(current_setting('request.jwt.claim.sub', true), ''),
+      (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
+    )::uuid
+  \$\$;
+  CREATE OR REPLACE FUNCTION auth.role() RETURNS text
+    LANGUAGE sql STABLE AS \$\$
+    SELECT coalesce(
+      nullif(current_setting('request.jwt.claim.role', true), ''),
+      (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role')
+    )::text
+  \$\$;
+  ALTER FUNCTION auth.uid() OWNER TO supabase_auth_admin;
+  ALTER FUNCTION auth.role() OWNER TO supabase_auth_admin;
 SQL

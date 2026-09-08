@@ -40,6 +40,7 @@
     "docker:logs": "docker compose -f docker-compose.yaml logs -f",
     "docker:ps": "docker compose -f docker-compose.yaml ps",
     "docker:reset": "docker compose -f docker-compose.yaml down -v",
+    "db:seed": "docker exec -i sm-postgres psql -U supabase_admin -d postgres < supabase/seed.sql",
     "gen:keys": "sh scripts/generate-key.sh"
   },
   "version": "0.1.0"
