@@ -1,12 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 import type { Student } from "@types";
 import {
   requireTeacher,
   withAction,
   type ActionResult,
 } from "./action-utils";
+
+dayjs.extend(customParseFormat);
 
 export interface ImportStudentsSummary {
   inserted: number;
@@ -17,10 +21,18 @@ interface CsvRow {
   studentCode: string;
   lastName: string;
   firstName: string;
+  dateOfBirth: string | null;
+}
+
+function parseDate(value: string | undefined): string | null {
+  if (!value) return null;
+  const parsed = dayjs(value.trim(), ["YYYY-MM-DD", "MM/DD/YYYY"]);
+  return parsed.isValid() ? parsed.format("YYYY-MM-DD") : null;
 }
 
 /**
- * Parse CSV text: studentCode,lastName,firstName.
+ * Parse CSV text: studentCode,lastName,firstName,dateOfBirth(optional).
+ * Accepted date formats: YYYY-MM-DD, MM/DD/YYYY.
  * Skips a header row if the first cell looks like a code label.
  */
 function parseCsv(text: string): CsvRow[] {
@@ -42,6 +54,7 @@ function parseCsv(text: string): CsvRow[] {
           studentCode: cells[0],
           lastName: cells[1],
           firstName: cells[2],
+          dateOfBirth: parseDate(cells[3]),
         },
       ];
     });
@@ -74,13 +87,7 @@ export async function importStudents(
 
     const { data, error } = await supabase
       .from("students")
-      .insert(
-        rows.map((r) => ({
-          ...r,
-          classId,
-          dateOfBirth: null,
-        })),
-      )
+      .insert(rows.map((r) => ({ ...r, classId })))
       .select("id");
     if (error) throw new Error(error.message);
 

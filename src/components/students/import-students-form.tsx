@@ -48,14 +48,39 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
     });
   };
 
+  function downloadTemplate() {
+    const rows = [
+      "maHS,ho,ten,ngay-sinh",
+      "HS001,Nguyễn Văn,An,2010-03-15",
+      "HS002,Trần Thị,Bình,03/15/2010",
+      "HS003,Lê Hoàng,Cường,",
+    ];
+    const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mau_import_hoc_sinh.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
-    <form onSubmit={onSubmit} className="flex items-end gap-3">
+    <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3">
       <div className="space-y-2">
-        <Label htmlFor="csv">Import CSV (maHS,ho,ten)</Label>
+        <Label htmlFor="csv">Import CSV (maHS,ho,ten,yyyy-mm-dd)</Label>
         <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
       </div>
       <Button type="submit" variant="secondary" disabled={isPending}>
         {isPending ? "Đang import..." : "Import"}
+      </Button>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={downloadTemplate}
+      >
+        Tải mẫu CSV
       </Button>
       {message && (
         <p
