@@ -1,4 +1,5 @@
 export { registerStudent } from "./register-student";
-export type { RegisterStudentResult } from "./register-student";
 export { login, logout } from "./auth";
-export type { AuthResult } from "./auth";
+export { groupAttendance } from "./group-attendance";
+export type { GroupAttendanceSummary } from "./group-attendance";
+export type { ActionResult } from "./action-utils";

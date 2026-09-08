@@ -22,3 +22,11 @@
 # SHADCN/UI RULES
 - MUST use shadcn/ui generated via CLI. Do not hand-roll duplicates.
 - Primitives live in `src/components/ui/` -> import via `@components/ui`[cite: 1].
+
+# SERVER ACTIONS RULES
+- Every Server Action MUST return `ActionResult<T>` (discriminated union: `{ success: true; data: T } | { success: false; error: string }`) from `src/lib/actions/action-utils.ts`.
+- Inside action bodies: THROW `Error` directly for all failures (auth, validation, DB, AWS). NEVER return `{ success: false }` manually.
+- Auth check MUST go through `requireTeacher()` — do not repeat `auth.getUser()` boilerplate.
+- Wrap every action body in `withAction()` — it is the single controller boundary that catches errors and normalizes the result.
+- `redirect()` (NEXT_REDIRECT) MUST stay OUTSIDE `withAction` — call it after checking `result.success`.
+- Shared action helpers live in `src/lib/actions/action-utils.ts`, imported via relative `./action-utils` (same-folder exception).

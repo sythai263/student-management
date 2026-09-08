@@ -29,3 +29,11 @@ You must strictly follow these coding standards and architectural patterns based
 - **Data Access:** Server-side data access lives in `lib/data-*`, `lib/actions/*`, and typed Supabase helpers under `lib/supabase*`[cite: 1].
 - **Client Data:** Client data fetching and mutations belong in `hooks/` (using React Query v5)[cite: 1].
 - **Forms:** Use React Hook Form + Zod[cite: 1]. Schemas belong in `schemas/` (using `@schemas` barrel)[cite: 1]. Prefer composing from shadcn `Form` + `@hookform/resolvers`[cite: 1].
+
+## 4. Server Actions
+- **Return type:** Every Server Action MUST return `Promise<ActionResult<T>>` — the discriminated union `{ success: true; data: T } | { success: false; error: string }` defined in `src/lib/actions/action-utils.ts`.
+- **Error handling:** Inside action bodies, THROW `Error` directly for every failure (auth, validation, DB, AWS). NEVER hand-write `return { success: false, ... }`.
+- **Auth guard:** Use `requireTeacher()` from `action-utils.ts` — it returns `{ supabase, user }` and throws when unauthenticated. Do not repeat `auth.getUser()` boilerplate.
+- **Controller boundary:** Wrap every action body in `withAction(async () => {...})` — the single place that catches thrown errors and normalizes them into `ActionResult`.
+- **Redirects:** `redirect()` throws `NEXT_REDIRECT`, so it MUST be called OUTSIDE `withAction` (e.g. `if (result.success) redirect("/")`).
+- **Helpers:** Shared helpers stay in `src/lib/actions/action-utils.ts` and are imported via relative `./action-utils` (allowed same-folder exception).
