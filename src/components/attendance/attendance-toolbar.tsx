@@ -3,7 +3,10 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { AttendanceStatus } from "@constants";
+import {
+  ATTENDANCE_FILTER_LABEL,
+  type AttendanceStatus,
+} from "@constants";
 
 interface AttendanceToolbarProps {
   search: string;
@@ -16,13 +19,6 @@ interface AttendanceToolbarProps {
   onMarkAll: () => void;
   onStartRollCall: () => void;
 }
-
-const FILTER_LABEL: Record<AttendanceStatus | "ALL", string> = {
-  ALL: "Tất cả",
-  CO_MAT: "Có mặt",
-  VANG: "Vắng",
-  VANG_PHEP: "V. phép",
-};
 
 export function AttendanceToolbar({
   search,
@@ -53,7 +49,7 @@ export function AttendanceToolbar({
           variant={filter === f ? "default" : "outline"}
           onClick={() => onFilterChange(f)}
         >
-          {FILTER_LABEL[f]}
+          {ATTENDANCE_FILTER_LABEL[f]}
         </Button>
       ))}
       <Button

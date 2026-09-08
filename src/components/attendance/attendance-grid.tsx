@@ -3,7 +3,14 @@
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ATTENDANCE_STATUS, type AttendanceStatus } from "@constants";
+import {
+  ATTENDANCE_STATUS,
+  ATTENDANCE_STATUS_LABEL,
+  ATTENDANCE_STATUS_LIST,
+  ATTENDANCE_STATUS_SHORT_LABEL,
+  ATTENDANCE_STATUS_VARIANT,
+  type AttendanceStatus,
+} from "@constants";
 import {
   useUpdateAttendance,
   type AttendanceRecordWithStudent,
@@ -15,27 +22,6 @@ interface AttendanceGridProps {
   /** Open the per-student edit dialog when a card is clicked. */
   onSelect: (record: AttendanceRecordWithStudent) => void;
 }
-
-const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  CO_MAT: "Có mặt",
-  VANG: "Vắng",
-  VANG_PHEP: "V.phép",
-};
-
-const STATUS_VARIANT: Record<
-  AttendanceStatus,
-  "default" | "secondary" | "destructive"
-> = {
-  CO_MAT: "default",
-  VANG: "destructive",
-  VANG_PHEP: "secondary",
-};
-
-const SHORT_LABEL: Record<AttendanceStatus, string> = {
-  CO_MAT: "C",
-  VANG: "V",
-  VANG_PHEP: "P",
-};
 
 const AttendanceCard = memo(function AttendanceCard({
   record: r,
@@ -57,8 +43,8 @@ const AttendanceCard = memo(function AttendanceCard({
         <span className="truncate text-sm font-medium">
           {r.students?.lastName} {r.students?.firstName}
         </span>
-        <Badge variant={STATUS_VARIANT[r.status]}>
-          {STATUS_LABEL[r.status]}
+        <Badge variant={ATTENDANCE_STATUS_VARIANT[r.status]}>
+          {ATTENDANCE_STATUS_LABEL[r.status]}
         </Badge>
       </div>
       <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -69,13 +55,7 @@ const AttendanceCard = memo(function AttendanceCard({
         <p className="truncate text-xs text-muted-foreground">{r.note}</p>
       )}
       <div className="flex gap-1">
-        {(
-          [
-            ATTENDANCE_STATUS.PRESENT,
-            ATTENDANCE_STATUS.ABSENT,
-            ATTENDANCE_STATUS.EXCUSED,
-          ] as const
-        ).map((s) => (
+        {ATTENDANCE_STATUS_LIST.map((s) => (
           <Button
             key={s}
             size="sm"
@@ -87,7 +67,7 @@ const AttendanceCard = memo(function AttendanceCard({
               onMark(r.id, s);
             }}
           >
-            {SHORT_LABEL[s]}
+            {ATTENDANCE_STATUS_SHORT_LABEL[s]}
           </Button>
         ))}
       </div>

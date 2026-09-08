@@ -11,7 +11,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ATTENDANCE_STATUS, type AttendanceStatus } from "@constants";
+import {
+  ATTENDANCE_STATUS,
+  ATTENDANCE_STATUS_LABEL,
+  ATTENDANCE_STATUS_LIST,
+  ATTENDANCE_STATUS_SHORT_LABEL,
+  ROLL_CALL_SECONDS,
+  type AttendanceStatus,
+} from "@constants";
 import {
   useUpdateAttendance,
   type AttendanceRecordWithStudent,
@@ -24,15 +31,6 @@ interface RollCallModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  CO_MAT: "Có mặt",
-  VANG: "Vắng",
-  VANG_PHEP: "V. phép",
-};
-
-/** Seconds a student has to respond "Có" before defaulting to VANG. */
-const ROLL_CALL_SECONDS = 6;
 
 export function RollCallModal({
   sessionId,
@@ -195,13 +193,7 @@ export function RollCallModal({
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-2">
-            {(
-              [
-                ATTENDANCE_STATUS.PRESENT,
-                ATTENDANCE_STATUS.ABSENT,
-                ATTENDANCE_STATUS.EXCUSED,
-              ] as const
-            ).map((status) => (
+            {ATTENDANCE_STATUS_LIST.map((status) => (
               <Button
                 key={status}
                 size="lg"
@@ -209,9 +201,9 @@ export function RollCallModal({
                 disabled={updateMutation.isPending}
                 onClick={() => mark(status)}
               >
-                {STATUS_LABEL[status]}
+                {ATTENDANCE_STATUS_LABEL[status]}
                 <span className="ml-1 text-xs opacity-60">
-                  ({status === "CO_MAT" ? "C" : status === "VANG" ? "V" : "P"})
+                  ({ATTENDANCE_STATUS_SHORT_LABEL[status]})
                 </span>
               </Button>
             ))}

@@ -12,7 +12,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ATTENDANCE_STATUS, type AttendanceStatus } from "@constants";
+import {
+  ATTENDANCE_STATUS,
+  ATTENDANCE_STATUS_LABEL,
+  ATTENDANCE_STATUS_LIST,
+  type AttendanceStatus,
+} from "@constants";
 import {
   useUpdateAttendance,
   type AttendanceRecordWithStudent,
@@ -23,12 +28,6 @@ interface RecordEditDialogProps {
   record: AttendanceRecordWithStudent | null;
   onClose: () => void;
 }
-
-const STATUS_LABEL: Record<AttendanceStatus, string> = {
-  CO_MAT: "Có mặt",
-  VANG: "Vắng",
-  VANG_PHEP: "Vắng phép",
-};
 
 /** Per-student edit dialog — fix status/note when AI or roll-call got it wrong. */
 export function RecordEditDialog({
@@ -83,19 +82,13 @@ export function RecordEditDialog({
 
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-2">
-            {(
-              [
-                ATTENDANCE_STATUS.PRESENT,
-                ATTENDANCE_STATUS.ABSENT,
-                ATTENDANCE_STATUS.EXCUSED,
-              ] as const
-            ).map((st) => (
+            {ATTENDANCE_STATUS_LIST.map((st) => (
               <Button
                 key={st}
                 variant={status === st ? "default" : "outline"}
                 onClick={() => setStatus(st)}
               >
-                {STATUS_LABEL[st]}
+                {ATTENDANCE_STATUS_LABEL[st]}
               </Button>
             ))}
           </div>
