@@ -1,0 +1,24 @@
+# AI BEHAVIOR & WORKFLOW
+1. Explore First: Always read the folder structure and `package.json` before writing code[cite: 2].
+2. PLANNING: For major features, propose a plan and wait for user approval[cite: 2].
+3. No Yapping: Keep explanations brief; ship complete code[cite: 2].
+4. Preserve Context: Do not delete working comments/logic unless explicitly asked[cite: 2].
+
+# TECH STACK & ARCHITECTURE
+- Framework: Next.js App Router. Server Components by default[cite: 1].
+- Language: TypeScript 7 (Strict mode, no `any`, use `interface`)[cite: 1].
+- Styling: Tailwind CSS v4, shadcn/ui (latest CLI, radix-nova theme, root layout uses `className="dark"`)[cite: 1].
+- Database: Supabase + PostgreSQL.
+- Storage: MinIO (Local) / Cloudflare R2 (Production).
+- State/Mutation: React Query v5[cite: 1].
+
+# DIRECTORY STRUCTURE (2ND-LEVEL BARREL PATTERN)
+- Every stable 2nd-level folder MUST have `index.ts` exporting internals[cite: 1].
+- Cross-folder imports should prefer the 2nd tier via absolute aliases (e.g., `import { LoginForm } from '@components/auth'`)[cite: 1].
+- Do not use `baseUrl` in `tsconfig` (removed in TS 7). Use explicit relative prefixes in `paths`[cite: 1].
+- Pure helpers (format date/money) MUST live under `src/lib/`[cite: 1].
+- Constants only in `src/constants/` via `@constants`[cite: 1].
+
+# SHADCN/UI RULES
+- MUST use shadcn/ui generated via CLI. Do not hand-roll duplicates.
+- Primitives live in `src/components/ui/` -> import via `@components/ui`[cite: 1].
