@@ -8,7 +8,9 @@ import {
 } from "@hooks";
 import { AttendanceToolbar } from "./attendance-toolbar";
 import { AttendanceGrid } from "./attendance-grid";
+import { RecordEditDialog } from "./record-edit-dialog";
 import { RollCallModal } from "./roll-call-modal";
+import type { AttendanceRecordWithStudent } from "@hooks";
 
 interface AttendanceBoardProps {
   sessionId: string;
@@ -19,6 +21,9 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
   const [filter, setFilter] = useState<AttendanceStatus | "ALL">("ALL");
   const [search, setSearch] = useState("");
   const [rollCallOpen, setRollCallOpen] = useState(false);
+  const [editing, setEditing] = useState<AttendanceRecordWithStudent | null>(
+    null,
+  );
 
   const {
     data: records,
@@ -74,7 +79,17 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         </p>
       )}
 
-      <AttendanceGrid sessionId={sessionId} records={visible} />
+      <AttendanceGrid
+        sessionId={sessionId}
+        records={visible}
+        onSelect={setEditing}
+      />
+
+      <RecordEditDialog
+        sessionId={sessionId}
+        record={editing}
+        onClose={() => setEditing(null)}
+      />
 
       <RollCallModal
         sessionId={sessionId}

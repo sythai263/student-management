@@ -12,6 +12,8 @@ import {
 interface AttendanceGridProps {
   sessionId: string;
   records: AttendanceRecordWithStudent[];
+  /** Open the per-student edit dialog when a card is clicked. */
+  onSelect: (record: AttendanceRecordWithStudent) => void;
 }
 
 const STATUS_LABEL: Record<AttendanceStatus, string> = {
@@ -39,13 +41,18 @@ const AttendanceCard = memo(function AttendanceCard({
   record: r,
   pending,
   onMark,
+  onSelect,
 }: {
   record: AttendanceRecordWithStudent;
   pending: boolean;
   onMark: (recordId: string, status: AttendanceStatus) => void;
+  onSelect: (record: AttendanceRecordWithStudent) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-md border p-2">
+    <div
+      className="flex cursor-pointer flex-col gap-1 rounded-md border p-2 transition-colors hover:border-primary"
+      onClick={() => onSelect(r)}
+    >
       <div className="flex items-center justify-between gap-1">
         <span className="truncate text-sm font-medium">
           {r.students?.lastName} {r.students?.firstName}
@@ -75,7 +82,10 @@ const AttendanceCard = memo(function AttendanceCard({
             variant={r.status === s ? "default" : "outline"}
             className="h-7 flex-1 px-0 text-xs"
             disabled={pending}
-            onClick={() => onMark(r.id, s)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMark(r.id, s);
+            }}
           >
             {SHORT_LABEL[s]}
           </Button>
@@ -86,7 +96,11 @@ const AttendanceCard = memo(function AttendanceCard({
 });
 
 /** Grid view of attendance records — compact cards, quick C/V/P marking. */
-export function AttendanceGrid({ sessionId, records }: AttendanceGridProps) {
+export function AttendanceGrid({
+  sessionId,
+  records,
+  onSelect,
+}: AttendanceGridProps) {
   const updateMutation = useUpdateAttendance(sessionId);
 
   if (records.length === 0) {
@@ -103,6 +117,7 @@ export function AttendanceGrid({ sessionId, records }: AttendanceGridProps) {
           onMark={(recordId, status) =>
             updateMutation.mutate({ recordId, status })
           }
+          onSelect={onSelect}
         />
       ))}
     </div>
