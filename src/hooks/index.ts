@@ -1,4 +1,4 @@
-export { useClasses, useClass } from "./classes";
+export { useClasses, useClass, useDeleteClass } from "./classes";
 export { useStudents } from "./students";
 export {
   useAttendanceSession,

@@ -47,3 +47,23 @@ export async function createClass(
   if (result.success) revalidatePath("/");
   return result;
 }
+
+/** Server Action: delete a class and all its dependent data. */
+export async function deleteClass(classId: unknown): Promise<ActionResult<void>> {
+  const result = await withAction(async () => {
+    const { supabase, user } = await requireTeacher();
+
+    const id = z.string().uuid().safeParse(classId);
+    if (!id.success) throw new Error("ID lớp không hợp lệ");
+
+    const { error } = await supabase
+      .from("classes")
+      .delete()
+      .eq("id", id.data)
+      .eq("teacherId", user.id);
+    if (error) throw new Error(error.message);
+  });
+
+  if (result.success) revalidatePath("/");
+  return result;
+}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteClass } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import type { Class } from "@types";
 
@@ -33,6 +34,17 @@ export function useClass(classId: string) {
         .single();
       if (error) throw new Error(error.message);
       return data as Class;
+    },
+  });
+}
+
+/** Delete a class and invalidate the class list. */
+export function useDeleteClass() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteClass,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
     },
   });
 }
