@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +44,9 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
   const [filter, setFilter] = useState<AttendanceStatus | "ALL">("ALL");
   const [search, setSearch] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  // Roll-call cursor: index of the row currently being called.
+  const [cursor, setCursor] = useState(0);
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -62,6 +65,47 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
     const note = noteDrafts[record.id] ?? record.note ?? undefined;
     updateMutation.mutate({ recordId: record.id, status, note });
   }
+
+  // Keyboard roll-call: C = có mặt, V = vắng, P = vắng phép.
+  // After marking, the cursor auto-advances to the next row.
+  useEffect(() => {
+    const KEY_MAP: Record<string, AttendanceStatus> = {
+      c: ATTENDANCE_STATUS.PRESENT,
+      v: ATTENDANCE_STATUS.ABSENT,
+      p: ATTENDANCE_STATUS.EXCUSED,
+    };
+
+    function onKeyDown(e: KeyboardEvent) {
+      // Ignore while typing in inputs or with modifier keys.
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        e.metaKey ||
+        e.ctrlKey ||
+        e.altKey
+      ) {
+        return;
+      }
+      const status = KEY_MAP[e.key.toLowerCase()];
+      const record = visible[cursor];
+      if (!status || !record) return;
+      e.preventDefault();
+      setStatus(record, status);
+      const next = Math.min(cursor + 1, visible.length - 1);
+      setCursor(next);
+      rowRefs.current[next]?.scrollIntoView({ block: "nearest" });
+    }
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, cursor, noteDrafts]);
+
+  // Keep cursor in range when the visible list shrinks (filter/search).
+  useEffect(() => {
+    if (cursor > visible.length - 1) setCursor(Math.max(0, visible.length - 1));
+  }, [visible.length, cursor]);
 
   if (isLoading) return <p className="text-muted-foreground">Đang tải...</p>;
   if (error) return <p className="text-sm text-destructive">{error.message}</p>;
@@ -98,6 +142,9 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         <Badge variant="secondary">
           {present}/{records?.length ?? 0} có mặt
         </Badge>
+        <span className="text-xs text-muted-foreground">
+          Phím tắt: C = Có mặt · V = Vắng · P = Vắng phép
+        </span>
       </div>
 
       {updateMutation.error && (
@@ -115,8 +162,15 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {visible.map((r) => (
-            <TableRow key={r.id}>
+          {visible.map((r, i) => (
+            <TableRow
+              key={r.id}
+              ref={(el) => {
+                rowRefs.current[i] = el;
+              }}
+              className={i === cursor ? "bg-accent" : undefined}
+              onClick={() => setCursor(i)}
+            >
               <TableCell>{r.students?.studentCode}</TableCell>
               <TableCell>
                 {r.students?.lastName} {r.students?.firstName}
