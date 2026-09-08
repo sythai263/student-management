@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createSupabaseBrowserClient } from "@lib/supabase";
+import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import type { Student } from "@types";
 
 /** Fetch the student roster of a class. */
