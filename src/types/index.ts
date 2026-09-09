@@ -50,8 +50,22 @@ export interface Subject {
   createdAt: string;
 }
 
+export interface GradeSession {
+  id: string;
+  classId: string;
+  subjectId: string;
+  semester: number;
+  scoreType: ScoreType;
+  name: string;
+  date: string;
+  weight: number;
+  closed: boolean;
+  createdAt: string;
+}
+
 export interface Grade {
   id: string;
+  gradeSessionId: string | null;
   studentId: string;
   subjectId: string;
   classId: string;

@@ -70,3 +70,12 @@ export const SCORE_TYPES = [
 ] as const;
 
 export type ScoreType = (typeof SCORE_TYPES)[number];
+
+export const SCORE_TYPE_LABEL: Record<ScoreType, string> = {
+  THUONG_XUYEN: "Thường xuyên",
+  MIENG: "Kiểm tra miệng",
+  PHUT_15: "Kiểm tra 15 phút",
+  TIET_1: "Kiểm tra 1 tiết",
+  GIUA_KY: "Kiểm tra giữa kỳ",
+  CUOI_KY: "Kiểm tra cuối kỳ",
+};
