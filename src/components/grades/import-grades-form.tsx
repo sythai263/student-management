@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useTransition, type SubmitEventHandler } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,17 +16,24 @@ import {
 import { useImportGrades } from "@hooks";
 
 interface ImportGradesFormProps {
-  sessionId: string;
+  classId: string;
+  subjectId: string;
+  semester: number;
+  onSuccess?: () => void;
 }
 
-export function ImportGradesForm({ sessionId }: ImportGradesFormProps) {
-  const queryClient = useQueryClient();
+export function ImportGradesForm({
+  classId,
+  subjectId,
+  semester,
+  onSuccess,
+}: ImportGradesFormProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const importGrades = useImportGrades(sessionId);
+  const importGrades = useImportGrades(classId, subjectId, semester);
 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
@@ -40,16 +46,18 @@ export function ImportGradesForm({ sessionId }: ImportGradesFormProps) {
 
     startTransition(async () => {
       const fd = new FormData();
-      fd.set("gradeSessionId", sessionId);
+      fd.set("classId", classId);
+      fd.set("subjectId", subjectId);
+      fd.set("semester", String(semester));
       fd.set("file", file);
 
       try {
         const result = await importGrades.mutateAsync(fd);
         setIsError(false);
-        setMessage(`Đã nhập ${result.inserted} điểm, bỏ qua ${result.skipped} dòng`);
+        setMessage(`Đã nhập ${result.inserted} học sinh, bỏ qua ${result.skipped} dòng`);
         if (fileRef.current) fileRef.current.value = "";
-        await queryClient.invalidateQueries({ queryKey: ["grades", sessionId] });
-        setOpen(false);
+        onSuccess?.();
+        setTimeout(() => setOpen(false), 1000);
       } catch (err) {
         setIsError(true);
         setMessage(err instanceof Error ? err.message : "Lỗi không xác định");
@@ -59,10 +67,9 @@ export function ImportGradesForm({ sessionId }: ImportGradesFormProps) {
 
   function downloadTemplate() {
     const rows = [
-      "maHS,diem,ghiChu",
-      "HS001,8.5,",
-      "HS002,9,",
-      "HS003,7.25,",
+      "maHS,tx1,tx2,tx3,tx4,gk,ck,ghiChu,nhanXet",
+      "HS001,8,8.5,,,7.5,8,,",
+      "HS002,7,7.5,8,,8,9,,",
     ];
     const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -85,13 +92,19 @@ export function ImportGradesForm({ sessionId }: ImportGradesFormProps) {
           <DialogHeader>
             <DialogTitle>Import điểm</DialogTitle>
             <DialogDescription>
-              Tải lên file CSV theo mẫu để nhập nhiều điểm cùng lúc.
+              Tải lên file CSV theo mẫu: maHS,tx1,tx2,tx3,tx4,gk,ck,ghiChu,nhanXet.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="csv">File CSV (maHS,diem,ghiChu)</Label>
-              <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
+              <Label htmlFor="csv">File CSV</Label>
+              <Input
+                id="csv"
+                ref={fileRef}
+                type="file"
+                accept=".csv,text/csv"
+                required
+              />
             </div>
             {message && (
               <p
@@ -106,7 +119,7 @@ export function ImportGradesForm({ sessionId }: ImportGradesFormProps) {
               <Button type="button" variant="outline" onClick={downloadTemplate}>
                 Tải mẫu CSV
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending || importGrades.isPending}>
                 {isPending ? "Đang import..." : "Import"}
               </Button>
             </DialogFooter>

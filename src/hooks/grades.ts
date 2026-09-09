@@ -1,104 +1,69 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  closeGradeSession,
-  createGradeSession,
-  importGrades,
-  saveGradesBulk,
-} from "@lib/actions";
+import { importGrades, saveGradesBulk } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
-import type { Grade, GradeSession, Student } from "@types";
+import type { Grade, Student } from "@types";
 
 export interface GradeWithStudent extends Grade {
   students: Pick<Student, "studentCode" | "lastName" | "firstName"> | null;
 }
 
-/** Fetch a single grade round. */
-export function useGradeSession(sessionId: string) {
-  return useQuery({
-    queryKey: ["gradeSession", sessionId],
-    queryFn: async (): Promise<GradeSession> => {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
-        .from("gradeSessions")
-        .select("*")
-        .eq("id", sessionId)
-        .single();
-      if (error) throw new Error(error.message);
-      return data as GradeSession;
-    },
-  });
-}
+const gradesKey = (classId: string, subjectId: string, semester: number) => [
+  "grades",
+  classId,
+  subjectId,
+  semester,
+];
 
-/** List grade rounds for a class, newest first. */
-export function useGradeSessions(classId: string) {
+/** Fetch the 6-score grade sheet for a class/subject/semester. */
+export function useGrades(
+  classId: string,
+  subjectId: string,
+  semester: number,
+) {
   return useQuery({
-    queryKey: ["gradeSessions", classId],
-    queryFn: async (): Promise<GradeSession[]> => {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
-        .from("gradeSessions")
-        .select("*")
-        .eq("classId", classId)
-        .order("date", { ascending: false });
-      if (error) throw new Error(error.message);
-      return (data ?? []) as GradeSession[];
-    },
-  });
-}
-
-/** Fetch grades of a round joined with student info. */
-export function useGrades(sessionId: string) {
-  return useQuery({
-    queryKey: ["grades", sessionId],
+    queryKey: gradesKey(classId, subjectId, semester),
     queryFn: async (): Promise<GradeWithStudent[]> => {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("grades")
         .select("*, students(studentCode, lastName, firstName)")
-        .eq("gradeSessionId", sessionId);
+        .eq("classId", classId)
+        .eq("subjectId", subjectId)
+        .eq("semester", semester)
+        .order("createdAt", { ascending: true });
       if (error) throw new Error(error.message);
       return (data ?? []) as GradeWithStudent[];
     },
+    enabled: !!classId && !!subjectId && semester > 0,
   });
 }
 
-export interface CreateGradeSessionInput {
+export interface GradeRowInput {
+  studentId: string;
+  tx1: number | null;
+  tx2: number | null;
+  tx3: number | null;
+  tx4: number | null;
+  gk: number | null;
+  ck: number | null;
+  note?: string | null;
+}
+
+export interface SaveGradesInput {
   classId: string;
   subjectId: string;
   semester: number;
-  scoreType: string;
-  name: string;
-  date: string;
-  weight: number;
+  grades: GradeRowInput[];
 }
 
-interface SaveGradesInput {
-  gradeSessionId: string;
-  grades: { studentId: string; score: number; note?: string }[];
-}
-
-const gradeSessionsKey = (classId: string) => ["gradeSessions", classId];
-const gradesKey = (sessionId: string) => ["grades", sessionId];
-
-/** Mutation: create a new grade round. */
-export function useCreateGradeSession(classId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: CreateGradeSessionInput) => {
-      const result = await createGradeSession(input);
-      if (!result.success) throw new Error(result.error);
-      return result.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gradeSessionsKey(classId) });
-    },
-  });
-}
-
-/** Mutation: save grades for a round and refresh the grade list. */
-export function useSaveGrades(sessionId: string) {
+/** Mutation: save the grade sheet and refresh the grade list. */
+export function useSaveGrades(
+  classId: string,
+  subjectId: string,
+  semester: number,
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: SaveGradesInput) => {
@@ -107,13 +72,19 @@ export function useSaveGrades(sessionId: string) {
       return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gradesKey(sessionId) });
+      queryClient.invalidateQueries({
+        queryKey: gradesKey(classId, subjectId, semester),
+      });
     },
   });
 }
 
 /** Mutation: import grades from a CSV file. */
-export function useImportGrades(sessionId: string) {
+export function useImportGrades(
+  classId: string,
+  subjectId: string,
+  semester: number,
+) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (formData: FormData) => {
@@ -122,21 +93,9 @@ export function useImportGrades(sessionId: string) {
       return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gradesKey(sessionId) });
-    },
-  });
-}
-
-/** Mutation: close a grade round. */
-export function useCloseGradeSession(sessionId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async () => {
-      const result = await closeGradeSession(sessionId);
-      if (!result.success) throw new Error(result.error);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gradeSession", sessionId] });
+      queryClient.invalidateQueries({
+        queryKey: gradesKey(classId, subjectId, semester),
+      });
     },
   });
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { GradeActions, GradeSessionList } from "@components/grades";
+import { GradeDashboard } from "@components/grades";
 
 interface GradesPageProps {
   params: Promise<{ id: string }>;
@@ -18,8 +18,7 @@ export default async function GradesPage({ params }: GradesPageProps) {
       >
         <ArrowLeft /> Quay lại lớp học
       </Link>
-      <GradeActions classId={id} />
-      <GradeSessionList classId={id} />
+      <GradeDashboard classId={id} />
     </main>
   );
 }

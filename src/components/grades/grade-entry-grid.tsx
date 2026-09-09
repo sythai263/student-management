@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition, type FormEventHandler } from "react";
-import { useRouter } from "next/navigation";
 import { Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,143 +13,229 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { useStudents, useSaveGrades, useGrades, useCloseGradeSession } from "@hooks";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGrades, useSaveGrades, useStudents } from "@hooks";
+import { GRADE_SLOT_FULL_LABEL } from "@constants";
+import { calculateAverage } from "@lib/grade-utils";
+import { ImportGradesForm } from "./import-grades-form";
 import type { GradeWithStudent } from "@hooks";
 
 interface GradeEntryGridProps {
   classId: string;
-  sessionId: string;
-  closed: boolean;
+  subjectId: string;
+  subjectName: string;
+  semester: number;
 }
 
-interface GradeInput {
-  score: string;
+type ScoreInput = {
+  tx1: string;
+  tx2: string;
+  tx3: string;
+  tx4: string;
+  gk: string;
+  ck: string;
   note: string;
+  comment: string;
+};
+
+const EMPTY_INPUT: ScoreInput = {
+  tx1: "",
+  tx2: "",
+  tx3: "",
+  tx4: "",
+  gk: "",
+  ck: "",
+  note: "",
+  comment: "",
+};
+
+const SLOTS = ["tx1", "tx2", "tx3", "tx4", "gk", "ck"] as const;
+
+function parseScore(value: string): number | null {
+  const trimmed = value.trim().replace(",", ".");
+  if (trimmed === "") return null;
+  const n = Number(trimmed);
+  if (Number.isNaN(n)) return null;
+  return n;
 }
 
-export function GradeEntryGrid({ classId, sessionId, closed }: GradeEntryGridProps) {
-  const router = useRouter();
+function formatScore(value: number | null | undefined): string {
+  if (value == null) return "";
+  return String(value);
+}
+
+function parseInputScores(input: ScoreInput) {
+  return {
+    tx1: parseScore(input.tx1),
+    tx2: parseScore(input.tx2),
+    tx3: parseScore(input.tx3),
+    tx4: parseScore(input.tx4),
+    gk: parseScore(input.gk),
+    ck: parseScore(input.ck),
+  };
+}
+
+export function GradeEntryGrid({
+  classId,
+  subjectId,
+  subjectName,
+  semester,
+}: GradeEntryGridProps) {
   const { data: students, isLoading: studentsLoading } = useStudents(classId);
-  const { data: grades, isLoading: gradesLoading } = useGrades(sessionId);
-  const save = useSaveGrades(sessionId);
-  const close = useCloseGradeSession(sessionId);
-  const [entries, setEntries] = useState<Record<string, GradeInput>>({});
+  const { data: grades, isLoading: gradesLoading } = useGrades(
+    classId,
+    subjectId,
+    semester,
+  );
+  const save = useSaveGrades(classId, subjectId, semester);
+  const [entries, setEntries] = useState<Record<string, ScoreInput>>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
-  const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  const isLoading = studentsLoading || gradesLoading;
 
   useEffect(() => {
-    if (!students || grades === undefined) return;
+    if (!students || !grades) return;
     const gradeMap = new Map<string, GradeWithStudent>();
-    grades.forEach((g) => {
-      if (g.students?.studentCode) {
-        gradeMap.set(g.students.studentCode, g);
-      }
-    });
+    for (const g of grades) {
+      gradeMap.set(g.studentId, g);
+    }
+
     setEntries((prev) => {
-      const next: Record<string, GradeInput> = {};
+      const next: Record<string, ScoreInput> = {};
       for (const s of students) {
-        const existing = prev[s.studentCode];
-        if (touched.has(s.studentCode)) {
-          next[s.studentCode] = existing ?? { score: "", note: "" };
-        } else {
-          const g = gradeMap.get(s.studentCode);
-          next[s.studentCode] = {
-            score: g ? String(g.score) : existing?.score ?? "",
-            note: g?.note ?? existing?.note ?? "",
-          };
+        const existing = prev[s.id];
+        if (existing && touched.has(s.id)) {
+          next[s.id] = existing;
+          continue;
         }
+        const g = gradeMap.get(s.id);
+        next[s.id] = g
+          ? {
+            tx1: formatScore(g.tx1),
+            tx2: formatScore(g.tx2),
+            tx3: formatScore(g.tx3),
+            tx4: formatScore(g.tx4),
+            gk: formatScore(g.gk),
+            ck: formatScore(g.ck),
+            note: g.note ?? "",
+            comment: g.comment ?? "",
+          }
+          : { ...EMPTY_INPUT };
       }
       return next;
     });
   }, [students, grades, touched]);
 
-  const isLoading = studentsLoading || gradesLoading;
-
-  const handleScoreChange = (code: string, value: string) => {
-    setTouched((prev) => new Set([...prev, code]));
+  function updateField(
+    studentId: string,
+    field: keyof ScoreInput,
+    value: string,
+  ) {
+    setTouched((prev) => new Set([...prev, studentId]));
     setEntries((prev) => ({
       ...prev,
-      [code]: { ...prev[code], score: value },
+      [studentId]: { ...prev[studentId], [field]: value },
     }));
-  };
-
-  const handleNoteChange = (code: string, value: string) => {
-    setTouched((prev) => new Set([...prev, code]));
-    setEntries((prev) => ({
-      ...prev,
-      [code]: { ...prev[code], note: value },
-    }));
-  };
+  }
 
   const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     if (!students) return;
 
-    const payload = [] as { studentId: string; score: number; note?: string }[];
+    const payload = [] as {
+      studentId: string;
+      tx1: number | null;
+      tx2: number | null;
+      tx3: number | null;
+      tx4: number | null;
+      gk: number | null;
+      ck: number | null;
+      note: string | null;
+      comment: string | null;
+    }[];
+
     for (const s of students) {
-      const input = entries[s.studentCode];
-      const score = input?.score.trim();
-      if (score === undefined || score === "") continue;
-      const parsed = Number(score.replace(",", "."));
-      if (Number.isNaN(parsed) || parsed < 0 || parsed > 10) {
-        setMessage(`Điểm không hợp lệ tại HS ${s.studentCode}`);
+      const input = entries[s.id] ?? EMPTY_INPUT;
+      const scores = parseInputScores(input);
+      const row: (typeof payload)[number] = {
+        studentId: s.id,
+        ...scores,
+        note: input.note.trim() || null,
+        comment: input.comment.trim() || null,
+      };
+
+      const hasAnyScore =
+        row.tx1 != null ||
+        row.tx2 != null ||
+        row.tx3 != null ||
+        row.tx4 != null ||
+        row.gk != null ||
+        row.ck != null;
+      if (!hasAnyScore) continue;
+
+      const regularCount = [row.tx1, row.tx2, row.tx3, row.tx4].filter(
+        (v) => v != null,
+      ).length;
+      if (regularCount < 2) {
+        setMessage(
+          `Học sinh ${s.studentCode} cần ít nhất 2 điểm thường xuyên`,
+        );
         return;
       }
-      payload.push({
-        studentId: s.id,
-        score: parsed,
-        note: input.note?.trim() || undefined,
-      });
+
+      payload.push(row);
     }
 
     startTransition(async () => {
       try {
-        await save.mutateAsync({ gradeSessionId: sessionId, grades: payload });
+        await save.mutateAsync({
+          classId,
+          subjectId,
+          semester,
+          grades: payload,
+        });
+        setTouched(new Set());
         setMessage("Đã lưu điểm");
-        router.refresh();
       } catch (err) {
         setMessage(err instanceof Error ? err.message : "Lỗi không xác định");
       }
     });
   };
 
-  const handleClose = () => {
-    if (!confirm("Đóng đợt kiểm tra sẽ không thể sửa điểm nữa. Tiếp tục?")) return;
-    startTransition(async () => {
-      await close.mutateAsync();
-      router.refresh();
-    });
-  };
-
   if (isLoading) {
-    return <p className="text-muted-foreground">Đang tải...</p>;
+    return (
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-8 w-full" />
+      </div>
+    );
   }
+
   if (!students?.length) {
     return <p className="text-muted-foreground">Lớp chưa có học sinh.</p>;
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <div className="flex items-center justify-between">
-        {closed ? (
-          <Badge variant="secondary">Đã đóng</Badge>
-        ) : (
-          <Badge>Đang mở</Badge>
-        )}
-        <div className="flex gap-2">
-          {!closed && (
-            <Button type="submit" disabled={isPending || save.isPending}>
-              <Save />
-              {isPending ? "Đang lưu..." : "Lưu điểm"}
-            </Button>
-          )}
-          {!closed && (
-            <Button type="button" variant="outline" onClick={handleClose} disabled={close.isPending}>
-              {close.isPending ? "Đang đóng..." : "Đóng đợt"}
-            </Button>
-          )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">{subjectName}</h2>
+          <p className="text-sm text-muted-foreground">Học kỳ {semester}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ImportGradesForm
+            classId={classId}
+            subjectId={subjectId}
+            semester={semester}
+            onSuccess={() => setTouched(new Set())}
+          />
+          <Button type="submit" disabled={isPending || save.isPending}>
+            <Save />
+            {isPending ? "Đang lưu..." : "Lưu điểm"}
+          </Button>
         </div>
       </div>
 
@@ -166,56 +251,77 @@ export function GradeEntryGrid({ classId, sessionId, closed }: GradeEntryGridPro
         </p>
       )}
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16">STT</TableHead>
-            <TableHead>Mã HS</TableHead>
-            <TableHead>Họ</TableHead>
-            <TableHead>Tên</TableHead>
-            <TableHead className="w-32">Điểm</TableHead>
-            <TableHead>Ghi chú</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {students.map((s, index) => (
-            <TableRow key={s.id}>
-              <TableCell>{index + 1}</TableCell>
-              <TableCell>{s.studentCode}</TableCell>
-              <TableCell>{s.lastName}</TableCell>
-              <TableCell>{s.firstName}</TableCell>
-              <TableCell>
-                <Label htmlFor={`score-${s.id}`} className="sr-only">
-                  Điểm {s.studentCode}
-                </Label>
-                <Input
-                  id={`score-${s.id}`}
-                  type="text"
-                  inputMode="decimal"
-                  value={entries[s.studentCode]?.score ?? ""}
-                  onChange={(e) => handleScoreChange(s.studentCode, e.target.value)}
-                  disabled={closed}
-                  placeholder="0-10"
-                  className="h-8"
-                />
-              </TableCell>
-              <TableCell>
-                <Label htmlFor={`note-${s.id}`} className="sr-only">
-                  Ghi chú {s.studentCode}
-                </Label>
-                <Input
-                  id={`note-${s.id}`}
-                  value={entries[s.studentCode]?.note ?? ""}
-                  onChange={(e) => handleNoteChange(s.studentCode, e.target.value)}
-                  disabled={closed}
-                  placeholder="Ghi chú"
-                  className="h-8"
-                />
-              </TableCell>
+      <div className="overflow-x-auto rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">STT</TableHead>
+              <TableHead>Mã HS</TableHead>
+              <TableHead>Họ</TableHead>
+              <TableHead>Tên</TableHead>
+              {SLOTS.map((slot) => (
+                <TableHead key={slot} className="w-20 text-center">
+                  {GRADE_SLOT_FULL_LABEL[slot]}
+                </TableHead>
+              ))}
+              <TableHead className="w-24 text-center">Điểm TB</TableHead>
+              <TableHead className="w-32">Ghi chú</TableHead>
+              <TableHead className="w-48">Nhận xét</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {students.map((s, index) => {
+              const input = entries[s.id] ?? EMPTY_INPUT;
+              const avg = calculateAverage(parseInputScores(input));
+              return (
+                <TableRow key={s.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{s.studentCode}</TableCell>
+                  <TableCell>{s.lastName}</TableCell>
+                  <TableCell>{s.firstName}</TableCell>
+                  {SLOTS.map((slot) => (
+                    <TableCell key={slot} className="p-1">
+                      <Label htmlFor={`${slot}-${s.id}`} className="sr-only">
+                        {GRADE_SLOT_FULL_LABEL[slot]} {s.studentCode}
+                      </Label>
+                      <Input
+                        id={`${slot}-${s.id}`}
+                        type="text"
+                        inputMode="decimal"
+                        value={input[slot]}
+                        onChange={(e) =>
+                          updateField(s.id, slot, e.target.value)
+                        }
+                        placeholder="0-10"
+                        className="h-8 w-20 text-center"
+                      />
+                    </TableCell>
+                  ))}
+                  <TableCell className="text-center font-medium">
+                    {avg ?? "—"}
+                  </TableCell>
+                  <TableCell className="p-1">
+                    <Input
+                      value={input.note}
+                      onChange={(e) => updateField(s.id, "note", e.target.value)}
+                      placeholder="Ghi chú"
+                      className="h-8"
+                    />
+                  </TableCell>
+                  <TableCell className="p-1">
+                    <Input
+                      value={input.comment}
+                      onChange={(e) => updateField(s.id, "comment", e.target.value)}
+                      placeholder="Nhận xét"
+                      className="h-8"
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </form>
   );
 }

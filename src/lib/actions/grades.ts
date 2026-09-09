@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { SCORE_TYPES } from "@constants";
-import type { Grade, GradeSession } from "@types";
+import type { Grade } from "@types";
+import { calculateAverage } from "@lib/grade-utils";
 import {
   requireTeacher,
   withAction,
@@ -12,67 +12,37 @@ import {
 
 const uuid = z.string().uuid();
 
-const createGradeSessionSchema = z.object({
-  classId: uuid,
-  subjectId: uuid,
-  semester: z.coerce.number().int().min(1).max(3),
-  scoreType: z.enum(SCORE_TYPES),
-  name: z.string().trim().min(1, "Tên đợt kiểm tra không được trống").max(100),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày không hợp lệ"),
-  weight: z.coerce.number().int().min(1, "Hệ số tối thiểu 1").max(10, "Hệ số tối đa 10").default(1),
-});
-
-/** Server Action: create a new grade round and ensure the subject is assigned to the class. */
-export async function createGradeSession(
-  input: unknown,
-): Promise<ActionResult<GradeSession>> {
-  const result = await withAction(async () => {
-    const { supabase } = await requireTeacher();
-
-    const parsed = createGradeSessionSchema.safeParse(input);
-    if (!parsed.success) {
-      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
-    }
-
-    const { classId, subjectId, ...sessionData } = parsed.data;
-
-    const { data: session, error: sessionError } = await supabase
-      .from("gradeSessions")
-      .insert({ classId, subjectId, ...sessionData })
-      .select()
-      .single();
-    if (sessionError) throw new Error(sessionError.message);
-
-    // Ensure the subject is assigned to the class (idempotent).
-    const { error: assignError } = await supabase
-      .from("classSubjects")
-      .upsert({ classId, subjectId }, { onConflict: '"classId","subjectId"' });
-    if (assignError) throw new Error(assignError.message);
-
-    return session as GradeSession;
-  });
-
-  if (result.success) {
-    revalidatePath(`/classes/${result.data.classId}/grades`);
-  }
-  return result;
-}
+const scoreValueSchema = z
+  .number()
+  .min(0, "Điểm tối thiểu 0")
+  .max(10, "Điểm tối đa 10")
+  .optional()
+  .nullable();
 
 const gradeRowSchema = z.object({
   studentId: uuid,
-  score: z.coerce
-    .number()
-    .min(0, "Điểm tối thiểu 0")
-    .max(10, "Điểm tối đa 10"),
-  note: z.string().trim().max(255).optional(),
+  tx1: scoreValueSchema.nullable(),
+  tx2: scoreValueSchema.nullable(),
+  tx3: scoreValueSchema.nullable(),
+  tx4: scoreValueSchema.nullable(),
+  gk: scoreValueSchema.nullable(),
+  ck: scoreValueSchema.nullable(),
+  note: z.string().trim().max(255).optional().nullable(),
+  comment: z.string().trim().max(500).optional().nullable(),
 });
 
 const saveGradesSchema = z.object({
-  gradeSessionId: uuid,
+  classId: uuid,
+  subjectId: uuid,
+  semester: z.coerce.number().int().min(1).max(2, "Học kỳ chỉ là 1 hoặc 2"),
   grades: z.array(gradeRowSchema).min(1, "Chưa có điểm nào"),
 });
 
-/** Server Action: save or update grades for a round in one batch. */
+function countRegularScores(row: z.infer<typeof gradeRowSchema>) {
+  return [row.tx1, row.tx2, row.tx3, row.tx4].filter((v) => v != null).length;
+}
+
+/** Server Action: save or update the full 6-score grade sheet for a class/subject/semester. */
 export async function saveGradesBulk(
   input: unknown,
 ): Promise<ActionResult<Grade[]>> {
@@ -84,32 +54,41 @@ export async function saveGradesBulk(
       throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
     }
 
-    const { gradeSessionId, grades } = parsed.data;
+    const { classId, subjectId, semester, grades } = parsed.data;
 
-    const { data: session, error: sessionError } = await supabase
-      .from("gradeSessions")
-      .select("classId,subjectId,semester,scoreType,weight,closed")
-      .eq("id", gradeSessionId)
-      .single();
-    if (sessionError) throw new Error(sessionError.message);
-    if (!session) throw new Error("Không tìm thấy đợt kiểm tra");
-    if (session.closed) throw new Error("Đợt kiểm tra đã đóng, không thể sửa");
+    // Enforce business rules per row.
+    for (const row of grades) {
+      if (countRegularScores(row) < 2) {
+        throw new Error("Mỗi học sinh cần ít nhất 2 điểm thường xuyên");
+      }
+    }
 
     const rows = grades.map((g) => ({
-      gradeSessionId,
+      classId,
+      subjectId,
+      semester,
       studentId: g.studentId,
-      classId: session.classId as string,
-      subjectId: session.subjectId as string,
-      semester: session.semester as number,
-      scoreType: session.scoreType as string,
-      weight: session.weight as number,
-      score: g.score,
+      tx1: g.tx1 ?? null,
+      tx2: g.tx2 ?? null,
+      tx3: g.tx3 ?? null,
+      tx4: g.tx4 ?? null,
+      gk: g.gk ?? null,
+      ck: g.ck ?? null,
+      averageScore: calculateAverage({
+        tx1: g.tx1,
+        tx2: g.tx2,
+        tx3: g.tx3,
+        tx4: g.tx4,
+        gk: g.gk,
+        ck: g.ck,
+      }),
       note: g.note ?? null,
+      comment: g.comment ?? null,
     }));
 
     const { data, error } = await supabase
       .from("grades")
-      .upsert(rows, { onConflict: '"gradeSessionId","studentId"' })
+      .upsert(rows, { onConflict: '"classId","subjectId","semester","studentId"' })
       .select();
     if (error) throw new Error(error.message);
 
@@ -117,25 +96,11 @@ export async function saveGradesBulk(
   });
 
   if (result.success) {
-    revalidatePath(`/classes/${result.data[0]?.classId}/grades/${result.data[0]?.gradeSessionId}`);
+    const first = result.data[0];
+    if (first) {
+      revalidatePath(`/classes/${first.classId}/grades`);
+    }
   }
-  return result;
-}
-
-/** Server Action: close a grade round so its scores can no longer be edited. */
-export async function closeGradeSession(
-  sessionId: string,
-): Promise<ActionResult<null>> {
-  const result = await withAction(async () => {
-    const { supabase } = await requireTeacher();
-    const { error } = await supabase
-      .from("gradeSessions")
-      .update({ closed: true })
-      .eq("id", sessionId);
-    if (error) throw new Error(error.message);
-    return null;
-  });
-
   return result;
 }
 
@@ -146,62 +111,89 @@ export interface ImportGradesSummary {
 
 interface CsvRow {
   studentCode: string;
-  score: number;
+  tx1: number | null;
+  tx2: number | null;
+  tx3: number | null;
+  tx4: number | null;
+  gk: number | null;
+  ck: number | null;
   note: string | null;
+  comment: string | null;
+}
+
+function parseScore(value: string): number | null {
+  if (!value || value.trim() === "") return null;
+  const score = Number(value.trim().replace(",", "."));
+  if (Number.isNaN(score) || score < 0 || score > 10) return null;
+  return score;
 }
 
 function parseCsv(text: string): CsvRow[] {
-  return text
+  const lines = text
     .split(/\r?\n/)
     .map((line) => line.trim())
-    .filter(Boolean)
-    .flatMap((line, index) => {
-      const cells = line.split(",").map((c) => c.trim());
-      if (
-        index === 0 &&
-        /^(ma|student)\s*(hs|code)?$/i.test(cells[0] ?? "")
-      ) {
-        return [];
-      }
-      if (cells.length < 2 || !cells[0] || cells[1] === "") return [];
-      const score = Number(cells[1].replace(",", "."));
-      if (Number.isNaN(score) || score < 0 || score > 10) return [];
-      return [
-        {
-          studentCode: cells[0],
-          score,
-          note: cells[2] || null,
-        },
-      ];
-    });
+    .filter(Boolean);
+  let startIndex = 0;
+  const first = lines[0]?.split(",").map((c) => c.trim().toLowerCase()) ?? [];
+  if (
+    first[0] === "mahs" ||
+    first[0] === "mã hs" ||
+    first[0] === "studentcode" ||
+    first[0] === "ma hs"
+  ) {
+    startIndex = 1;
+  }
+
+  return lines.slice(startIndex).flatMap((line) => {
+    const cells = line.split(",").map((c) => c.trim());
+    if (cells.length < 2 || !cells[0]) return [];
+    const studentCode = cells[0];
+    const tx1 = parseScore(cells[1] ?? "");
+    const tx2 = parseScore(cells[2] ?? "");
+    const tx3 = parseScore(cells[3] ?? "");
+    const tx4 = parseScore(cells[4] ?? "");
+    const gk = parseScore(cells[5] ?? "");
+    const ck = parseScore(cells[6] ?? "");
+    const note = cells[7] || null;
+    const comment = cells[8] || null;
+
+    if (tx1 == null && tx2 == null && tx3 == null && tx4 == null && gk == null && ck == null) {
+      return [];
+    }
+    return [{ studentCode, tx1, tx2, tx3, tx4, gk, ck, note, comment }];
+  });
 }
 
-/** Server Action: bulk-import grades for a round from a CSV file. */
+const importGradesSchema = z.object({
+  classId: uuid,
+  subjectId: uuid,
+  semester: z.coerce.number().int().min(1).max(2, "Học kỳ chỉ là 1 hoặc 2"),
+});
+
+/** Server Action: bulk-import 6-score grades from a CSV file. */
 export async function importGrades(
   formData: FormData,
 ): Promise<ActionResult<ImportGradesSummary>> {
-  const gradeSessionId = formData.get("gradeSessionId");
-
   const result = await withAction(async () => {
     const { supabase } = await requireTeacher();
 
-    if (typeof gradeSessionId !== "string" || gradeSessionId.length === 0) {
-      throw new Error("Thiếu gradeSessionId");
+    const classId = formData.get("classId");
+    const subjectId = formData.get("subjectId");
+    const semester = formData.get("semester");
+    const file = formData.get("file");
+
+    const parsed = importGradesSchema.safeParse({
+      classId,
+      subjectId,
+      semester,
+    });
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
     }
 
-    const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
       throw new Error("Thiếu file CSV");
     }
-
-    const { data: session, error: sessionError } = await supabase
-      .from("gradeSessions")
-      .select("classId,subjectId,semester,scoreType,weight,closed")
-      .eq("id", gradeSessionId)
-      .single();
-    if (sessionError) throw new Error(sessionError.message);
-    if (!session) throw new Error("Không tìm thấy đợt kiểm tra");
-    if (session.closed) throw new Error("Đợt kiểm tra đã đóng");
 
     const rows = parseCsv(await file.text());
     if (rows.length === 0) {
@@ -212,7 +204,7 @@ export async function importGrades(
     const { data: students, error: studentsError } = await supabase
       .from("students")
       .select("id,studentCode")
-      .eq("classId", session.classId as string)
+      .eq("classId", parsed.data.classId)
       .in("studentCode", codes);
     if (studentsError) throw new Error(studentsError.message);
 
@@ -225,21 +217,40 @@ export async function importGrades(
       throw new Error("Không tìm thấy mã học sinh nào khớp trong lớp");
     }
 
+    // Enforce business rules.
+    for (const row of validRows) {
+      const regularCount = [row.tx1, row.tx2, row.tx3, row.tx4].filter((v) => v != null).length;
+      if (regularCount < 2) {
+        throw new Error(`Học sinh ${row.studentCode} cần ít nhất 2 điểm thường xuyên`);
+      }
+    }
+
     const gradeRows = validRows.map((r) => ({
-      gradeSessionId,
+      classId: parsed.data.classId,
+      subjectId: parsed.data.subjectId,
+      semester: parsed.data.semester,
       studentId: studentByCode.get(r.studentCode) as string,
-      classId: session.classId as string,
-      subjectId: session.subjectId as string,
-      semester: session.semester as number,
-      scoreType: session.scoreType as string,
-      weight: session.weight as number,
-      score: r.score,
+      tx1: r.tx1,
+      tx2: r.tx2,
+      tx3: r.tx3,
+      tx4: r.tx4,
+      gk: r.gk,
+      ck: r.ck,
+      averageScore: calculateAverage({
+        tx1: r.tx1,
+        tx2: r.tx2,
+        tx3: r.tx3,
+        tx4: r.tx4,
+        gk: r.gk,
+        ck: r.ck,
+      }),
       note: r.note,
+      comment: r.comment,
     }));
 
     const { error } = await supabase
       .from("grades")
-      .upsert(gradeRows, { onConflict: '"gradeSessionId","studentId"' });
+      .upsert(gradeRows, { onConflict: '"classId","subjectId","semester","studentId"' });
     if (error) throw new Error(error.message);
 
     return {

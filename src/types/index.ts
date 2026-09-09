@@ -50,31 +50,23 @@ export interface Subject {
   createdAt: string;
 }
 
-export interface GradeSession {
-  id: string;
-  classId: string;
-  subjectId: string;
-  semester: number;
-  scoreType: ScoreType;
-  name: string;
-  date: string;
-  weight: number;
-  closed: boolean;
-  createdAt: string;
-}
-
 export interface Grade {
   id: string;
-  gradeSessionId: string | null;
-  studentId: string;
-  subjectId: string;
   classId: string;
+  subjectId: string;
   semester: number;
-  scoreType: ScoreType;
-  score: number;
-  weight: number;
+  studentId: string;
+  tx1: number | null;
+  tx2: number | null;
+  tx3: number | null;
+  tx4: number | null;
+  gk: number | null;
+  ck: number | null;
+  averageScore: number | null;
   note: string | null;
+  comment: string | null;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface ClassSubject {
@@ -82,6 +74,13 @@ export interface ClassSubject {
   classId: string;
   subjectId: string;
   createdAt: string;
+}
+
+export interface GradeWeight {
+  slot: string;
+  weight: number;
+  label: string;
+  fullLabel: string;
 }
 
 /** Row of the studentGradeSummaries statistics view. */
