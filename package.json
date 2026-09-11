@@ -32,17 +32,17 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "db:seed": "docker exec -i sm-postgres psql -U supabase_admin -d postgres < supabase/seed.sql",
     "dev": "next dev",
-    "lint": "next lint",
-    "start": "next start",
-    "typecheck": "tsc --noEmit",
-    "docker:up": "docker compose -f docker-compose.yaml up -d",
     "docker:down": "docker compose -f docker-compose.yaml down",
     "docker:logs": "docker compose -f docker-compose.yaml logs -f",
     "docker:ps": "docker compose -f docker-compose.yaml ps",
     "docker:reset": "docker compose -f docker-compose.yaml down -v",
-    "db:seed": "docker exec -i sm-postgres psql -U supabase_admin -d postgres < supabase/seed.sql",
-    "gen:keys": "sh scripts/generate-key.sh"
+    "docker:up": "docker compose -f docker-compose.yaml up -d",
+    "gen:keys": "sh scripts/generate-key.sh",
+    "lint": "next lint",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "version": "0.1.0"
 }
