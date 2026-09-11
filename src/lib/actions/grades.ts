@@ -3,12 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Grade } from "@types";
-import { calculateAverage } from "@lib/grade-utils";
+import { parseGradeCsv, calculateAverage } from "@lib/grade-utils";
 import {
   requireTeacher,
   withAction,
   type ActionResult,
 } from "./action-utils";
+
+export interface ImportGradesError {
+  lineNo: number;
+  studentCode: string | null;
+  message: string;
+}
 
 const uuid = z.string().uuid();
 
@@ -107,61 +113,7 @@ export async function saveGradesBulk(
 export interface ImportGradesSummary {
   inserted: number;
   skipped: number;
-}
-
-interface CsvRow {
-  studentCode: string;
-  tx1: number | null;
-  tx2: number | null;
-  tx3: number | null;
-  tx4: number | null;
-  gk: number | null;
-  ck: number | null;
-  note: string | null;
-  comment: string | null;
-}
-
-function parseScore(value: string): number | null {
-  if (!value || value.trim() === "") return null;
-  const score = Number(value.trim().replace(",", "."));
-  if (Number.isNaN(score) || score < 0 || score > 10) return null;
-  return score;
-}
-
-function parseCsv(text: string): CsvRow[] {
-  const lines = text
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-  let startIndex = 0;
-  const first = lines[0]?.split(",").map((c) => c.trim().toLowerCase()) ?? [];
-  if (
-    first[0] === "mahs" ||
-    first[0] === "mã hs" ||
-    first[0] === "studentcode" ||
-    first[0] === "ma hs"
-  ) {
-    startIndex = 1;
-  }
-
-  return lines.slice(startIndex).flatMap((line) => {
-    const cells = line.split(",").map((c) => c.trim());
-    if (cells.length < 2 || !cells[0]) return [];
-    const studentCode = cells[0];
-    const tx1 = parseScore(cells[1] ?? "");
-    const tx2 = parseScore(cells[2] ?? "");
-    const tx3 = parseScore(cells[3] ?? "");
-    const tx4 = parseScore(cells[4] ?? "");
-    const gk = parseScore(cells[5] ?? "");
-    const ck = parseScore(cells[6] ?? "");
-    const note = cells[7] || null;
-    const comment = cells[8] || null;
-
-    if (tx1 == null && tx2 == null && tx3 == null && tx4 == null && gk == null && ck == null) {
-      return [];
-    }
-    return [{ studentCode, tx1, tx2, tx3, tx4, gk, ck, note, comment }];
-  });
+  errors: ImportGradesError[];
 }
 
 const importGradesSchema = z.object({
@@ -195,12 +147,12 @@ export async function importGrades(
       throw new Error("Thiếu file CSV");
     }
 
-    const rows = parseCsv(await file.text());
+    const { rows, hasHeader } = parseGradeCsv(await file.text());
     if (rows.length === 0) {
-      throw new Error("File CSV không có dữ liệu hợp lệ");
+      throw new Error(hasHeader ? "File CSV không có dòng dữ liệu" : "File CSV không có dữ liệu hợp lệ");
     }
 
-    const codes = rows.map((r) => r.studentCode);
+    const codes = rows.map((r) => r.studentCode).filter((c): c is string => c != null && c !== "");
     const { data: students, error: studentsError } = await supabase
       .from("students")
       .select("id,studentCode")
@@ -209,53 +161,73 @@ export async function importGrades(
     if (studentsError) throw new Error(studentsError.message);
 
     const studentByCode = new Map(
-      (students ?? []).map((s) => [s.studentCode, s.id as string]),
+      (students ?? []).map((s) => [s.studentCode as string, s.id as string]),
     );
 
-    const validRows = rows.filter((r) => studentByCode.has(r.studentCode));
-    if (validRows.length === 0) {
-      throw new Error("Không tìm thấy mã học sinh nào khớp trong lớp");
-    }
+    const gradeRows: Record<string, unknown>[] = [];
+    const errors: ImportGradesError[] = [];
 
-    // Enforce business rules.
-    for (const row of validRows) {
-      const regularCount = [row.tx1, row.tx2, row.tx3, row.tx4].filter((v) => v != null).length;
-      if (regularCount < 2) {
-        throw new Error(`Học sinh ${row.studentCode} cần ít nhất 2 điểm thường xuyên`);
+    for (const row of rows) {
+      const messages: string[] = [];
+      const studentCode = row.studentCode?.trim();
+
+      if (!studentCode) {
+        messages.push("Thiếu mã học sinh");
+      } else if (!studentByCode.has(studentCode)) {
+        messages.push(`Mã học sinh ${studentCode} không có trong lớp`);
       }
+
+      if (row.invalidScores.length > 0) {
+        messages.push(`Điểm không hợp lệ: ${row.invalidScores.join(", ")}`);
+      }
+
+      const regularCount = [row.scores.tx1, row.scores.tx2, row.scores.tx3, row.scores.tx4].filter(
+        (v) => v != null,
+      ).length;
+      if (regularCount > 0 && regularCount < 2) {
+        messages.push("Cần ít nhất 2 điểm thường xuyên");
+      }
+
+      const hasAnyScore =
+        regularCount > 0 || row.scores.gk != null || row.scores.ck != null;
+      if (!hasAnyScore) {
+        messages.push("Không có điểm nào");
+      }
+
+      if (messages.length > 0) {
+        errors.push({
+          lineNo: row.lineNo,
+          studentCode: studentCode ?? row.fullName,
+          message: messages.join("; "),
+        });
+        continue;
+      }
+
+      const averageScore = calculateAverage(row.scores);
+
+      gradeRows.push({
+        classId: parsed.data.classId,
+        subjectId: parsed.data.subjectId,
+        semester: parsed.data.semester,
+        studentId: studentByCode.get(studentCode as string) as string,
+        ...row.scores,
+        averageScore,
+        note: row.note,
+        comment: row.comment,
+      });
     }
 
-    const gradeRows = validRows.map((r) => ({
-      classId: parsed.data.classId,
-      subjectId: parsed.data.subjectId,
-      semester: parsed.data.semester,
-      studentId: studentByCode.get(r.studentCode) as string,
-      tx1: r.tx1,
-      tx2: r.tx2,
-      tx3: r.tx3,
-      tx4: r.tx4,
-      gk: r.gk,
-      ck: r.ck,
-      averageScore: calculateAverage({
-        tx1: r.tx1,
-        tx2: r.tx2,
-        tx3: r.tx3,
-        tx4: r.tx4,
-        gk: r.gk,
-        ck: r.ck,
-      }),
-      note: r.note,
-      comment: r.comment,
-    }));
-
-    const { error } = await supabase
-      .from("grades")
-      .upsert(gradeRows, { onConflict: '"classId","subjectId","semester","studentId"' });
-    if (error) throw new Error(error.message);
+    if (gradeRows.length > 0) {
+      const { error } = await supabase
+        .from("grades")
+        .upsert(gradeRows, { onConflict: '"classId","subjectId","semester","studentId"' });
+      if (error) throw new Error(error.message);
+    }
 
     return {
-      inserted: validRows.length,
-      skipped: rows.length - validRows.length,
+      inserted: gradeRows.length,
+      skipped: errors.length,
+      errors,
     } satisfies ImportGradesSummary;
   });
 

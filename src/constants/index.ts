@@ -90,24 +90,3 @@ export const GRADE_SLOT_WEIGHT: Record<GradeSlot, number> = {
   gk: 2,
   ck: 3,
 };
-
-/** Keep compatibility for legacy ScoreType references. */
-export const SCORE_TYPES = [
-  "THUONG_XUYEN",
-  "MIENG",
-  "PHUT_15",
-  "TIET_1",
-  "GIUA_KY",
-  "CUOI_KY",
-] as const;
-
-export type ScoreType = (typeof SCORE_TYPES)[number];
-
-export const SCORE_TYPE_LABEL: Record<ScoreType, string> = {
-  THUONG_XUYEN: "Thường xuyên",
-  MIENG: "Kiểm tra miệng",
-  PHUT_15: "Kiểm tra 15 phút",
-  TIET_1: "Kiểm tra 1 tiết",
-  GIUA_KY: "Kiểm tra giữa kỳ",
-  CUOI_KY: "Kiểm tra cuối kỳ",
-};

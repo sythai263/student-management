@@ -1,4 +1,4 @@
-import type { AttendanceStatus, ScoreType } from "@constants";
+import type { AttendanceStatus } from "@constants";
 
 /** Row types mirroring the Supabase schema (camelCase columns). */
 
