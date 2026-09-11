@@ -15,18 +15,41 @@ import {
 } from "@/components/ui/dialog";
 import { useImportGrades } from "@hooks";
 import type { ImportGradesSummary } from "@lib/actions";
+import type { Student } from "@types";
+
+interface ScoreInput {
+  tx1: string;
+  tx2: string;
+  tx3: string;
+  tx4: string;
+  gk: string;
+  ck: string;
+  note: string;
+  comment: string;
+}
 
 interface ImportGradesFormProps {
   classId: string;
   subjectId: string;
   semester: number;
+  students: Student[];
+  entries: Record<string, ScoreInput>;
   onSuccess?: () => void;
+}
+
+function csvCell(value: string): string {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }
 
 export function ImportGradesForm({
   classId,
   subjectId,
   semester,
+  students,
+  entries,
   onSuccess,
 }: ImportGradesFormProps) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -56,7 +79,9 @@ export function ImportGradesForm({
       try {
         const result = await importGrades.mutateAsync(fd);
         setIsError(result.inserted === 0 && result.errors.length > 0);
-        setMessage("Đã nhập " + result.inserted + " học sinh, bỏ qua " + result.skipped + " dòng");
+        setMessage(
+          "Đã nhập " + result.inserted + " học sinh, bỏ qua " + result.skipped + " dòng",
+        );
         setErrors(result.errors);
         if (result.inserted > 0) {
           if (fileRef.current) fileRef.current.value = "";
@@ -75,12 +100,34 @@ export function ImportGradesForm({
 
   function downloadTemplate() {
     const header = "maHS,Họ tên,TX1,TX2,TX3,TX4,GK,CK,Ghi chú,Nhận xét";
-    const sample = [
-      "HS001,Nguyễn Văn A,8,8.5,,,7.5,8,,",
-      "HS002,Trần Thị B,7,7.5,8,,8,9,,",
-      "HS003,Lê Văn C,,,,,9,8.5,Đã nộp muộn,Cần cố gắng",
-    ];
-    const blob = new Blob([header + "\n" + sample.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const rows = students.map((s) => {
+      const fullName = `${s.lastName} ${s.firstName}`;
+      const input = entries[s.id] ?? {
+        tx1: "",
+        tx2: "",
+        tx3: "",
+        tx4: "",
+        gk: "",
+        ck: "",
+        note: "",
+        comment: "",
+      };
+      return [
+        csvCell(s.studentCode),
+        csvCell(fullName),
+        input.tx1,
+        input.tx2,
+        input.tx3,
+        input.tx4,
+        input.gk,
+        input.ck,
+        csvCell(input.note),
+        csvCell(input.comment),
+      ].join(",");
+    });
+    const blob = new Blob([header + "\n" + rows.join("\n")], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -138,7 +185,12 @@ export function ImportGradesForm({
               </div>
             )}
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={downloadTemplate}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={downloadTemplate}
+                disabled={students.length === 0}
+              >
                 Tải mẫu CSV
               </Button>
               <Button type="submit" disabled={isPending || importGrades.isPending}>

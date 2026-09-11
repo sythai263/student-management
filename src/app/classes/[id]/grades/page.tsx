@@ -35,7 +35,7 @@ export default async function GradesPage({
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 p-8">
+    <main className="mx-auto max-w-7xl space-y-8 p-8">
       <Link
         href={backHref}
         className={buttonVariants({ variant: "ghost", size: "sm" })}

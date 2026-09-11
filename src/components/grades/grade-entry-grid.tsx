@@ -228,6 +228,8 @@ export function GradeEntryGrid({
             classId={classId}
             subjectId={subjectId}
             semester={semester}
+            students={students}
+            entries={entries}
             onSuccess={() => setTouched(new Set())}
           />
           <Button type="submit" disabled={isPending || save.isPending}>
@@ -258,8 +260,11 @@ export function GradeEntryGrid({
               <TableHead>Họ</TableHead>
               <TableHead>Tên</TableHead>
               {GRADE_SLOTS.map((slot) => (
-                <TableHead key={slot} className="w-20 text-center">
-                  {GRADE_SLOT_FULL_LABEL[slot]}
+                <TableHead
+                  key={slot}
+                  className="w-16 whitespace-pre-line text-center text-xs"
+                >
+                  {GRADE_SLOT_FULL_LABEL[slot].replace(" ", "\n")}
                 </TableHead>
               ))}
               <TableHead className="w-24 text-center">Điểm TB</TableHead>
@@ -290,8 +295,7 @@ export function GradeEntryGrid({
                         onChange={(e) =>
                           updateField(s.id, slot, e.target.value)
                         }
-                        placeholder="0-10"
-                        className="h-8 w-20 text-center"
+                        className="h-7 w-16 text-center"
                       />
                     </TableCell>
                   ))}
