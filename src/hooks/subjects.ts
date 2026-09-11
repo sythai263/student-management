@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createSubject, deleteSubject } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import type { Subject } from "@types";
+import type { CreateSubjectInput } from "@schemas";
 
 /** Fetch all subjects owned by the current teacher. */
 export function useSubjects() {
@@ -25,7 +26,7 @@ export function useSubjects() {
 export function useCreateSubject() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { name: string; code?: string }) => {
+    mutationFn: async (input: CreateSubjectInput) => {
       const result = await createSubject(input);
       if (!result.success) throw new Error(result.error);
       return result.data;

@@ -3,16 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Subject } from "@types";
+import { createSubjectSchema } from "@schemas";
 import {
   requireTeacher,
   withAction,
   type ActionResult,
 } from "./action-utils";
-
-const createSubjectSchema = z.object({
-  name: z.string().trim().min(1, "Tên môn học không được trống").max(100),
-  code: z.string().trim().max(20).optional(),
-});
 
 /** Server Action: create a subject owned by the current teacher. */
 export async function createSubject(
