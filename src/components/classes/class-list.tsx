@@ -45,8 +45,10 @@ export function ClassList() {
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <CardTitle>{c.name}</CardTitle>
-                    <CardDescription>Năm học {c.schoolYear}</CardDescription>
+                    <CardTitle>{c.classCode}</CardTitle>
+                    <CardDescription>
+                      {c.name} · Năm học {c.schoolYear}
+                    </CardDescription>
                   </div>
                   <Button
                     type="button"
