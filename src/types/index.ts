@@ -1,4 +1,4 @@
-import type { AttendanceStatus } from "@constants";
+import type { AttendanceStatus, GradeSlot } from "@constants";
 
 /** Row types mirroring the Supabase schema (camelCase columns). */
 
@@ -98,4 +98,40 @@ export interface RaceState {
   positions: number[];
   trackLength: number;
   winnerName: string;
+}
+
+export interface DuckRaceData {
+  students: Student[];
+  winnerId: string;
+}
+
+export interface GradeWithStudent extends Grade {
+  students: Pick<Student, "studentCode" | "lastName" | "firstName"> | null;
+}
+
+export interface ImportGradesError {
+  lineNo: number;
+  studentCode: string | null;
+  message: string;
+}
+
+export interface ImportGradesSummary {
+  inserted: number;
+  skipped: number;
+  errors: ImportGradesError[];
+}
+
+export interface CsvMappedRow {
+  lineNo: number;
+  studentCode: string | null;
+  fullName: string | null;
+  scores: Record<GradeSlot, number | null>;
+  invalidScores: GradeSlot[];
+  note: string | null;
+  comment: string | null;
+}
+
+export interface ParseGradeCsvResult {
+  hasHeader: boolean;
+  rows: CsvMappedRow[];
 }

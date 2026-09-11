@@ -1,6 +1,5 @@
-import { GRADE_SLOT_WEIGHT, type GradeSlot } from "@constants";
-
-const SLOTS: GradeSlot[] = ["tx1", "tx2", "tx3", "tx4", "gk", "ck"];
+import { GRADE_SLOT_WEIGHT, GRADE_SLOTS, type GradeSlot } from "@constants";
+import type { CsvMappedRow, ParseGradeCsvResult } from "@types";
 
 /**
  * Calculate the weighted average for a grade row.
@@ -11,7 +10,7 @@ export function calculateAverage(
 ): number | null {
   let total = 0;
   let weight = 0;
-  for (const slot of SLOTS) {
+  for (const slot of GRADE_SLOTS) {
     const score = scores[slot];
     if (score != null) {
       total += score * GRADE_SLOT_WEIGHT[slot];
@@ -124,21 +123,6 @@ function detectDelimiter(line: string): string {
   return semicolons > commas ? ";" : ",";
 }
 
-export interface CsvMappedRow {
-  lineNo: number;
-  studentCode: string | null;
-  fullName: string | null;
-  scores: Record<GradeSlot, number | null>;
-  invalidScores: GradeSlot[];
-  note: string | null;
-  comment: string | null;
-}
-
-export interface ParseGradeCsvResult {
-  hasHeader: boolean;
-  rows: CsvMappedRow[];
-}
-
 /** Parse a flexible CSV for grade import.
  *  Supports Vietnamese/English headers, comma/semicolon delimiters, quoted cells, and BOM.
  */
@@ -199,7 +183,7 @@ export function parseGradeCsv(text: string): ParseGradeCsvResult {
     };
     const invalidScores: GradeSlot[] = [];
 
-    for (const slot of SLOTS) {
+    for (const slot of GRADE_SLOTS) {
       const col = headerMapping[slot];
       if (col < 0) continue;
       const { value, invalid } = parseScoreInput(get(col));

@@ -2,19 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { Grade } from "@types";
+import type { Grade, ImportGradesError, ImportGradesSummary } from "@types";
 import { parseGradeCsv, calculateAverage } from "@lib/grade-utils";
 import {
   requireTeacher,
   withAction,
   type ActionResult,
 } from "./action-utils";
-
-export interface ImportGradesError {
-  lineNo: number;
-  studentCode: string | null;
-  message: string;
-}
 
 const uuid = z.string().uuid();
 
@@ -108,12 +102,6 @@ export async function saveGradesBulk(
     }
   }
   return result;
-}
-
-export interface ImportGradesSummary {
-  inserted: number;
-  skipped: number;
-  errors: ImportGradesError[];
 }
 
 const importGradesSchema = z.object({

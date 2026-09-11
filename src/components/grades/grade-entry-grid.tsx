@@ -15,10 +15,10 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGrades, useSaveGrades, useStudents } from "@hooks";
-import { GRADE_SLOT_FULL_LABEL } from "@constants";
+import { GRADE_SLOT_FULL_LABEL, GRADE_SLOTS } from "@constants";
 import { calculateAverage } from "@lib/grade-utils";
 import { ImportGradesForm } from "./import-grades-form";
-import type { GradeWithStudent } from "@hooks";
+import type { GradeWithStudent } from "@types";
 
 interface GradeEntryGridProps {
   classId: string;
@@ -48,8 +48,6 @@ const EMPTY_INPUT: ScoreInput = {
   note: "",
   comment: "",
 };
-
-const SLOTS = ["tx1", "tx2", "tx3", "tx4", "gk", "ck"] as const;
 
 function parseScore(value: string): number | null {
   const trimmed = value.trim().replace(",", ".");
@@ -259,7 +257,7 @@ export function GradeEntryGrid({
               <TableHead>Mã HS</TableHead>
               <TableHead>Họ</TableHead>
               <TableHead>Tên</TableHead>
-              {SLOTS.map((slot) => (
+              {GRADE_SLOTS.map((slot) => (
                 <TableHead key={slot} className="w-20 text-center">
                   {GRADE_SLOT_FULL_LABEL[slot]}
                 </TableHead>
@@ -279,7 +277,7 @@ export function GradeEntryGrid({
                   <TableCell>{s.studentCode}</TableCell>
                   <TableCell>{s.lastName}</TableCell>
                   <TableCell>{s.firstName}</TableCell>
-                  {SLOTS.map((slot) => (
+                  {GRADE_SLOTS.map((slot) => (
                     <TableCell key={slot} className="p-1">
                       <Label htmlFor={`${slot}-${s.id}`} className="sr-only">
                         {GRADE_SLOT_FULL_LABEL[slot]} {s.studentCode}

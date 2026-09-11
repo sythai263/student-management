@@ -2,7 +2,7 @@ export { useClasses, useClass, useDeleteClass } from "./classes";
 export { useStudents, usePaginatedStudents } from "./students";
 export { useSubjects, useCreateSubject, useDeleteSubject } from "./subjects";
 export { useGrades, useSaveGrades, useImportGrades } from "./grades";
-export type { GradeWithStudent } from "./grades";
+export type { GradeWithStudent } from "@types";
 export { useDebounce } from "./use-debounce";
 export {
   useAttendanceSession,

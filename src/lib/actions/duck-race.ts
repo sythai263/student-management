@@ -1,16 +1,11 @@
 "use server";
 
-import type { Student } from "@types";
+import type { DuckRaceData, Student } from "@types";
 import {
   requireTeacher,
   withAction,
   type ActionResult,
 } from "./action-utils";
-
-export interface DuckRaceData {
-  students: Student[];
-  winnerId: string;
-}
 
 /** Server Action: pick a random student for review, weighted toward
  *  those with fewer THUONG_XUYEN grades. Returns the full roster and

@@ -3,11 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { importGrades, saveGradesBulk } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
-import type { Grade, Student } from "@types";
-
-export interface GradeWithStudent extends Grade {
-  students: Pick<Student, "studentCode" | "lastName" | "firstName"> | null;
-}
+import type { GradeWithStudent, Student } from "@types";
 
 const gradesKey = (classId: string, subjectId: string, semester: number) => [
   "grades",
