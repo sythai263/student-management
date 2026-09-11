@@ -145,3 +145,14 @@ export interface GroupAttendanceSummary {
   presentCount: number;
   totalCount: number;
 }
+
+export interface ClassSubject {
+  id: string;
+  classId: string;
+  subjectId: string;
+  createdAt: string;
+}
+
+export interface ClassSubjectWithSubject extends ClassSubject {
+  subjects: Pick<Subject, "name" | "code"> | null;
+}

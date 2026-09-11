@@ -9,6 +9,7 @@ import {
 import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
 import { registerStudentSchema } from "@schemas";
+import { initializeGradesForClassStudents } from "@lib/grades";
 import type { Student } from "@types";
 import {
   requireTeacher,
@@ -105,6 +106,11 @@ export async function registerStudent(
       .single();
 
     if (error) throw new Error(error.message);
+    await initializeGradesForClassStudents(
+      supabase,
+      input.classId,
+      [student.id as string],
+    );
     return student as Student;
   });
 }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import { initializeGradesForClassStudents } from "@lib/grades";
 import type { Student } from "@types";
 import {
   requireTeacher,
@@ -100,11 +101,16 @@ export async function importStudents(
 
     const existingCodes = new Set(existing?.map((s) => s.studentCode) ?? []);
 
-    const { error } = await supabase.from("students").upsert(
-      rows.map((r) => ({ ...r, classId })),
-      { onConflict: '"studentCode","classId"' },
-    );
+    const { data: upserted, error } = await supabase
+      .from("students")
+      .upsert(rows.map((r) => ({ ...r, classId })), {
+        onConflict: '"studentCode","classId"',
+      })
+      .select();
     if (error) throw new Error(error.message);
+
+    const studentIds = (upserted ?? []).map((s) => s.id as string);
+    await initializeGradesForClassStudents(supabase, classId as string, studentIds);
 
     return {
       inserted: rows.length - existingCodes.size,

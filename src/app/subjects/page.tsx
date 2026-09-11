@@ -1,4 +1,8 @@
-import { CreateSubjectForm, SubjectList } from "@components/subjects";
+import {
+  CreateSubjectForm,
+  SubjectList,
+  SubjectCatalogForm,
+} from "@components/subjects";
 
 export default function SubjectsPage() {
   return (
@@ -7,6 +11,7 @@ export default function SubjectsPage() {
         <h1 className="text-2xl font-semibold">Môn học</h1>
         <CreateSubjectForm />
       </header>
+      <SubjectCatalogForm />
       <SubjectList />
     </main>
   );

@@ -7,3 +7,12 @@ export const createSubjectSchema = z.object({
 });
 
 export type CreateSubjectInput = z.infer<typeof createSubjectSchema>;
+
+/** Validation for creating multiple subjects from the built-in catalog. */
+export const createSubjectsFromCatalogSchema = z.array(
+  z.string().trim().min(1),
+).min(1, "Chọn ít nhất một môn");
+
+export type CreateSubjectsFromCatalogInput = z.infer<
+  typeof createSubjectsFromCatalogSchema
+>;

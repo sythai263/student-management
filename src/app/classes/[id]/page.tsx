@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarCheck, Dices, GraduationCap, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { ClassHeader } from "@components/classes";
+import { ClassHeader, ClassSubjectManager } from "@components/classes";
 import { StudentTable, ImportStudentsForm } from "@components/students";
 
 interface ClassDetailPageProps {
@@ -17,6 +17,8 @@ export default async function ClassDetailPage({
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-8">
       <ClassHeader classId={id} />
+
+      <ClassSubjectManager classId={id} />
 
       <div className="flex flex-wrap gap-3">
         <Link
