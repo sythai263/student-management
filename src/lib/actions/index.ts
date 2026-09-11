@@ -13,7 +13,11 @@ export {
 } from "./class-subjects";
 export { saveGradesBulk, importGrades } from "./grades";
 export type { ImportGradesSummary } from "@types";
-export { pickReviewStudent } from "./duck-race";
+export {
+  pickReviewStudent,
+  getGradeForRace,
+  saveRaceGrades,
+} from "./duck-race";
 export type { DuckRaceData } from "@types";
 export { importStudents } from "./import-students";
 export type { ImportStudentsSummary } from "./import-students";

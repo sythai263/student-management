@@ -80,7 +80,11 @@ export default async function ClassDetailPage({
           <GraduationCap /> Nhập điểm
         </Link>
         <Link
-          href={`/classes/${id}/race`}
+          href={
+            activeSubjectId
+              ? `/classes/${id}/race?subjectId=${activeSubjectId}`
+              : `/classes/${id}/race`
+          }
           className={buttonVariants({ variant: "outline" })}
         >
           <Dices /> Kiểm tra bài

@@ -3,25 +3,44 @@
 import { useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
 import confetti from "canvas-confetti";
-import { ArrowLeft, Play, RotateCcw, X } from "lucide-react";
+import { ArrowLeft, Pencil, Play, X } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { RaceState, Student } from "@types";
-import { RACE_DURATION_COOKIE, DEFAULT_RACE_DURATION, MIN_RACE_DURATION, MAX_RACE_DURATION } from "@constants";
+import {
+  RACE_DURATION_COOKIE,
+  DEFAULT_RACE_DURATION,
+  MIN_RACE_DURATION,
+  MAX_RACE_DURATION,
+} from "@constants";
 import { buildRace } from "@lib/duck-race";
 import { DuckIcon } from "./duck-icon";
 import { drawDuck } from "./draw-duck";
 import { renderDuckToImage } from "./render-duck-image";
+import { RaceGradeModal } from "./race-grade-modal";
 
 interface DuckRaceCanvasProps {
   students: Student[];
   winnerId: string;
   classId: string;
+  subjectId?: string;
 }
 
-export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasProps) {
+export function DuckRaceCanvas({
+  students,
+  winnerId,
+  classId,
+  subjectId,
+}: DuckRaceCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<RaceState | null>(null);
@@ -30,9 +49,14 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
   const [timeLeft, setTimeLeft] = useState(DEFAULT_RACE_DURATION);
   const [finished, setFinished] = useState(false);
   const [winnerName, setWinnerName] = useState<string | null>(null);
-  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  const [duckImages, setDuckImages] = useState<Record<string, HTMLImageElement>>({});
+  const [size, setSize] = useState<{ width: number; height: number } | null>(
+    null,
+  );
+  const [duckImages, setDuckImages] = useState<
+    Record<string, HTMLImageElement>
+  >({});
   const [modalOpen, setModalOpen] = useState(false);
+  const [gradeOpen, setGradeOpen] = useState(false);
   const [draftDuration, setDraftDuration] = useState(DEFAULT_RACE_DURATION);
   const confettiFired = useRef(false);
   const duckImagesReady = Object.keys(duckImages).length > 0;
@@ -41,7 +65,11 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
     const saved = Cookies.get(RACE_DURATION_COOKIE);
     if (saved) {
       const parsed = parseInt(saved, 10);
-      if (!isNaN(parsed) && parsed >= MIN_RACE_DURATION && parsed <= MAX_RACE_DURATION) {
+      if (
+        !isNaN(parsed) &&
+        parsed >= MIN_RACE_DURATION &&
+        parsed <= MAX_RACE_DURATION
+      ) {
         setDuration(parsed);
         setTimeLeft(parsed);
       }
@@ -58,7 +86,12 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
           clearInterval(interval);
           return;
         }
-        confetti({ ...defaults, particleCount: 60, spread: 120, startVelocity: 45 });
+        confetti({
+          ...defaults,
+          particleCount: 60,
+          spread: 120,
+          startVelocity: 45,
+        });
       }, 200);
     }
   }, [finished, winnerName]);
@@ -84,7 +117,10 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
 
     const resize = () => {
       const rect = el.getBoundingClientRect();
-      setSize({ width: Math.floor(rect.width), height: Math.floor(rect.height) });
+      setSize({
+        width: Math.floor(rect.width),
+        height: Math.floor(rect.height),
+      });
     };
 
     resize();
@@ -116,7 +152,7 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
     const roadTop = 60;
     const roadBottom = height - 60;
     const laneHeight = (roadBottom - roadTop) / laneCount;
-    const duckScale = Math.min(laneHeight * 0.55 / 56, 1.2);
+    const duckScale = Math.min((laneHeight * 0.55) / 56, 1.2);
     const colors = students.map((_, i) => `hsl(${(i * 137) % 360}, 75%, 55%)`);
 
     const race = buildRace(students, winnerId, trackLength, duration);
@@ -140,7 +176,12 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
 
       // Track road
       ctx.fillStyle = "#e2e8f0";
-      ctx.fillRect(worldStart - cameraX, roadTop, state.trackLength, roadBottom - roadTop);
+      ctx.fillRect(
+        worldStart - cameraX,
+        roadTop,
+        state.trackLength,
+        roadBottom - roadTop,
+      );
 
       // Lane dividers
       ctx.strokeStyle = "#cbd5e1";
@@ -178,7 +219,12 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
 
       // Draw ducks sorted by x so front ones overlap back ones
       const sorted = students
-        .map((s, i) => ({ ...s, i, pos: state.positions[i] ?? 0, lane: i % laneCount }))
+        .map((s, i) => ({
+          ...s,
+          i,
+          pos: state.positions[i] ?? 0,
+          lane: i % laneCount,
+        }))
         .sort((a, b) => a.pos - b.pos);
 
       for (const d of sorted) {
@@ -196,7 +242,11 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
       ctx.font = "bold 18px sans-serif";
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
-      ctx.fillText(`Còn lại: ${Math.max(0, duration - elapsed).toFixed(1)}s`, 10, 10);
+      ctx.fillText(
+        `Còn lại: ${Math.max(0, duration - elapsed).toFixed(1)}s`,
+        10,
+        10,
+      );
     };
 
     const frame = (now: number) => {
@@ -243,30 +293,28 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
     setStarted(false);
     setFinished(false);
     setWinnerName(null);
+    setGradeOpen(false);
     setTimeLeft(duration);
     stateRef.current = null;
   };
 
-  const reset = () => {
-    close();
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext("2d");
-      if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  };
+  const backHref = subjectId
+    ? `/classes/${classId}?subjectId=${subjectId}`
+    : `/classes/${classId}`;
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-background">
       <header className="grid h-14 grid-cols-3 items-center border-b px-4">
         <div className="flex items-center gap-2">
           <Link
-            href={`/classes/${classId}`}
+            href={backHref}
             className={buttonVariants({ variant: "ghost", size: "sm" })}
           >
             <ArrowLeft /> Quay lại
           </Link>
-          <h1 className="text-base font-semibold sm:text-lg">Kiểm tra bài cũ</h1>
+          <h1 className="text-base font-semibold sm:text-lg">
+            Kiểm tra bài cũ
+          </h1>
         </div>
         <div className="flex items-center justify-center" />
         <div className="flex items-center justify-end gap-4">
@@ -281,7 +329,9 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
           >
             Cập nhật thời gian đua
           </Button>
-          <span className="text-sm font-medium tabular-nums">{timeLeft.toFixed(1)}s</span>
+          <span className="text-sm font-medium tabular-nums">
+            {timeLeft.toFixed(1)}s
+          </span>
         </div>
       </header>
 
@@ -289,7 +339,9 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cập nhật thời gian đua</DialogTitle>
-            <DialogDescription>Nhập thời gian đua từ 5 đến 120 giây.</DialogDescription>
+            <DialogDescription>
+              Nhập thời gian đua từ 5 đến 120 giây.
+            </DialogDescription>
           </DialogHeader>
           <Input
             aria-label="Thời gian đua"
@@ -299,7 +351,9 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
             value={draftDuration}
             onChange={(e) => {
               const parsed = parseInt(e.target.value, 10);
-              setDraftDuration(isNaN(parsed) ? DEFAULT_RACE_DURATION : parsed);
+              setDraftDuration(
+                isNaN(parsed) ? DEFAULT_RACE_DURATION : parsed,
+              );
             }}
             className="h-10 text-base"
           />
@@ -309,10 +363,15 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
             </Button>
             <Button
               onClick={() => {
-                if (draftDuration >= MIN_RACE_DURATION && draftDuration <= MAX_RACE_DURATION) {
+                if (
+                  draftDuration >= MIN_RACE_DURATION &&
+                  draftDuration <= MAX_RACE_DURATION
+                ) {
                   setDuration(draftDuration);
                   setTimeLeft(draftDuration);
-                  Cookies.set(RACE_DURATION_COOKIE, String(draftDuration), { expires: 365 });
+                  Cookies.set(RACE_DURATION_COOKIE, String(draftDuration), {
+                    expires: 365,
+                  });
                   setModalOpen(false);
                 }
               }}
@@ -333,13 +392,14 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
               disabled={!duckImagesReady}
               className="gap-2 px-10 py-6 text-xl"
             >
-              <Play className="size-6" /> {duckImagesReady ? "Bắt đầu" : "Đang tải..."}
+              <Play className="size-6" />{" "}
+              {duckImagesReady ? "Bắt đầu" : "Đang tải..."}
             </Button>
           </div>
         )}
       </div>
 
-      {finished && winnerName && (
+      {finished && winnerName && !gradeOpen && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-black/70 p-6 text-center backdrop-blur-sm">
           <button
             onClick={close}
@@ -349,19 +409,41 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
             <X className="size-6" />
           </button>
           <div className="animate-bounce rounded-3xl bg-gradient-to-br from-green-500 to-green-700 p-10 shadow-2xl">
-            <p className="text-4xl font-bold text-white sm:text-6xl">Xin chúc mừng</p>
-            <p className="mt-6 break-words text-5xl font-extrabold text-white sm:text-8xl">{winnerName}</p>
+            <p className="text-4xl font-bold text-white sm:text-6xl">
+              Xin chúc mừng
+            </p>
+            <p className="mt-6 break-words text-5xl font-extrabold text-white sm:text-8xl">
+              {winnerName}
+            </p>
           </div>
           <div className="flex items-center gap-4">
-            <Button onClick={close} variant="secondary" size="lg" className="gap-2 text-lg">
+            <Button
+              onClick={close}
+              variant="secondary"
+              size="lg"
+              className="gap-2 text-lg"
+            >
               Đóng
             </Button>
-            <Button onClick={reset} size="lg" className="gap-2 text-lg">
-              <RotateCcw className="size-5" /> Chạy lại
+            <Button
+              onClick={() => setGradeOpen(true)}
+              size="lg"
+              className="gap-2 text-lg"
+            >
+              <Pencil className="size-5" /> Nhập điểm
             </Button>
           </div>
         </div>
       )}
+
+      <RaceGradeModal
+        open={gradeOpen}
+        onOpenChange={setGradeOpen}
+        classId={classId}
+        subjectId={subjectId}
+        studentId={winnerId}
+        studentName={winnerName ?? undefined}
+      />
     </div>
   );
 }
