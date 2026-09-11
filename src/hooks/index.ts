@@ -12,4 +12,4 @@ export {
   useCloseSession,
   useCreateSession,
 } from "./attendance";
-export type { AttendanceRecordWithStudent } from "./attendance";
+export type { AttendanceRecordWithStudent } from "@types";

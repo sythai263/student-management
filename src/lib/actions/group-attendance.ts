@@ -4,18 +4,13 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { SearchFacesByImageCommand } from "@aws-sdk/client-rekognition";
 import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
+import type { GroupAttendanceSummary } from "@types";
 import { ATTENDANCE_STATUS } from "@constants";
 import {
   requireTeacher,
   withAction,
   type ActionResult,
 } from "./action-utils";
-
-export interface GroupAttendanceSummary {
-  sessionId: string;
-  presentCount: number;
-  totalCount: number;
-}
 
 /**
  * Server Action: Group Attendance.

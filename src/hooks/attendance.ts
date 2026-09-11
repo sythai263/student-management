@@ -7,12 +7,14 @@ import {
   createManualSession,
   updateAttendanceRecord,
 } from "@lib/actions";
+import type { UpdateAttendanceInput } from "@schemas";
 import type { AttendanceStatus } from "@constants";
-import type { AttendanceSession, AttendanceRecord, Student } from "@types";
-
-export interface AttendanceRecordWithStudent extends AttendanceRecord {
-  students: Pick<Student, "studentCode" | "lastName" | "firstName"> | null;
-}
+import type {
+  AttendanceSession,
+  AttendanceRecord,
+  AttendanceRecordWithStudent,
+  Student,
+} from "@types";
 
 /** Fetch a single attendance session. */
 export function useAttendanceSession(sessionId: string) {
@@ -70,12 +72,6 @@ export function useAttendanceRecords(
       return (data ?? []) as AttendanceRecordWithStudent[];
     },
   });
-}
-
-interface UpdateAttendanceInput {
-  recordId: string;
-  status: AttendanceStatus;
-  note?: string;
 }
 
 // Partial key matches every status-filtered variant of the records query.

@@ -135,3 +135,13 @@ export interface ParseGradeCsvResult {
   hasHeader: boolean;
   rows: CsvMappedRow[];
 }
+
+export interface AttendanceRecordWithStudent extends AttendanceRecord {
+  students: Pick<Student, "studentCode" | "lastName" | "firstName"> | null;
+}
+
+export interface GroupAttendanceSummary {
+  sessionId: string;
+  presentCount: number;
+  totalCount: number;
+}

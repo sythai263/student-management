@@ -1,31 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { ATTENDANCE_STATUS } from "@constants";
+import { updateRecordSchema } from "@schemas";
 import type { AttendanceRecord } from "@types";
 import {
   requireTeacher,
   withAction,
   type ActionResult,
 } from "./action-utils";
-
-const updateRecordSchema = z
-  .object({
-    recordId: z.uuid("recordId không hợp lệ"),
-    status: z.enum([
-      ATTENDANCE_STATUS.PRESENT,
-      ATTENDANCE_STATUS.ABSENT,
-      ATTENDANCE_STATUS.EXCUSED,
-      ATTENDANCE_STATUS.SKIPPED,
-      ATTENDANCE_STATUS.LATE,
-    ]),
-    note: z.string().trim().optional(),
-  })
-  .refine((v) => v.status !== ATTENDANCE_STATUS.EXCUSED || !!v.note, {
-    message: "Vắng có phép cần nhập lý do",
-    path: ["note"],
-  });
 
 /** Server Action: update one attendance record's status/note. */
 export async function updateAttendanceRecord(

@@ -14,5 +14,5 @@ export {
   closeAttendanceSession,
   createManualSession,
 } from "./attendance";
-export type { GroupAttendanceSummary } from "./group-attendance";
+export type { GroupAttendanceSummary } from "@types";
 export type { ActionResult } from "./action-utils";
