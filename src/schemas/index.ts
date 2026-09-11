@@ -6,3 +6,5 @@ export { createSubjectSchema } from "./subjects";
 export type { CreateSubjectInput } from "./subjects";
 export { updateRecordSchema } from "./attendance";
 export type { UpdateAttendanceInput } from "./attendance";
+export { createClassSchema, deleteClassSchema } from "./classes";
+export type { CreateClassInput } from "./classes";
