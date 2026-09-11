@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Subject } from "@types";
-import { SUBJECT_CATALOG } from "@constants";
 import { createSubjectSchema, createSubjectsFromCatalogSchema } from "@schemas";
 import {
   requireTeacher,
@@ -70,20 +69,23 @@ export async function createSubjectsFromCatalog(
       throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
     }
 
-    const names = new Set(parsed.data);
-    const selected = SUBJECT_CATALOG.filter((c) => names.has(c.name));
+    const { data: catalogItems, error: catalogError } = await supabase
+      .from("subjectCatalog")
+      .select("name, code")
+      .in("name", parsed.data);
+    if (catalogError) throw new Error(catalogError.message);
+
+    const selected = (catalogItems ?? []) as { name: string; code: string | null }[];
     if (selected.length === 0) {
       throw new Error("Không có môn nào trong danh mục");
     }
 
+    const selectedNames = selected.map((s) => s.name);
     const { data: existing } = await supabase
       .from("subjects")
       .select("name")
       .eq("teacherId", user.id)
-      .in(
-        "name",
-        selected.map((s) => s.name),
-      );
+      .in("name", selectedNames);
 
     const existingNames = new Set(existing?.map((s) => s.name) ?? []);
     const missing = selected.filter((s) => !existingNames.has(s.name));

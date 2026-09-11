@@ -1,24 +1,59 @@
 import Link from "next/link";
-import { CalendarCheck, Dices, GraduationCap, UserPlus } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Dices, GraduationCap, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { requireTeacher } from "@lib/actions/action-utils";
 import { ClassHeader, ClassSubjectManager } from "@components/classes";
 import { StudentTable, ImportStudentsForm } from "@components/students";
 
 interface ClassDetailPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 // Route protection is handled globally by src/proxy.ts (updateSession).
 export default async function ClassDetailPage({
   params,
+  searchParams,
 }: ClassDetailPageProps) {
   const { id } = await params;
+  const { subjectId } = await searchParams;
+  const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
+
+  let subjectName: string | undefined;
+  let backHref = "/classes";
+  let backLabel = "Quay lại danh sách lớp";
+
+  if (activeSubjectId) {
+    const { supabase, user } = await requireTeacher();
+    const { data } = await supabase
+      .from("subjects")
+      .select("name")
+      .eq("id", activeSubjectId)
+      .eq("teacherId", user.id)
+      .single();
+    subjectName = data?.name;
+    backHref = `/subjects/${activeSubjectId}`;
+    backLabel = "Quay lại môn học";
+  }
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-8">
+      <Link
+        href={backHref}
+        className={buttonVariants({ variant: "ghost", size: "sm" })}
+      >
+        <ArrowLeft /> {backLabel}
+      </Link>
+
       <ClassHeader classId={id} />
 
-      <ClassSubjectManager classId={id} />
+      {activeSubjectId && subjectName ? (
+        <p className="rounded-md border p-2 text-sm font-medium">
+          Môn đang chọn: {subjectName}
+        </p>
+      ) : (
+        <ClassSubjectManager classId={id} />
+      )}
 
       <div className="flex flex-wrap gap-3">
         <Link
@@ -35,7 +70,11 @@ export default async function ClassDetailPage({
           <CalendarCheck /> Buổi điểm danh
         </Link>
         <Link
-          href={`/classes/${id}/grades`}
+          href={
+            activeSubjectId
+              ? `/classes/${id}/grades?subjectId=${activeSubjectId}`
+              : `/classes/${id}/grades`
+          }
           className={buttonVariants({ variant: "outline" })}
         >
           <GraduationCap /> Nhập điểm

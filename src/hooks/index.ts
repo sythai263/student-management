@@ -1,6 +1,6 @@
 export { useClasses, useClass, useDeleteClass } from "./classes";
 export { useStudents, usePaginatedStudents } from "./students";
-export { useSubjects, useCreateSubject, useDeleteSubject } from "./subjects";
+export { useSubjects, useCreateSubject, useDeleteSubject, useSubjectCatalog } from "./subjects";
 export {
   useClassSubjects,
   useAssignClassSubject,

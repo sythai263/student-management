@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,26 +40,32 @@ export function SubjectList() {
     <>
       <section className="grid gap-4 sm:grid-cols-2">
         {subjects.map((s) => (
-          <Card key={s.id} className="relative group">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <CardTitle>{s.name}</CardTitle>
-                  <CardDescription>{s.code ?? "—"}</CardDescription>
+          <Link key={s.id} href={`/subjects/${s.id}`} className="group">
+            <Card className="relative transition-colors hover:border-primary">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <CardTitle>{s.name}</CardTitle>
+                    <CardDescription>{s.code ?? "—"}</CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="opacity-0 group-hover:opacity-100 focus:opacity-100"
+                    aria-label={`Xóa môn ${s.name}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSubjectToDelete(s);
+                    }}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  className="opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  aria-label={`Xóa môn ${s.name}`}
-                  onClick={() => setSubjectToDelete(s)}
-                >
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              </div>
-            </CardHeader>
-          </Card>
+              </CardHeader>
+            </Card>
+          </Link>
         ))}
       </section>
 

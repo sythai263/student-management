@@ -50,6 +50,13 @@ export interface Subject {
   createdAt: string;
 }
 
+export interface SubjectCatalog {
+  id: string;
+  name: string;
+  code: string | null;
+  createdAt: string;
+}
+
 export interface Grade {
   id: string;
   classId: string;
@@ -155,4 +162,8 @@ export interface ClassSubject {
 
 export interface ClassSubjectWithSubject extends ClassSubject {
   subjects: Pick<Subject, "name" | "code"> | null;
+}
+
+export interface ClassSubjectWithClass extends ClassSubject {
+  classes: Pick<Class, "name" | "classCode" | "schoolYear">[];
 }

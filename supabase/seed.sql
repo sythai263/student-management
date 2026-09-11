@@ -59,4 +59,5 @@ commit;
 -- Kết quả
 select 'classes' as tbl, count(*) from public.classes
 union all select 'students', count(*) from public.students
-union all select 'subjects', count(*) from public.subjects;
+union all select 'subjects', count(*) from public.subjects
+union all select 'subjectCatalog', count(*) from public."subjectCatalog";

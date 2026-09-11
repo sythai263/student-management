@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -18,14 +16,26 @@ import { GradeEntryGrid } from "./grade-entry-grid";
 
 interface GradeDashboardProps {
   classId: string;
+  subjectId?: string;
+  subjectName?: string;
 }
 
-export function GradeDashboard({ classId }: GradeDashboardProps) {
+export function GradeDashboard({
+  classId,
+  subjectId: subjectIdProp,
+  subjectName: subjectNameProp,
+}: GradeDashboardProps) {
   const { data: subjects, isLoading } = useSubjects();
-  const [subjectId, setSubjectId] = useState("");
+  const [subjectId, setSubjectId] = useState(subjectIdProp ?? "");
   const [semester, setSemester] = useState(1);
 
-  const selectedSubject = subjects?.find((s) => s.id === subjectId);
+  const isLocked = !!subjectIdProp;
+  const selectedSubject = isLocked
+    ? { id: subjectIdProp, name: subjectNameProp ?? "" }
+    : subjects?.find((s) => s.id === subjectId);
+
+  const activeSubjectId = isLocked ? subjectIdProp! : subjectId;
+  const activeSubjectName = selectedSubject?.name ?? "";
 
   return (
     <Card>
@@ -38,10 +48,20 @@ export function GradeDashboard({ classId }: GradeDashboardProps) {
             <Label htmlFor="subject">Môn học</Label>
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Đang tải...</p>
+            ) : isLocked ? (
+              <p
+                id="subject"
+                className="rounded-md border p-2 text-sm font-medium"
+              >
+                {activeSubjectName}
+              </p>
             ) : !subjects?.length ? (
               <p className="text-sm text-destructive">Chưa có môn học.</p>
             ) : (
-              <Select value={subjectId} onValueChange={(v) => setSubjectId(v ?? "")}>
+              <Select
+                value={subjectId}
+                onValueChange={(v) => setSubjectId(v ?? "")}
+              >
                 <SelectTrigger id="subject">
                   <SelectValue placeholder="Chọn môn học" />
                 </SelectTrigger>
@@ -57,7 +77,10 @@ export function GradeDashboard({ classId }: GradeDashboardProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="semester">Học kỳ</Label>
-            <Select value={String(semester)} onValueChange={(v) => setSemester(Number(v))}>
+            <Select
+              value={String(semester)}
+              onValueChange={(v) => setSemester(Number(v))}
+            >
               <SelectTrigger id="semester">
                 <SelectValue />
               </SelectTrigger>
@@ -72,8 +95,8 @@ export function GradeDashboard({ classId }: GradeDashboardProps) {
         {selectedSubject ? (
           <GradeEntryGrid
             classId={classId}
-            subjectId={subjectId}
-            subjectName={selectedSubject.name}
+            subjectId={activeSubjectId}
+            subjectName={activeSubjectName}
             semester={semester}
           />
         ) : (

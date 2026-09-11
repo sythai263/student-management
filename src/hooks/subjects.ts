@@ -3,8 +3,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createSubject, deleteSubject } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
-import type { Subject } from "@types";
+import type { Subject, SubjectCatalog } from "@types";
 import type { CreateSubjectInput } from "@schemas";
+
+/** Fetch the global subject catalog. */
+export function useSubjectCatalog() {
+  return useQuery({
+    queryKey: ["subjectCatalog"],
+    queryFn: async (): Promise<SubjectCatalog[]> => {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from("subjectCatalog")
+        .select("*")
+        .order("name");
+      if (error) throw new Error(error.message);
+      return (data ?? []) as SubjectCatalog[];
+    },
+  });
+}
 
 /** Fetch all subjects owned by the current teacher. */
 export function useSubjects() {

@@ -14,9 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createClass } from "@lib/actions";
+import { assignSubjectToClass, createClass } from "@lib/actions";
 
-export function CreateClassForm() {
+interface CreateClassFormProps {
+  subjectId?: string;
+}
+
+export function CreateClassForm({ subjectId }: CreateClassFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
@@ -37,25 +41,46 @@ export function CreateClassForm() {
 
     startTransition(async () => {
       const result = await createClass(input);
-      setError(result.success ? null : result.error);
-      if (result.success) {
-        formRef.current?.reset();
-        await queryClient.invalidateQueries({ queryKey: ["classes"] });
-        setOpen(false);
-        router.push(`/classes/${result.data.id}`);
+      if (!result.success) {
+        setError(result.error);
+        return;
       }
+
+      let redirectPath = `/classes/${result.data.id}`;
+
+      if (subjectId) {
+        const assign = await assignSubjectToClass({
+          classId: result.data.id,
+          subjectId,
+        });
+        if (!assign.success) {
+          setError(assign.error);
+          return;
+        }
+        await queryClient.invalidateQueries({
+          queryKey: ["class-subjects", result.data.id],
+        });
+        redirectPath = `/classes/${result.data.id}?subjectId=${subjectId}`;
+      }
+
+      formRef.current?.reset();
+      await queryClient.invalidateQueries({ queryKey: ["classes"] });
+      setOpen(false);
+      router.push(redirectPath);
     });
   };
 
   return (
     <>
       <Button type="button" onClick={() => setOpen(true)}>
-        Tạo lớp mới
+        {subjectId ? "Tạo lớp cho môn này" : "Tạo lớp mới"}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Tạo lớp mới</DialogTitle>
+            <DialogTitle>
+              {subjectId ? "Tạo lớp cho môn này" : "Tạo lớp mới"}
+            </DialogTitle>
             <DialogDescription>
               Nhập thông tin lớp học để bắt đầu quản lý.
             </DialogDescription>
