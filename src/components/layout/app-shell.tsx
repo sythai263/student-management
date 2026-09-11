@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, ChevronLeft, ChevronRight, GraduationCap, LogOut } from "lucide-react";
-import { useState } from "react";
+import {
+  ArrowLeft,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  GraduationCap,
+  LogOut,
+  User,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { logout } from "@lib/actions";
 
@@ -15,6 +23,19 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDocMouseDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [menuOpen]);
 
   const hideShell =
     pathname === "/login" ||
@@ -81,17 +102,6 @@ export function AppShell({ children }: AppShellProps) {
               </>
             )}
           </Button>
-          <form action={logout}>
-            <Button
-              variant="outline"
-              type="submit"
-              className="w-full gap-2"
-              title="Đăng xuất"
-            >
-              <LogOut className="size-4" />
-              {!collapsed && "Đăng xuất"}
-            </Button>
-          </form>
         </div>
       </aside>
 
@@ -105,6 +115,32 @@ export function AppShell({ children }: AppShellProps) {
           >
             <ArrowLeft /> Quay lại
           </Button>
+
+          <div className="flex-1" />
+
+          <div className="relative" ref={menuRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Menu tài khoản"
+            >
+              <User className="size-5" />
+            </Button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-40 rounded-md border bg-popover p-1 shadow-md">
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  >
+                    <LogOut className="size-4" /> Đăng xuất
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
