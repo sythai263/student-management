@@ -165,5 +165,5 @@ export interface ClassSubjectWithSubject extends ClassSubject {
 }
 
 export interface ClassSubjectWithClass extends ClassSubject {
-  classes: Pick<Class, "name" | "classCode" | "schoolYear">[];
+  classes: Pick<Class, "name" | "classCode" | "schoolYear"> | null;
 }

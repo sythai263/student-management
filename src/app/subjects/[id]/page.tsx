@@ -44,7 +44,10 @@ export default async function SubjectDetailPage({
   }
 
   const subject = subjectRes.data as Subject;
-  const classSubjects = (classSubjectsRes.data ?? []) as ClassSubjectWithClass[];
+  const classSubjects = (classSubjectsRes.data ?? []).map((c) => ({
+    ...c,
+    classes: Array.isArray(c.classes) ? (c.classes[0] ?? null) : c.classes,
+  })) as ClassSubjectWithClass[];
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-8">
@@ -83,10 +86,12 @@ export default async function SubjectDetailPage({
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <CardTitle>{c.classes[0]?.name ?? "—"}</CardTitle>
-                      <CardDescription>
-                        {c.classes[0]?.classCode ?? "—"} · Năm học{" "}
-                        {c.classes[0]?.schoolYear ?? "—"}
+                      <CardTitle className="text-lg font-bold">
+                        {c.classes?.classCode ?? "—"}
+                      </CardTitle>
+                      <CardDescription className="space-y-0.5">
+                        <div>{c.classes?.name ?? "—"}</div>
+                        <div>Năm học {c.classes?.schoolYear ?? "—"}</div>
                       </CardDescription>
                     </div>
                     <GraduationCap className="size-5 text-muted-foreground" />
