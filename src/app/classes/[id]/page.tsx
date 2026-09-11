@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarCheck, GraduationCap, UserPlus } from "lucide-react";
+import { CalendarCheck, Dices, GraduationCap, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { ClassHeader } from "@components/classes";
 import { StudentTable, ImportStudentsForm } from "@components/students";
@@ -37,6 +37,12 @@ export default async function ClassDetailPage({
           className={buttonVariants({ variant: "outline" })}
         >
           <GraduationCap /> Nhập điểm
+        </Link>
+        <Link
+          href={`/classes/${id}/race`}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          <Dices /> Kiểm tra bài
         </Link>
       </div>
 
