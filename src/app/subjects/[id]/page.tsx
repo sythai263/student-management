@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, GraduationCap } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { GraduationCap } from "lucide-react";
 import {
   Card,
   CardDescription,
@@ -51,13 +50,6 @@ export default async function SubjectDetailPage({
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-8">
-      <Link
-        href="/subjects"
-        className={buttonVariants({ variant: "ghost", size: "sm" })}
-      >
-        <ArrowLeft /> Quay lại môn học
-      </Link>
-
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">

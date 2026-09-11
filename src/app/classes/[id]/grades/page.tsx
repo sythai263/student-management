@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { GradeDashboard } from "@components/grades";
 import { requireTeacher } from "@lib/actions/action-utils";
 
@@ -18,8 +15,6 @@ export default async function GradesPage({
   const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
 
   let subjectName: string | undefined;
-  let backHref = `/classes/${id}`;
-  let backLabel = "Quay lại lớp học";
 
   if (activeSubjectId) {
     const { supabase, user } = await requireTeacher();
@@ -30,18 +25,10 @@ export default async function GradesPage({
       .eq("teacherId", user.id)
       .single();
     subjectName = data?.name;
-    backHref = `/subjects/${activeSubjectId}`;
-    backLabel = "Quay lại môn học";
   }
 
   return (
     <main className="mx-auto max-w-7xl space-y-8 p-8">
-      <Link
-        href={backHref}
-        className={buttonVariants({ variant: "ghost", size: "sm" })}
-      >
-        <ArrowLeft /> {backLabel}
-      </Link>
       <GradeDashboard
         classId={id}
         subjectId={activeSubjectId}

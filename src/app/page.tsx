@@ -1,7 +1,3 @@
-import Link from "next/link";
-import { GraduationCap } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { logout } from "@lib/actions";
 import { SubjectCatalogForm, SubjectList } from "@components/subjects";
 
 // Route protection is handled globally by src/proxy.ts (updateSession).
@@ -10,20 +6,7 @@ export default function DashboardPage() {
     <main className="mx-auto max-w-4xl space-y-8 p-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Môn học của tôi</h1>
-        <div className="flex gap-2">
-          <SubjectCatalogForm />
-          <Link
-            href="/classes"
-            className={buttonVariants({ variant: "outline" })}
-          >
-            <GraduationCap /> Lớp học
-          </Link>
-          <form action={logout}>
-            <Button variant="outline" type="submit">
-              Đăng xuất
-            </Button>
-          </form>
-        </div>
+        <SubjectCatalogForm />
       </header>
 
       <SubjectList />

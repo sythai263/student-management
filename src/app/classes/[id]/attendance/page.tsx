@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { AttendanceActions, SessionList } from "@components/attendance";
 
 interface AttendancePageProps {
@@ -12,12 +9,6 @@ export default async function AttendancePage({ params }: AttendancePageProps) {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-8">
-      <Link
-        href={`/classes/${id}`}
-        className={buttonVariants({ variant: "ghost", size: "sm" })}
-      >
-        <ArrowLeft /> Quay lại lớp học
-      </Link>
       <AttendanceActions classId={id} />
       <SessionList classId={id} />
     </main>

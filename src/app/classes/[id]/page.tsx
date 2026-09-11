@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, CalendarCheck, Dices, GraduationCap, UserPlus } from "lucide-react";
+import { CalendarCheck, Dices, GraduationCap, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { requireTeacher } from "@lib/actions/action-utils";
 import { ClassHeader, ClassSubjectManager } from "@components/classes";
@@ -20,8 +20,6 @@ export default async function ClassDetailPage({
   const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
 
   let subjectName: string | undefined;
-  let backHref = "/classes";
-  let backLabel = "Quay lại danh sách lớp";
 
   if (activeSubjectId) {
     const { supabase, user } = await requireTeacher();
@@ -32,19 +30,10 @@ export default async function ClassDetailPage({
       .eq("teacherId", user.id)
       .single();
     subjectName = data?.name;
-    backHref = `/subjects/${activeSubjectId}`;
-    backLabel = "Quay lại môn học";
   }
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 p-8">
-      <Link
-        href={backHref}
-        className={buttonVariants({ variant: "ghost", size: "sm" })}
-      >
-        <ArrowLeft /> {backLabel}
-      </Link>
-
       <ClassHeader classId={id} />
 
       {activeSubjectId && subjectName ? (
