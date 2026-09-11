@@ -92,3 +92,10 @@ export interface StudentGradeSummary {
   averageScore: number;
   gradeCount: number;
 }
+
+export interface RaceState {
+  speeds: number[][];
+  positions: number[];
+  trackLength: number;
+  winnerName: string;
+}

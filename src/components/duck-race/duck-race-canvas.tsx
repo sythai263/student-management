@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createRoot } from "react-dom/client";
-import { flushSync } from "react-dom";
 import Cookies from "js-cookie";
 import confetti from "canvas-confetti";
 import { ArrowLeft, Play, RotateCcw, X } from "lucide-react";
@@ -10,8 +8,12 @@ import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { Student } from "@types";
+import type { RaceState, Student } from "@types";
+import { RACE_DURATION_COOKIE, DEFAULT_RACE_DURATION, MIN_RACE_DURATION, MAX_RACE_DURATION } from "@constants";
+import { buildRace } from "@lib/duck-race";
 import { DuckIcon } from "./duck-icon";
+import { drawDuck } from "./draw-duck";
+import { renderDuckToImage } from "./render-duck-image";
 
 interface DuckRaceCanvasProps {
   students: Student[];
@@ -19,191 +21,27 @@ interface DuckRaceCanvasProps {
   classId: string;
 }
 
-const COOKIE_KEY = "race-duration";
-const DEFAULT_DURATION = 30;
-
-interface RaceState {
-  speeds: number[][];
-  positions: number[];
-  trackLength: number;
-  winnerName: string;
-}
-
-function randomBetween(min: number, max: number) {
-  return Math.random() * (max - min) + min;
-}
-
-type Scenario = 0 | 1 | 2;
-
-function buildRace(students: Student[], winnerId: string, trackLength: number, duration: number): RaceState {
-  const n = students.length;
-  const winnerIndex = students.findIndex((s) => s.id === winnerId);
-
-  const raw: number[][] = [];
-  for (let i = 0; i < n; i++) {
-    const row: number[] = [];
-    for (let t = 0; t < duration; t++) {
-      row.push(randomBetween(25, 85));
-    }
-    raw.push(row);
-  }
-
-  const nonWinnerIndexes = Array.from({ length: n }, (_, i) => i).filter((i) => i !== winnerIndex);
-  const scenario: Scenario = Math.floor(Math.random() * 3) as Scenario;
-
-  const pacerCount = Math.min(6, Math.max(0, nonWinnerIndexes.length));
-  const pacers = new Set<number>();
-  while (pacers.size < pacerCount) {
-    const pick = Math.floor(Math.random() * nonWinnerIndexes.length);
-    pacers.add(nonWinnerIndexes[pick]);
-  }
-
-  const weights: number[][] = raw.map(() => new Array(duration).fill(1));
-
-  for (let i = 0; i < n; i++) {
-    if (i === winnerIndex) {
-      if (scenario === 0) continue;
-      if (scenario === 1) {
-        for (let t = 0; t < duration; t++) {
-          weights[i][t] = t < duration * 0.55 ? 0.55 : 1.65;
-        }
-      } else {
-        for (let t = 0; t < duration; t++) {
-          weights[i][t] = t < duration * 0.75 ? 0.35 : 2.1;
-        }
-      }
-    } else if (pacers.has(i)) {
-      for (let t = 0; t < duration; t++) {
-        weights[i][t] = t < duration * 0.65 ? 0.45 : 1.85;
-      }
-    } else if (scenario === 2) {
-      for (let t = 0; t < duration; t++) {
-        weights[i][t] = 0.85;
-      }
-    }
-  }
-
-  const targets = students.map((_, i) => {
-    if (i === winnerIndex) return trackLength;
-    if (pacers.has(i)) {
-      const gap = randomBetween(80, Math.min(220, trackLength * 0.15));
-      return Math.max(0, trackLength - gap);
-    }
-    const gap = randomBetween(250, Math.min(900, trackLength * 0.35));
-    return Math.max(0, trackLength - gap);
-  });
-
-  const speeds = raw.map((row, i) => {
-    const shaped = row.map((v, t) => v * weights[i][t]);
-    const shapedSum = shaped.reduce((a, b) => a + b, 0);
-    const target = targets[i] ?? 0;
-    const scale = target / (shapedSum || 1);
-    return shaped.map((v) => v * scale);
-  });
-
-  const positions = new Array(n).fill(0);
-  const winner = students[winnerIndex] ?? students[0];
-  return {
-    speeds,
-    positions,
-    trackLength,
-    winnerName: `${winner.lastName} ${winner.firstName}`,
-  };
-}
-
-function renderDuckToImage(color: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const container = document.createElement("div");
-    container.style.position = "fixed";
-    container.style.left = "-9999px";
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    setTimeout(() => {
-      flushSync(() => {
-        root.render(<DuckIcon color={color} size={128} />);
-      });
-      const svg = container.querySelector("svg");
-      if (!svg) {
-        root.unmount();
-        container.remove();
-        reject(new Error("DuckIcon SVG not found"));
-        return;
-      }
-      const svgString = new XMLSerializer().serializeToString(svg);
-      const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        root.unmount();
-        container.remove();
-        resolve(img);
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        root.unmount();
-        container.remove();
-        reject(new Error("DuckIcon image load failed"));
-      };
-      img.src = url;
-    }, 0);
-  });
-}
-
-function drawDuck(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  name: string,
-  scale: number,
-  image: HTMLImageElement,
-) {
-  const duckFont = Math.min(Math.max(scale * 11, 9), 12);
-  const w = 36 * scale;
-  let h = 32 * scale;
-  let cx = x + w / 2;
-
-  if (image.complete && image.naturalWidth > 0) {
-    h = (image.height / image.width) * w;
-    const top = y - h / 2;
-    ctx.drawImage(image, x, top, w, h);
-    cx = x + w / 2;
-  }
-
-  ctx.font = `${duckFont}px sans-serif`;
-  const metrics = ctx.measureText(name);
-  const textW = metrics.width;
-  const nameY = y - h / 2 - 4;
-  ctx.fillStyle = "rgba(255,255,255,0.75)";
-  ctx.fillRect(cx - textW / 2 - 3, nameY - duckFont - 3, textW + 6, duckFont + 6);
-  ctx.fillStyle = "#000";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "bottom";
-  ctx.fillText(name, cx, nameY);
-}
-
 export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<RaceState | null>(null);
   const [started, setStarted] = useState(false);
-  const [duration, setDuration] = useState<number>(DEFAULT_DURATION);
-  const [timeLeft, setTimeLeft] = useState(DEFAULT_DURATION);
+  const [duration, setDuration] = useState<number>(DEFAULT_RACE_DURATION);
+  const [timeLeft, setTimeLeft] = useState(DEFAULT_RACE_DURATION);
   const [finished, setFinished] = useState(false);
   const [winnerName, setWinnerName] = useState<string | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const [duckImages, setDuckImages] = useState<Record<string, HTMLImageElement>>({});
   const [modalOpen, setModalOpen] = useState(false);
-  const duckImagesReady = Object.keys(duckImages).length > 0;
-  const [draftDuration, setDraftDuration] = useState(DEFAULT_DURATION);
+  const [draftDuration, setDraftDuration] = useState(DEFAULT_RACE_DURATION);
   const confettiFired = useRef(false);
+  const duckImagesReady = Object.keys(duckImages).length > 0;
 
   useEffect(() => {
-    const saved = Cookies.get(COOKIE_KEY);
+    const saved = Cookies.get(RACE_DURATION_COOKIE);
     if (saved) {
       const parsed = parseInt(saved, 10);
-      if (!isNaN(parsed) && parsed >= 5 && parsed <= 120) {
+      if (!isNaN(parsed) && parsed >= MIN_RACE_DURATION && parsed <= MAX_RACE_DURATION) {
         setDuration(parsed);
         setTimeLeft(parsed);
       }
@@ -392,7 +230,7 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [started, finished, size, students, winnerId]);
+  }, [started, finished, size, students, winnerId, duration]);
 
   const start = () => {
     setStarted(true);
@@ -456,12 +294,12 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
           <Input
             aria-label="Thời gian đua"
             type="number"
-            min={5}
-            max={120}
+            min={MIN_RACE_DURATION}
+            max={MAX_RACE_DURATION}
             value={draftDuration}
             onChange={(e) => {
               const parsed = parseInt(e.target.value, 10);
-              setDraftDuration(isNaN(parsed) ? DEFAULT_DURATION : parsed);
+              setDraftDuration(isNaN(parsed) ? DEFAULT_RACE_DURATION : parsed);
             }}
             className="h-10 text-base"
           />
@@ -471,10 +309,10 @@ export function DuckRaceCanvas({ students, winnerId, classId }: DuckRaceCanvasPr
             </Button>
             <Button
               onClick={() => {
-                if (draftDuration >= 5 && draftDuration <= 120) {
+                if (draftDuration >= MIN_RACE_DURATION && draftDuration <= MAX_RACE_DURATION) {
                   setDuration(draftDuration);
                   setTimeLeft(draftDuration);
-                  Cookies.set(COOKIE_KEY, String(draftDuration), { expires: 365 });
+                  Cookies.set(RACE_DURATION_COOKIE, String(draftDuration), { expires: 365 });
                   setModalOpen(false);
                 }
               }}

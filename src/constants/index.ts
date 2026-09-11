@@ -90,3 +90,5 @@ export const GRADE_SLOT_WEIGHT: Record<GradeSlot, number> = {
   gk: 2,
   ck: 3,
 };
+
+export * from "./duck-race";
