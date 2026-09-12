@@ -8,11 +8,13 @@ import {
   ChevronLeft,
   ChevronRight,
   GraduationCap,
+  KeyRound,
   LogOut,
   User,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { ChangePasswordDialog } from "@components/auth";
 import { logout } from "@lib/actions";
 
 interface AppShellProps {
@@ -24,6 +26,7 @@ export function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -129,7 +132,17 @@ export function AppShell({ children }: AppShellProps) {
             </Button>
 
             {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-40 rounded-md border bg-popover p-1 shadow-md">
+              <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border bg-popover p-1 shadow-md">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setPasswordOpen(true);
+                  }}
+                >
+                  <KeyRound className="size-4" /> Đổi mật khẩu
+                </button>
                 <form action={logout}>
                   <button
                     type="submit"
@@ -140,6 +153,11 @@ export function AppShell({ children }: AppShellProps) {
                 </form>
               </div>
             )}
+
+            <ChangePasswordDialog
+              open={passwordOpen}
+              onOpenChange={setPasswordOpen}
+            />
           </div>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
