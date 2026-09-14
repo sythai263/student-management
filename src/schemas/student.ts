@@ -13,3 +13,16 @@ export const registerStudentSchema = z.object({
 });
 
 export type RegisterStudentInput = z.infer<typeof registerStudentSchema>;
+
+/** Validation for the "Update Student" server action input. */
+export const updateStudentSchema = z.object({
+  studentId: z.uuid("studentId không hợp lệ"),
+  lastName: z.string().trim().min(1, "Họ không được trống"),
+  firstName: z.string().trim().min(1, "Tên không được trống"),
+  dateOfBirth: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Ngày sinh phải theo định dạng YYYY-MM-DD")
+    .optional(),
+});
+
+export type UpdateStudentInput = z.infer<typeof updateStudentSchema>;

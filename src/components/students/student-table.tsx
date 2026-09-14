@@ -15,6 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useDebounce, usePaginatedStudents } from "@hooks";
+import type { Student } from "@types";
+import { StudentEditDialog } from "./student-edit-dialog";
 import {
   Select,
   SelectContent,
@@ -36,6 +38,7 @@ export function StudentTable({ classId }: StudentTableProps) {
   const search = useDebounce(searchInput, SEARCH_DEBOUNCE_MS);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [editing, setEditing] = useState<Student | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const {
     data: { students, total, totalPages },
@@ -116,7 +119,11 @@ export function StudentTable({ classId }: StudentTableProps) {
               </TableRow>
             ) : (
               students.map((s, index) => (
-                <TableRow key={s.id}>
+                <TableRow
+                  key={s.id}
+                  className="cursor-pointer"
+                  onClick={() => setEditing(s)}
+                >
                   <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
                   <TableCell>{s.studentCode}</TableCell>
                   <TableCell>{s.lastName}</TableCell>
@@ -137,6 +144,8 @@ export function StudentTable({ classId }: StudentTableProps) {
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+
+      <StudentEditDialog student={editing} onClose={() => setEditing(null)} />
     </section>
   );
 }

@@ -1,4 +1,5 @@
 export { registerStudent } from "./register-student";
+export { updateStudent } from "./update-student";
 export { login, logout, changePassword } from "./auth";
 export { groupAttendance } from "./group-attendance";
 export { createClass, deleteClass } from "./classes";

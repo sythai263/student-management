@@ -1,5 +1,5 @@
-export { registerStudentSchema } from "./student";
-export type { RegisterStudentInput } from "./student";
+export { registerStudentSchema, updateStudentSchema } from "./student";
+export type { RegisterStudentInput, UpdateStudentInput } from "./student";
 export { loginSchema, changePasswordSchema } from "./auth";
 export type { LoginInput, ChangePasswordInput } from "./auth";
 export { createSubjectSchema, createSubjectsFromCatalogSchema } from "./subjects";
