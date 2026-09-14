@@ -56,3 +56,5 @@ Thumbs.db
 !.vscode/extensions.json
 
 data
+
+supabase/.temp
