@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createManualSession } from "@lib/actions";
+import { PHOTO_ATTENDANCE_ENABLED } from "@constants";
 import { GroupAttendanceForm } from "./group-attendance-form";
 
 interface AttendanceActionsProps {
@@ -72,36 +73,40 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
             <PenLine />
             {isPending ? "Đang tạo..." : "Điểm danh thủ công"}
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setDialogOpen(true)}
-            className="flex-1"
-          >
-            <Camera />
-            Điểm danh bằng ảnh
-          </Button>
+          {PHOTO_ATTENDANCE_ENABLED && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setDialogOpen(true)}
+              className="flex-1"
+            >
+              <Camera />
+              Điểm danh bằng ảnh
+            </Button>
+          )}
         </div>
       </CardContent>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Điểm danh bằng ảnh</DialogTitle>
-            <DialogDescription>
-              Upload ảnh nhóm để hệ thống tự nhận diện học sinh có mặt.
-            </DialogDescription>
-          </DialogHeader>
-          <GroupAttendanceForm
-            classId={classId}
-            sessionDate={date}
-            onSuccess={(sessionId) => {
-              setDialogOpen(false);
-              router.push(`/classes/${classId}/attendance/${sessionId}`);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      {PHOTO_ATTENDANCE_ENABLED && (
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Điểm danh bằng ảnh</DialogTitle>
+              <DialogDescription>
+                Upload ảnh nhóm để hệ thống tự nhận diện học sinh có mặt.
+              </DialogDescription>
+            </DialogHeader>
+            <GroupAttendanceForm
+              classId={classId}
+              sessionDate={date}
+              onSuccess={(sessionId) => {
+                setDialogOpen(false);
+                router.push(`/classes/${classId}/attendance/${sessionId}`);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </Card>
   );
 }

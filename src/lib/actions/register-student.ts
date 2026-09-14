@@ -20,11 +20,13 @@ import {
 /**
  * Server Action: Register New Student.
  * Flow (per docs/1-project-requirements.md):
- *   1. Client compresses the portrait image, then calls this action.
- *   2. Upload image to MinIO (dev) / Cloudflare R2 (prod) -> public URL.
+ *   1. Client compresses the portrait image (optional), then calls this action.
+ *   2. If an image is provided: upload to MinIO (dev) / Cloudflare R2 (prod)
+ *      -> public URL.
  *   3. AWS Rekognition IndexFaces into the class's Collection,
  *      ExternalImageId = studentCode.
- *   4. Insert student row (awsFaceId + avatarUrl) into Supabase.
+ *   4. Insert student row (awsFaceId + avatarUrl, both null without an image)
+ *      into Supabase.
  */
 export async function registerStudent(
   formData: FormData,
@@ -46,48 +48,55 @@ export async function registerStudent(
     }
     const input = parsed.data;
 
+    // Portrait is optional for the manual MVP — AWS calls are skipped
+    // entirely when no image is provided.
     const image = formData.get("image");
-    if (!(image instanceof File) || image.size === 0) {
-      throw new Error("Thiếu ảnh chân dung học sinh");
-    }
-    const imageBytes = new Uint8Array(await image.arrayBuffer());
+    const imageBytes =
+      image instanceof File && image.size > 0
+        ? new Uint8Array(await image.arrayBuffer())
+        : null;
 
-    // --- 3. Upload portrait to S3 (MinIO / R2) ---
-    const objectKey = `students/${input.classId}/${input.studentCode}-${Date.now()}.jpg`;
-    const s3 = createS3Client();
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: S3_BUCKET,
-        Key: objectKey,
-        Body: imageBytes,
-        ContentType: image.type || "image/jpeg",
-      }),
-    );
-    const avatarUrl = getPublicUrl(objectKey);
-
-    // --- 4. Index face into the class's Rekognition collection ---
-    const rekognition = createRekognitionClient();
-    const collectionId = getCollectionId(input.classId);
-    try {
-      await rekognition.send(
-        new CreateCollectionCommand({ CollectionId: collectionId }),
+    let avatarUrl: string | null = null;
+    let awsFaceId: string | null = null;
+    if (imageBytes && image instanceof File) {
+      // --- 3. Upload portrait to S3 (MinIO / R2) ---
+      const objectKey = `students/${input.classId}/${input.studentCode}-${Date.now()}.jpg`;
+      const s3 = createS3Client();
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: S3_BUCKET,
+          Key: objectKey,
+          Body: imageBytes,
+          ContentType: image.type || "image/jpeg",
+        }),
       );
-    } catch (err) {
-      if (!(err instanceof ResourceAlreadyExistsException)) throw err;
-    }
+      avatarUrl = getPublicUrl(objectKey);
 
-    const indexResult = await rekognition.send(
-      new IndexFacesCommand({
-        CollectionId: collectionId,
-        Image: { Bytes: imageBytes },
-        ExternalImageId: input.studentCode,
-        MaxFaces: 1,
-        QualityFilter: "AUTO",
-      }),
-    );
-    const faceRecord = indexResult.FaceRecords?.[0];
-    if (!faceRecord?.Face?.FaceId) {
-      throw new Error("Không nhận diện được khuôn mặt trong ảnh");
+      // --- 4. Index face into the class's Rekognition collection ---
+      const rekognition = createRekognitionClient();
+      const collectionId = getCollectionId(input.classId);
+      try {
+        await rekognition.send(
+          new CreateCollectionCommand({ CollectionId: collectionId }),
+        );
+      } catch (err) {
+        if (!(err instanceof ResourceAlreadyExistsException)) throw err;
+      }
+
+      const indexResult = await rekognition.send(
+        new IndexFacesCommand({
+          CollectionId: collectionId,
+          Image: { Bytes: imageBytes },
+          ExternalImageId: input.studentCode,
+          MaxFaces: 1,
+          QualityFilter: "AUTO",
+        }),
+      );
+      const faceRecord = indexResult.FaceRecords?.[0];
+      if (!faceRecord?.Face?.FaceId) {
+        throw new Error("Không nhận diện được khuôn mặt trong ảnh");
+      }
+      awsFaceId = faceRecord.Face.FaceId;
     }
 
     // --- 5. Insert student into Supabase (RLS: teacher must own the class) ---
@@ -99,7 +108,7 @@ export async function registerStudent(
         firstName: input.firstName,
         dateOfBirth: input.dateOfBirth ?? null,
         classId: input.classId,
-        awsFaceId: faceRecord.Face.FaceId,
+        awsFaceId,
         avatarUrl,
       })
       .select()

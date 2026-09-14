@@ -31,17 +31,13 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
     const form = e.currentTarget;
     const fileInput = form.elements.namedItem("image") as HTMLInputElement;
     const file = fileInput.files?.[0];
-    if (!file) {
-      setIsError(true);
-      setMessage("Chọn ảnh chân dung");
-      return;
-    }
 
     startTransition(async () => {
-      // Client compresses the image before calling the Server Action.
-      const compressed = await compressImage(file);
       const fd = new FormData(form);
-      fd.set("image", compressed);
+      // Client compresses the image before calling the Server Action.
+      if (file) {
+        fd.set("image", await compressImage(file));
+      }
       fd.set("classId", classId);
 
       const result = await registerStudent(fd);
@@ -63,7 +59,8 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
       <CardHeader>
         <CardTitle>Đăng ký học sinh</CardTitle>
         <CardDescription>
-          Ảnh chân dung sẽ được nén và index vào AWS Rekognition
+          Ảnh chân dung không bắt buộc — nếu có sẽ được nén và index vào AWS
+          Rekognition
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -87,8 +84,8 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="image">Ảnh chân dung</Label>
-            <Input id="image" name="image" type="file" accept="image/*" required />
+            <Label htmlFor="image">Ảnh chân dung (không bắt buộc)</Label>
+            <Input id="image" name="image" type="file" accept="image/*" />
           </div>
           {message && (
             <p

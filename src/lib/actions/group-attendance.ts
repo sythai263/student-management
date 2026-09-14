@@ -5,7 +5,7 @@ import { SearchFacesByImageCommand } from "@aws-sdk/client-rekognition";
 import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
 import type { GroupAttendanceSummary } from "@types";
-import { ATTENDANCE_STATUS } from "@constants";
+import { ATTENDANCE_STATUS, PHOTO_ATTENDANCE_ENABLED } from "@constants";
 import {
   requireTeacher,
   withAction,
@@ -29,6 +29,10 @@ export async function groupAttendance(
   formData: FormData,
 ): Promise<ActionResult<GroupAttendanceSummary>> {
   return withAction(async () => {
+    if (!PHOTO_ATTENDANCE_ENABLED) {
+      throw new Error("Điểm danh bằng ảnh đang tạm tắt");
+    }
+
     // --- 1. Auth ---
     const { supabase } = await requireTeacher();
 
