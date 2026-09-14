@@ -44,9 +44,17 @@ export async function registerStudent(
     // Portrait is optional — AWS calls are skipped entirely when no
     // image is provided.
     const image = formData.get("image");
+    const compressed = formData.get("imageCompressed");
     const face =
       image instanceof File && image.size > 0
-        ? await indexStudentFace(input.classId, input.studentCode, image)
+        ? await indexStudentFace(
+          input.classId,
+          input.studentCode,
+          image,
+          compressed instanceof File && compressed.size > 0
+            ? compressed
+            : undefined,
+        )
         : null;
 
     // --- 5. Upsert student into Supabase (RLS: teacher must own the class) ---

@@ -6,6 +6,7 @@ import {
   ResourceAlreadyExistsException,
 } from "@aws-sdk/client-rekognition";
 import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
+import { REKOGNITION_IMAGE_MAX_BYTES } from "@constants";
 import { createRekognitionClient } from "./client";
 import { getCollectionId } from "./collection";
 
@@ -18,13 +19,21 @@ export interface IndexedFace {
  * Shared face-registration pipeline used by register-student and
  * update-student: upload portrait to S3, ensure the class collection
  * exists, IndexFaces with ExternalImageId = studentCode.
+ *
+ * `image` is the original file (max accuracy for Rekognition);
+ * `storageImage` is the compressed copy kept in S3. If the original
+ * exceeds the Rekognition Bytes limit, the compressed copy is used.
  */
 export async function indexStudentFace(
   classId: string,
   studentCode: string,
   image: File,
+  storageImage: File = image,
 ): Promise<IndexedFace> {
-  const imageBytes = new Uint8Array(await image.arrayBuffer());
+  const rekognitionSource =
+    image.size <= REKOGNITION_IMAGE_MAX_BYTES ? image : storageImage;
+  const imageBytes = new Uint8Array(await rekognitionSource.arrayBuffer());
+  const storageBytes = new Uint8Array(await storageImage.arrayBuffer());
 
   // Upload portrait to S3 (MinIO / R2).
   const objectKey = `students/${classId}/${studentCode}-${Date.now()}.jpg`;
@@ -33,8 +42,8 @@ export async function indexStudentFace(
     new PutObjectCommand({
       Bucket: S3_BUCKET,
       Key: objectKey,
-      Body: imageBytes,
-      ContentType: image.type || "image/jpeg",
+      Body: storageBytes,
+      ContentType: storageImage.type || "image/jpeg",
     }),
   );
   const avatarUrl = getPublicUrl(objectKey);

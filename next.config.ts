@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
+  experimental: {
+    serverActions: {
+      // Original photos are sent to Rekognition — allow larger FormData bodies.
+      bodySizeLimit: "50mb",
+    },
+    // src/proxy.ts truncates request bodies at 10MB by default — must be
+    // >= serverActions.bodySizeLimit or uploads end mid-stream.
+    proxyClientMaxBodySize: "50mb",
+  },
   images: {
     remotePatterns: [
       // MinIO local

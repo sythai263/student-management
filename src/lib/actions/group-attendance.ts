@@ -5,7 +5,12 @@ import { SearchFacesByImageCommand } from "@aws-sdk/client-rekognition";
 import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
 import type { GroupAttendanceSummary } from "@types";
-import { ATTENDANCE_STATUS, PHOTO_ATTENDANCE_ENABLED } from "@constants";
+import {
+  ATTENDANCE_STATUS,
+  FACE_MATCH_THRESHOLD,
+  PHOTO_ATTENDANCE_ENABLED,
+  REKOGNITION_IMAGE_MAX_BYTES,
+} from "@constants";
 import {
   requireTeacher,
   withAction,
@@ -44,17 +49,24 @@ export async function groupAttendance(
       (formData.get("sessionDate") as string | null) ||
       new Date().toISOString().slice(0, 10);
 
+    // `photos`: originals (best accuracy for Rekognition).
+    // `photosCompressed`: smaller copies kept in S3 storage.
     const photos = formData
       .getAll("photos")
       .filter((f): f is File => f instanceof File && f.size > 0);
     if (photos.length === 0) {
       throw new Error("Cần ít nhất 1 ảnh nhóm");
     }
+    const compressed = formData
+      .getAll("photosCompressed")
+      .filter((f): f is File => f instanceof File && f.size > 0);
+    const storagePhotos =
+      compressed.length === photos.length ? compressed : photos;
 
     // --- 2. Upload all photos to S3 ---
     const s3 = createS3Client();
     const imageUrls = await Promise.all(
-      photos.map(async (photo, i) => {
+      storagePhotos.map(async (photo, i) => {
         const key = `attendance/${classId}/${sessionDate}/${Date.now()}-${i}.jpg`;
         await s3.send(
           new PutObjectCommand({
@@ -80,14 +92,20 @@ export async function groupAttendance(
     const rekognition = createRekognitionClient();
     const collectionId = getCollectionId(classId);
     const searchResults = await Promise.all(
-      photos.map(async (photo) => {
-        const bytes = new Uint8Array(await photo.arrayBuffer());
+      photos.map(async (photo, i) => {
+        // Fall back to the compressed copy when the original exceeds
+        // the Rekognition Bytes payload limit.
+        const source =
+          photo.size <= REKOGNITION_IMAGE_MAX_BYTES
+            ? photo
+            : storagePhotos[i];
+        const bytes = new Uint8Array(await source.arrayBuffer());
         const res = await rekognition.send(
           new SearchFacesByImageCommand({
             CollectionId: collectionId,
             Image: { Bytes: bytes },
             MaxFaces: 50,
-            FaceMatchThreshold: 80,
+            FaceMatchThreshold: FACE_MATCH_THRESHOLD,
           }),
         );
         return res.FaceMatches ?? [];

@@ -34,9 +34,10 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
 
     startTransition(async () => {
       const fd = new FormData(form);
-      // Client compresses the image before calling the Server Action.
+      // "image" stays the original for Rekognition; the compressed
+      // copy is what gets stored in S3.
       if (file) {
-        fd.set("image", await compressImage(file));
+        fd.set("imageCompressed", await compressImage(file));
       }
       fd.set("classId", classId);
 

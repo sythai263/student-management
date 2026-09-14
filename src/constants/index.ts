@@ -65,6 +65,12 @@ export const ROLL_CALL_SECONDS = 10;
  */
 export const PHOTO_ATTENDANCE_ENABLED = true;
 
+/** Rekognition similarity threshold for SearchFacesByImage (0-100). */
+export const FACE_MATCH_THRESHOLD = 70;
+
+/** Rekognition rejects Bytes payloads over 5MB — keep a safety margin. */
+export const REKOGNITION_IMAGE_MAX_BYTES = 4.5 * 1024 * 1024;
+
 /** Fixed grade slots per subject/semester. */
 export const GRADE_SLOTS = ["tx1", "tx2", "tx3", "tx4", "gk", "ck"] as const;
 

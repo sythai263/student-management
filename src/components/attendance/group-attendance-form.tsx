@@ -40,7 +40,10 @@ export function GroupAttendanceForm({
       fd.set("classId", classId);
       fd.set("sessionDate", sessionDate);
       for (const file of files) {
-        fd.append("photos", await compressImage(file, 1920, 0.85));
+        // Original goes to Rekognition for best accuracy; the
+        // compressed copy is what gets stored in S3.
+        fd.append("photos", file);
+        fd.append("photosCompressed", await compressImage(file, 1920, 0.85));
       }
 
       const result = await groupAttendance(fd);

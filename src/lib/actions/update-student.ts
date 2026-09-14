@@ -43,9 +43,17 @@ export async function updateStudent(
 
     // Optional new portrait -> re-index the face under the same studentCode.
     const image = formData.get("image");
+    const compressed = formData.get("imageCompressed");
     const face =
       image instanceof File && image.size > 0
-        ? await indexStudentFace(classId, existing.studentCode as string, image)
+        ? await indexStudentFace(
+          classId,
+          existing.studentCode as string,
+          image,
+          compressed instanceof File && compressed.size > 0
+            ? compressed
+            : undefined,
+        )
         : null;
 
     const { data: student, error } = await supabase

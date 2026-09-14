@@ -58,8 +58,9 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
     const file = fileRef.current?.files?.[0];
 
     startTransition(async () => {
-      // Client compresses the image before calling the Server Action.
-      if (file) fd.set("image", await compressImage(file));
+      // "image" stays the original for Rekognition; the compressed
+      // copy is what gets stored in S3.
+      if (file) fd.set("imageCompressed", await compressImage(file));
       fd.set("studentId", student.id);
 
       const result = await updateStudent(fd);
