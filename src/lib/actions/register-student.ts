@@ -3,6 +3,7 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import {
   CreateCollectionCommand,
+  DeleteFacesCommand,
   IndexFacesCommand,
   ResourceAlreadyExistsException,
 } from "@aws-sdk/client-rekognition";
@@ -25,8 +26,8 @@ import {
  *      -> public URL.
  *   3. AWS Rekognition IndexFaces into the class's Collection,
  *      ExternalImageId = studentCode.
- *   4. Insert student row (awsFaceId + avatarUrl, both null without an image)
- *      into Supabase.
+ *   4. Upsert student row into Supabase: existing studentCode in the class
+ *      gets updated (new image re-indexes the face), otherwise insert.
  */
 export async function registerStudent(
   formData: FormData,
@@ -99,22 +100,58 @@ export async function registerStudent(
       awsFaceId = faceRecord.Face.FaceId;
     }
 
-    // --- 5. Insert student into Supabase (RLS: teacher must own the class) ---
-    const { data: student, error } = await supabase
+    // --- 5. Upsert student into Supabase (RLS: teacher must own the class) ---
+    const { data: existing, error: existingError } = await supabase
       .from("students")
-      .insert({
-        studentCode: input.studentCode,
-        lastName: input.lastName,
-        firstName: input.firstName,
-        dateOfBirth: input.dateOfBirth ?? null,
-        classId: input.classId,
-        awsFaceId,
-        avatarUrl,
-      })
-      .select()
-      .single();
+      .select("id, awsFaceId")
+      .eq("classId", input.classId)
+      .eq("studentCode", input.studentCode)
+      .maybeSingle();
+    if (existingError) throw new Error(existingError.message);
 
+    const baseFields = {
+      lastName: input.lastName,
+      firstName: input.firstName,
+      dateOfBirth: input.dateOfBirth ?? null,
+    };
+    // Keep the old face data when no new image was provided.
+    const faceFields = awsFaceId ? { awsFaceId, avatarUrl } : {};
+
+    const { data: student, error } = existing
+      ? await supabase
+        .from("students")
+        .update({ ...baseFields, ...faceFields })
+        .eq("id", existing.id as string)
+        .select()
+        .single()
+      : await supabase
+        .from("students")
+        .insert({
+          studentCode: input.studentCode,
+          classId: input.classId,
+          ...baseFields,
+          awsFaceId,
+          avatarUrl,
+        })
+        .select()
+        .single();
     if (error) throw new Error(error.message);
+
+    // Re-indexed face: drop the old vector so stale faces don't accumulate.
+    if (existing?.awsFaceId && awsFaceId) {
+      try {
+        const rekognition = createRekognitionClient();
+        await rekognition.send(
+          new DeleteFacesCommand({
+            CollectionId: getCollectionId(input.classId),
+            FaceIds: [existing.awsFaceId as string],
+          }),
+        );
+      } catch {
+        // Best-effort cleanup — a stale vector still maps to the same student.
+      }
+    }
+
     await initializeGradesForClassStudents(
       supabase,
       input.classId,

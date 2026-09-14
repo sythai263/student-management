@@ -63,7 +63,7 @@ export const ROLL_CALL_SECONDS = 10;
  * Feature flag: photo-based attendance via AWS Rekognition.
  * Disabled for the manual MVP — flip to true once the AWS API is verified.
  */
-export const PHOTO_ATTENDANCE_ENABLED = false;
+export const PHOTO_ATTENDANCE_ENABLED = true;
 
 /** Fixed grade slots per subject/semester. */
 export const GRADE_SLOTS = ["tx1", "tx2", "tx3", "tx4", "gk", "ck"] as const;
