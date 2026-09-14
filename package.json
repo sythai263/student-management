@@ -38,7 +38,11 @@
   "private": true,
   "scripts": {
     "build": "next build",
+    "db:migrate": "for f in supabase/migrations/*.sql; do echo \"Applying $f\"; docker exec -i sm-postgres psql -v ON_ERROR_STOP=1 -U supabase_admin -d postgres < \"$f\" || exit 1; done",
+    "db:migrate:remote": "for f in supabase/migrations/*.sql; do echo \"Applying $f\"; psql -v ON_ERROR_STOP=1 \"$DATABASE_URL\" -f \"$f\" || exit 1; done",
+    "db:psql": "docker exec -it sm-postgres psql -U supabase_admin -d postgres",
     "db:seed": "docker exec -i sm-postgres psql -U supabase_admin -d postgres < supabase/seed.sql",
+    "db:seed:remote": "psql -v ON_ERROR_STOP=1 \"$DATABASE_URL\" -f supabase/seed.sql",
     "dev": "next dev",
     "docker:down": "docker compose -f docker-compose.yaml down",
     "docker:logs": "docker compose -f docker-compose.yaml logs -f",
