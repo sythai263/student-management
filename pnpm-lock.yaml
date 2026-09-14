@@ -172,6 +172,9 @@ importers:
       shadcn:
         specifier: ^4.21.0
         version: 4.21.0(typescript@7.0.2)
+      sharp:
+        specifier: ^0.35.4
+        version: 0.35.4
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0

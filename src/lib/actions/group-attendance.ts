@@ -1,7 +1,11 @@
 "use server";
 
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { SearchFacesByImageCommand } from "@aws-sdk/client-rekognition";
+import {
+  DetectFacesCommand,
+  SearchFacesByImageCommand,
+} from "@aws-sdk/client-rekognition";
+import sharp from "sharp";
 import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
 import type { GroupAttendanceSummary } from "@types";
@@ -23,9 +27,9 @@ import {
  *   1. Teacher uploads an array of group photos.
  *   2. Upload all photos to MinIO/R2 -> imageUrls.
  *   3. Create an attendanceSessions row.
- *   4. Promise.all: SearchFacesByImageCommand per photo on the class's
- *      Rekognition collection.
- *   5. Collect ExternalImageIds (= studentCode) into a Set to dedupe
+ *   4. Per photo: DetectFaces -> crop each face -> SearchFacesByImage per
+ *      crop (the API only matches the largest face, so crops are required).
+ *   5. Collect ExternalImageIds (= studentCode) into a Map to dedupe
  *      students appearing in multiple photos; keep the best confidence.
  *   6. Insert attendanceRecords: CO_MAT if studentCode in the Set,
  *      VANG otherwise.
@@ -88,10 +92,15 @@ export async function groupAttendance(
       .single();
     if (sessionError) throw new Error(sessionError.message);
 
-    // --- 4. Search faces in every photo (parallel) ---
+    // --- 4. Search faces in every photo ---
+    // SearchFacesByImage only matches the LARGEST face in an image, so the
+    // group-photo flow is: DetectFaces -> crop each face (padded) ->
+    // SearchFacesByImage per crop.
     const rekognition = createRekognitionClient();
     const collectionId = getCollectionId(classId);
-    const searchResults = await Promise.all(
+    const presentMap = new Map<string, number>();
+
+    await Promise.all(
       photos.map(async (photo, i) => {
         // Fall back to the compressed copy when the original exceeds
         // the Rekognition Bytes payload limit.
@@ -100,31 +109,74 @@ export async function groupAttendance(
             ? photo
             : storagePhotos[i];
         const bytes = new Uint8Array(await source.arrayBuffer());
-        const res = await rekognition.send(
-          new SearchFacesByImageCommand({
-            CollectionId: collectionId,
-            Image: { Bytes: bytes },
-            MaxFaces: 50,
-            FaceMatchThreshold: FACE_MATCH_THRESHOLD,
+
+        const detect = await rekognition.send(
+          new DetectFacesCommand({ Image: { Bytes: bytes } }),
+        );
+
+        // .rotate() normalizes EXIF orientation — Rekognition reports
+        // bounding boxes in the orientation-corrected frame.
+        const img = sharp(bytes).rotate();
+        const { width = 0, height = 0 } = await img.metadata();
+
+        const PAD = 0.3;
+        const crops = await Promise.all(
+          (detect.FaceDetails ?? []).map(async (face) => {
+            const bb = face.BoundingBox;
+            if (!bb?.Width || !bb.Height || bb.Left == null || bb.Top == null) {
+              return null;
+            }
+            const left = Math.max(0, Math.floor((bb.Left - bb.Width * PAD) * width));
+            const top = Math.max(0, Math.floor((bb.Top - bb.Height * PAD) * height));
+            const w = Math.min(
+              width - left,
+              Math.ceil(bb.Width * (1 + PAD * 2) * width),
+            );
+            const h = Math.min(
+              height - top,
+              Math.ceil(bb.Height * (1 + PAD * 2) * height),
+            );
+            if (w < 20 || h < 20) return null;
+            return img
+              .clone()
+              .extract({ left, top, width: w, height: h })
+              .jpeg({ quality: 92 })
+              .toBuffer();
           }),
         );
-        return res.FaceMatches ?? [];
+
+        const results = await Promise.all(
+          crops
+            .filter((c) => c !== null)
+            .map((crop) =>
+              rekognition
+                .send(
+                  new SearchFacesByImageCommand({
+                    CollectionId: collectionId,
+                    Image: { Bytes: crop },
+                    MaxFaces: 1,
+                    FaceMatchThreshold: FACE_MATCH_THRESHOLD,
+                  }),
+                )
+                .then((r) => r.FaceMatches ?? [])
+                .catch(() => []),
+            ),
+        );
+
+        // Dedupe: studentCode -> best similarity across all crops/photos.
+        for (const matches of results) {
+          for (const match of matches) {
+            const code = match.Face?.ExternalImageId;
+            const confidence = match.Similarity ?? match.Face?.Confidence ?? 0;
+            if (!code) continue;
+            const prev = presentMap.get(code);
+            if (prev === undefined || confidence > prev) {
+              presentMap.set(code, confidence);
+            }
+          }
+        }
       }),
     );
-
-    // --- 5. Dedupe: studentCode -> best confidence ---
-    const presentMap = new Map<string, number>();
-    for (const matches of searchResults) {
-      for (const match of matches) {
-        const code = match.Face?.ExternalImageId;
-        const confidence = match.Similarity ?? match.Face?.Confidence ?? 0;
-        if (!code) continue;
-        const prev = presentMap.get(code);
-        if (prev === undefined || confidence > prev) {
-          presentMap.set(code, confidence);
-        }
-      }
-    }
 
     // --- 6. Build attendanceRecords for the whole class roster ---
     const { data: students, error: studentsError } = await supabase
