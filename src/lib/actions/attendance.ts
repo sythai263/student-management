@@ -64,7 +64,7 @@ export async function createManualSession(
     const date = sessionDate ?? new Date().toISOString().slice(0, 10);
     const { data: session, error: sessionError } = await supabase
       .from("attendanceSessions")
-      .insert({ classId, sessionDate: date, imageUrls: [] })
+      .insert({ classId, sessionDate: date, imageKeys: [] })
       .select("id")
       .single();
     if (sessionError) throw new Error(sessionError.message);

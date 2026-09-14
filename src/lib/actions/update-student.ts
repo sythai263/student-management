@@ -13,7 +13,7 @@ import {
  * Server Action: Update Student.
  * Edits name/dateOfBirth and, when a new portrait is attached, runs the
  * same pipeline as register-student: upload to S3, IndexFaces with
- * ExternalImageId = studentCode, then swap awsFaceId + avatarUrl on the row.
+ * ExternalImageId = studentCode, then swap awsFaceId + avatarKey on the row.
  */
 export async function updateStudent(
   formData: FormData,
@@ -66,7 +66,7 @@ export async function updateStudent(
         firstName: input.firstName,
         dateOfBirth: input.dateOfBirth ?? null,
         ...(face
-          ? { awsFaceId: face.awsFaceId, avatarUrl: face.avatarUrl }
+          ? { awsFaceId: face.awsFaceId, avatarKey: face.avatarKey }
           : {}),
       })
       .eq("id", existing.id as string)

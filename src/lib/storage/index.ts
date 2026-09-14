@@ -1,4 +1,4 @@
-export { createS3Client, getPublicUrl, S3_BUCKET } from "./s3";
+export { createS3Client, S3_BUCKET } from "./s3";
 export {
   createPresignedUploadUrl,
   downloadObject,

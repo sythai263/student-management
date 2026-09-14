@@ -5,7 +5,7 @@ import {
   SearchFacesByImageCommand,
 } from "@aws-sdk/client-rekognition";
 import sharp from "sharp";
-import { deleteObject, downloadObject, getPublicUrl } from "@lib/storage";
+import { deleteObject, downloadObject } from "@lib/storage";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
 import type { GroupAttendanceSummary } from "@types";
 import {
@@ -27,7 +27,7 @@ import {
  *      group photo directly to storage (see `uploadDirect`) — only the
  *      resulting keys are sent here, never the files themselves
  *      (Vercel Functions cap request bodies at 4.5MB).
- *   2. `displayKeys` already sit at their final storage location -> imageUrls.
+ *   2. `displayKeys` already sit at their final storage location -> imageKeys.
  *   3. Create an attendanceSessions row.
  *   4. Per original: download bytes -> DetectFaces -> crop each face ->
  *      SearchFacesByImage per crop (the API only matches the largest
@@ -68,14 +68,15 @@ export async function groupAttendance(
     const displayKeys = formData
       .getAll("photoDisplayKeys")
       .filter((v): v is string => typeof v === "string" && v.length > 0);
-    const imageUrls = (
-      displayKeys.length === photoKeys.length ? displayKeys : photoKeys
-    ).map(getPublicUrl);
+    // Keys are stored, not URLs — the bucket has no public access, the
+    // browser reads them back through the authenticated /api/image route.
+    const imageKeys =
+      displayKeys.length === photoKeys.length ? displayKeys : photoKeys;
 
     // --- 3. Create the attendance session ---
     const { data: session, error: sessionError } = await supabase
       .from("attendanceSessions")
-      .insert({ classId, sessionDate, imageUrls })
+      .insert({ classId, sessionDate, imageKeys })
       .select("id")
       .single();
     if (sessionError) throw new Error(sessionError.message);

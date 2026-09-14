@@ -10,16 +10,8 @@ const nextConfig: NextConfig = {
   // receive small string fields (storage keys), so the default 1MB
   // body limit is enough. Required anyway: Vercel Functions hard-cap
   // request bodies at 4.5MB regardless of this setting.
-  images: {
-    remotePatterns: [
-      // MinIO local
-      { protocol: "http", hostname: "localhost", port: "9000" },
-      // Cloudflare R2 public bucket domain (set via env when deploying)
-      ...(process.env.R2_PUBLIC_HOSTNAME
-        ? [{ protocol: "https" as const, hostname: process.env.R2_PUBLIC_HOSTNAME }]
-        : []),
-    ],
-  },
+  // Stored images are private: they render through the authenticated
+  // /api/image route, so no remote image hostnames are needed.
 };
 
 export default nextConfig;

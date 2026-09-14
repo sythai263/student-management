@@ -17,7 +17,7 @@ export interface UploadUrl {
  * Storage prefix per upload kind.
  * - "*-original": full-quality file kept only long enough for
  *   Rekognition to read it, then deleted (see rekognition/faces.ts).
- * - "*-display": compressed copy kept permanently as avatarUrl/imageUrls.
+ * - "*-display": compressed copy kept permanently as avatarKey/imageKeys.
  */
 const KIND_PREFIX = {
   "student-original": "tmp/students",

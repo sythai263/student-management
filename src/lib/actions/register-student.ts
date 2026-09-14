@@ -15,7 +15,7 @@ import {
  * Flow (per docs/1-project-requirements.md):
  *   1. Client compresses the portrait image (optional), then calls this action.
  *   2. If an image is provided: upload to MinIO (dev) / Cloudflare R2 (prod)
- *      -> public URL.
+ *      -> storage object key (served via the authenticated /api/image route).
  *   3. AWS Rekognition IndexFaces into the class's Collection,
  *      ExternalImageId = studentCode.
  *   4. Upsert student row into Supabase: existing studentCode in the class
@@ -75,7 +75,7 @@ export async function registerStudent(
     };
     // Keep the old face data when no new image was provided.
     const faceFields = face
-      ? { awsFaceId: face.awsFaceId, avatarUrl: face.avatarUrl }
+      ? { awsFaceId: face.awsFaceId, avatarKey: face.avatarKey }
       : {};
 
     const { data: student, error } = existing
@@ -92,7 +92,7 @@ export async function registerStudent(
           classId: input.classId,
           ...baseFields,
           awsFaceId: face?.awsFaceId ?? null,
-          avatarUrl: face?.avatarUrl ?? null,
+          avatarKey: face?.avatarKey ?? null,
         })
         .select()
         .single();

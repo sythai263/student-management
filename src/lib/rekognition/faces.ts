@@ -4,14 +4,14 @@ import {
   IndexFacesCommand,
   ResourceAlreadyExistsException,
 } from "@aws-sdk/client-rekognition";
-import { deleteObject, downloadObject, getPublicUrl } from "@lib/storage";
+import { deleteObject, downloadObject } from "@lib/storage";
 import { REKOGNITION_IMAGE_MAX_BYTES } from "@constants";
 import { createRekognitionClient } from "./client";
 import { getCollectionId } from "./collection";
 
 export interface IndexedFace {
   awsFaceId: string;
-  avatarUrl: string;
+  avatarKey: string;
 }
 
 /**
@@ -23,7 +23,8 @@ export interface IndexedFace {
  *
  * `imageKey` is the temp original: downloaded here for IndexFaces,
  * then deleted. `avatarKey` is the compressed copy already sitting at
- * its final, permanent location.
+ * its final, permanent location — stored on the student row and served
+ * back through the authenticated /api/image route.
  */
 export async function indexStudentFace(
   classId: string,
@@ -37,7 +38,6 @@ export async function indexStudentFace(
   if (imageBytes.byteLength > REKOGNITION_IMAGE_MAX_BYTES) {
     imageBytes = await downloadObject(avatarKey);
   }
-  const avatarUrl = getPublicUrl(avatarKey);
 
   // Index face into the class's Rekognition collection.
   const rekognition = createRekognitionClient();
@@ -67,7 +67,7 @@ export async function indexStudentFace(
   // Temp original no longer needed once indexed.
   await deleteObject(imageKey);
 
-  return { awsFaceId: faceRecord.Face.FaceId, avatarUrl };
+  return { awsFaceId: faceRecord.Face.FaceId, avatarKey };
 }
 
 /** Remove a face vector from the class collection (best-effort). */

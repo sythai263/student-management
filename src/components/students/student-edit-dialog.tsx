@@ -89,7 +89,13 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
     });
   };
 
-  const avatarSrc = preview ?? student.avatarUrl;
+  // Stored value is a private object key — fetched through the
+  // authenticated /api/image proxy, never a public URL.
+  const avatarSrc =
+    preview ??
+    (student.avatarKey
+      ? `/api/image?key=${encodeURIComponent(student.avatarKey)}`
+      : null);
 
   return (
     <Dialog open={!!student} onOpenChange={(o) => !o && onClose()}>

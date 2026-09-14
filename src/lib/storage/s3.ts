@@ -25,12 +25,6 @@ export function createS3Client(): S3Client {
   });
 }
 
-/** Build the public URL for a stored object key. */
-export function getPublicUrl(objectKey: string): string {
-  const base = process.env.S3_PUBLIC_BASE_URL!.replace(/\/$/, "");
-  return `${base}/${objectKey}`;
-}
-
 export const S3_BUCKET = process.env.S3_BUCKET ?? "student-management";
 
 /**

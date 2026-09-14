@@ -18,14 +18,14 @@ Class rosters are fixed per school year: 1 student belongs to exactly 1 class.
 - `dateOfBirth` (Date, nullable)
 - `classId` (UUID, Foreign Key to classes.id)
 - `awsFaceId` (Text, retrieved from AWS Rekognition)
-- `avatarUrl` (Text, MinIO/R2 URL)
+- `avatarKey` (Text, MinIO/R2 object key — served via authenticated /api/image)
 - `createdAt` (Timestamptz)
 
 ## 3. Table: attendanceSessions
 - `id` (UUID, Primary Key)
 - `classId` (UUID, Foreign Key to classes.id)
 - `sessionDate` (Date)
-- `imageUrls` (Text Array, URLs of the uploaded group photos)
+- `imageKeys` (Text Array, object keys of the uploaded group photos)
 - `createdAt` (Timestamptz)
 
 ## 4. Table: attendanceRecords

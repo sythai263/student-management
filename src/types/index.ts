@@ -19,7 +19,7 @@ export interface Student {
   dateOfBirth: string | null;
   classId: string;
   awsFaceId: string | null;
-  avatarUrl: string | null;
+  avatarKey: string | null;
   createdAt: string;
 }
 
@@ -27,7 +27,7 @@ export interface AttendanceSession {
   id: string;
   classId: string;
   sessionDate: string;
-  imageUrls: string[];
+  imageKeys: string[];
   closed: boolean;
   createdAt: string;
 }

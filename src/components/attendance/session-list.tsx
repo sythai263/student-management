@@ -50,9 +50,9 @@ export function SessionList({ classId }: SessionListProps) {
               className="flex items-center gap-3 rounded-md border p-3 transition-colors hover:border-primary"
             >
               <span className="font-medium">{s.sessionDate}</span>
-              <Badge variant={s.imageUrls.length > 0 ? "default" : "secondary"}>
-                {s.imageUrls.length > 0
-                  ? `${s.imageUrls.length} ảnh`
+              <Badge variant={s.imageKeys.length > 0 ? "default" : "secondary"}>
+                {s.imageKeys.length > 0
+                  ? `${s.imageKeys.length} ảnh`
                   : "Thủ công"}
               </Badge>
               {s.closed && (
