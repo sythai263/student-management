@@ -41,18 +41,21 @@ export async function updateStudent(
 
     const classId = existing.classId as string;
 
-    // Optional new portrait -> re-index the face under the same studentCode.
-    const image = formData.get("image");
-    const compressed = formData.get("imageCompressed");
+    // Optional new portrait -> re-index the face under the same
+    // studentCode. Both keys point at files already uploaded directly
+    // to storage by the client (see `uploadDirect`).
+    const imageKey = formData.get("imageKey");
+    const avatarKey = formData.get("avatarKey");
     const face =
-      image instanceof File && image.size > 0
+      typeof imageKey === "string" &&
+        imageKey.length > 0 &&
+        typeof avatarKey === "string" &&
+        avatarKey.length > 0
         ? await indexStudentFace(
           classId,
           existing.studentCode as string,
-          image,
-          compressed instanceof File && compressed.size > 0
-            ? compressed
-            : undefined,
+          imageKey,
+          avatarKey,
         )
         : null;
 

@@ -42,18 +42,20 @@ export async function registerStudent(
     const input = parsed.data;
 
     // Portrait is optional — AWS calls are skipped entirely when no
-    // image is provided.
-    const image = formData.get("image");
-    const compressed = formData.get("imageCompressed");
+    // image is provided. Both keys point at files already uploaded
+    // directly to storage by the client (see `uploadDirect`).
+    const imageKey = formData.get("imageKey");
+    const avatarKey = formData.get("avatarKey");
     const face =
-      image instanceof File && image.size > 0
+      typeof imageKey === "string" &&
+        imageKey.length > 0 &&
+        typeof avatarKey === "string" &&
+        avatarKey.length > 0
         ? await indexStudentFace(
           input.classId,
           input.studentCode,
-          image,
-          compressed instanceof File && compressed.size > 0
-            ? compressed
-            : undefined,
+          imageKey,
+          avatarKey,
         )
         : null;
 

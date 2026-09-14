@@ -1,11 +1,10 @@
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import {
   CreateCollectionCommand,
   DeleteFacesCommand,
   IndexFacesCommand,
   ResourceAlreadyExistsException,
 } from "@aws-sdk/client-rekognition";
-import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
+import { deleteObject, downloadObject, getPublicUrl } from "@lib/storage";
 import { REKOGNITION_IMAGE_MAX_BYTES } from "@constants";
 import { createRekognitionClient } from "./client";
 import { getCollectionId } from "./collection";
@@ -17,36 +16,28 @@ export interface IndexedFace {
 
 /**
  * Shared face-registration pipeline used by register-student and
- * update-student: upload portrait to S3, ensure the class collection
- * exists, IndexFaces with ExternalImageId = studentCode.
+ * update-student. Both the original (full quality, best accuracy for
+ * Rekognition) and the compressed display copy are uploaded directly
+ * from the browser to storage beforehand (see `uploadDirect` /
+ * `createUploadUrl`) — Server Actions never receive the raw file.
  *
- * `image` is the original file (max accuracy for Rekognition);
- * `storageImage` is the compressed copy kept in S3. If the original
- * exceeds the Rekognition Bytes limit, the compressed copy is used.
+ * `imageKey` is the temp original: downloaded here for IndexFaces,
+ * then deleted. `avatarKey` is the compressed copy already sitting at
+ * its final, permanent location.
  */
 export async function indexStudentFace(
   classId: string,
   studentCode: string,
-  image: File,
-  storageImage: File = image,
+  imageKey: string,
+  avatarKey: string,
 ): Promise<IndexedFace> {
-  const rekognitionSource =
-    image.size <= REKOGNITION_IMAGE_MAX_BYTES ? image : storageImage;
-  const imageBytes = new Uint8Array(await rekognitionSource.arrayBuffer());
-  const storageBytes = new Uint8Array(await storageImage.arrayBuffer());
-
-  // Upload portrait to S3 (MinIO / R2).
-  const objectKey = `students/${classId}/${studentCode}-${Date.now()}.jpg`;
-  const s3 = createS3Client();
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: S3_BUCKET,
-      Key: objectKey,
-      Body: storageBytes,
-      ContentType: storageImage.type || "image/jpeg",
-    }),
-  );
-  const avatarUrl = getPublicUrl(objectKey);
+  // Rekognition's Bytes payload caps at 5MB — camera originals can be
+  // much larger, so fall back to the compressed display copy.
+  let imageBytes = await downloadObject(imageKey);
+  if (imageBytes.byteLength > REKOGNITION_IMAGE_MAX_BYTES) {
+    imageBytes = await downloadObject(avatarKey);
+  }
+  const avatarUrl = getPublicUrl(avatarKey);
 
   // Index face into the class's Rekognition collection.
   const rekognition = createRekognitionClient();
@@ -72,6 +63,10 @@ export async function indexStudentFace(
   if (!faceRecord?.Face?.FaceId) {
     throw new Error("Không nhận diện được khuôn mặt trong ảnh");
   }
+
+  // Temp original no longer needed once indexed.
+  await deleteObject(imageKey);
+
   return { awsFaceId: faceRecord.Face.FaceId, avatarUrl };
 }
 

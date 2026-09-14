@@ -1,12 +1,11 @@
 "use server";
 
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import {
   DetectFacesCommand,
   SearchFacesByImageCommand,
 } from "@aws-sdk/client-rekognition";
 import sharp from "sharp";
-import { createS3Client, getPublicUrl, S3_BUCKET } from "@lib/storage";
+import { deleteObject, downloadObject, getPublicUrl } from "@lib/storage";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
 import type { GroupAttendanceSummary } from "@types";
 import {
@@ -24,11 +23,15 @@ import {
 /**
  * Server Action: Group Attendance.
  * Flow (per docs/1-project-requirements.md):
- *   1. Teacher uploads an array of group photos.
- *   2. Upload all photos to MinIO/R2 -> imageUrls.
+ *   1. Teacher's browser uploads original + compressed copies of each
+ *      group photo directly to storage (see `uploadDirect`) — only the
+ *      resulting keys are sent here, never the files themselves
+ *      (Vercel Functions cap request bodies at 4.5MB).
+ *   2. `displayKeys` already sit at their final storage location -> imageUrls.
  *   3. Create an attendanceSessions row.
- *   4. Per photo: DetectFaces -> crop each face -> SearchFacesByImage per
- *      crop (the API only matches the largest face, so crops are required).
+ *   4. Per original: download bytes -> DetectFaces -> crop each face ->
+ *      SearchFacesByImage per crop (the API only matches the largest
+ *      face, so crops are required) -> delete the temp original.
  *   5. Collect ExternalImageIds (= studentCode) into a Map to dedupe
  *      students appearing in multiple photos; keep the best confidence.
  *   6. Insert attendanceRecords: CO_MAT if studentCode in the Set,
@@ -53,36 +56,21 @@ export async function groupAttendance(
       (formData.get("sessionDate") as string | null) ||
       new Date().toISOString().slice(0, 10);
 
-    // `photos`: originals (best accuracy for Rekognition).
-    // `photosCompressed`: smaller copies kept in S3 storage.
-    const photos = formData
-      .getAll("photos")
-      .filter((f): f is File => f instanceof File && f.size > 0);
-    if (photos.length === 0) {
+    // `photoKeys`: temp originals (best accuracy for Rekognition), deleted
+    // after use. `photoDisplayKeys`: compressed copies already uploaded
+    // to their final, permanent storage location.
+    const photoKeys = formData
+      .getAll("photoKeys")
+      .filter((v): v is string => typeof v === "string" && v.length > 0);
+    if (photoKeys.length === 0) {
       throw new Error("Cần ít nhất 1 ảnh nhóm");
     }
-    const compressed = formData
-      .getAll("photosCompressed")
-      .filter((f): f is File => f instanceof File && f.size > 0);
-    const storagePhotos =
-      compressed.length === photos.length ? compressed : photos;
-
-    // --- 2. Upload all photos to S3 ---
-    const s3 = createS3Client();
-    const imageUrls = await Promise.all(
-      storagePhotos.map(async (photo, i) => {
-        const key = `attendance/${classId}/${sessionDate}/${Date.now()}-${i}.jpg`;
-        await s3.send(
-          new PutObjectCommand({
-            Bucket: S3_BUCKET,
-            Key: key,
-            Body: new Uint8Array(await photo.arrayBuffer()),
-            ContentType: photo.type || "image/jpeg",
-          }),
-        );
-        return getPublicUrl(key);
-      }),
-    );
+    const displayKeys = formData
+      .getAll("photoDisplayKeys")
+      .filter((v): v is string => typeof v === "string" && v.length > 0);
+    const imageUrls = (
+      displayKeys.length === photoKeys.length ? displayKeys : photoKeys
+    ).map(getPublicUrl);
 
     // --- 3. Create the attendance session ---
     const { data: session, error: sessionError } = await supabase
@@ -101,14 +89,13 @@ export async function groupAttendance(
     const presentMap = new Map<string, number>();
 
     await Promise.all(
-      photos.map(async (photo, i) => {
-        // Fall back to the compressed copy when the original exceeds
-        // the Rekognition Bytes payload limit.
-        const source =
-          photo.size <= REKOGNITION_IMAGE_MAX_BYTES
-            ? photo
-            : storagePhotos[i];
-        const bytes = new Uint8Array(await source.arrayBuffer());
+      photoKeys.map(async (photoKey, i) => {
+        // Rekognition's Bytes payload caps at 5MB — camera originals
+        // can be much larger, so fall back to the compressed display copy.
+        let bytes = await downloadObject(photoKey);
+        if (bytes.byteLength > REKOGNITION_IMAGE_MAX_BYTES && displayKeys[i]) {
+          bytes = await downloadObject(displayKeys[i]);
+        }
 
         const detect = await rekognition.send(
           new DetectFacesCommand({ Image: { Bytes: bytes } }),
@@ -175,6 +162,9 @@ export async function groupAttendance(
             }
           }
         }
+
+        // Temp original no longer needed once processed.
+        await deleteObject(photoKey);
       }),
     );
 

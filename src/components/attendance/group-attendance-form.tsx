@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { groupAttendance } from "@lib/actions";
-import { compressImage } from "@lib/image";
+import { compressImage, uploadDirect } from "@lib/image";
 
 interface GroupAttendanceFormProps {
   classId: string;
@@ -39,12 +39,25 @@ export function GroupAttendanceForm({
       const fd = new FormData();
       fd.set("classId", classId);
       fd.set("sessionDate", sessionDate);
-      for (const file of files) {
-        // Original goes to Rekognition for best accuracy; the
-        // compressed copy is what gets stored in S3.
-        fd.append("photos", file);
-        fd.append("photosCompressed", await compressImage(file, 1920, 0.85));
-      }
+      // Original + compressed copies are uploaded directly to storage
+      // from the browser — a Server Action body must stay well under
+      // Vercel's 4.5MB request limit.
+      await Promise.all(
+        files.map(async (file, i) => {
+          const label = `${sessionDate}-${i}`;
+          const [photoKey, displayKey] = await Promise.all([
+            uploadDirect("attendance-original", classId, label, file),
+            uploadDirect(
+              "attendance-display",
+              classId,
+              label,
+              await compressImage(file, 1920, 0.85),
+            ),
+          ]);
+          fd.append("photoKeys", photoKey);
+          fd.append("photoDisplayKeys", displayKey);
+        }),
+      );
 
       const result = await groupAttendance(fd);
       setIsError(!result.success);

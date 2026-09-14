@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { registerStudent } from "@lib/actions";
-import { compressImage } from "@lib/image";
+import { compressImage, uploadDirect } from "@lib/image";
 
 interface RegisterStudentFormProps {
   classId: string;
@@ -31,13 +31,28 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
     const form = e.currentTarget;
     const fileInput = form.elements.namedItem("image") as HTMLInputElement;
     const file = fileInput.files?.[0];
+    const studentCode = (
+      form.elements.namedItem("studentCode") as HTMLInputElement
+    ).value;
 
     startTransition(async () => {
       const fd = new FormData(form);
-      // "image" stays the original for Rekognition; the compressed
-      // copy is what gets stored in S3.
+      fd.delete("image");
+      // Original + compressed copy are uploaded directly to storage
+      // from the browser — a Server Action body must stay well under
+      // Vercel's 4.5MB request limit.
       if (file) {
-        fd.set("imageCompressed", await compressImage(file));
+        const [imageKey, avatarKey] = await Promise.all([
+          uploadDirect("student-original", classId, studentCode, file),
+          uploadDirect(
+            "student-display",
+            classId,
+            studentCode,
+            await compressImage(file),
+          ),
+        ]);
+        fd.set("imageKey", imageKey);
+        fd.set("avatarKey", avatarKey);
       }
       fd.set("classId", classId);
 

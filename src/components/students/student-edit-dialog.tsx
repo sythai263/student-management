@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateStudent } from "@lib/actions";
-import { compressImage } from "@lib/image";
+import { compressImage, uploadDirect } from "@lib/image";
 import type { Student } from "@types";
 
 interface StudentEditDialogProps {
@@ -55,12 +55,26 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    fd.delete("image");
     const file = fileRef.current?.files?.[0];
 
     startTransition(async () => {
-      // "image" stays the original for Rekognition; the compressed
-      // copy is what gets stored in S3.
-      if (file) fd.set("imageCompressed", await compressImage(file));
+      // Original + compressed copy are uploaded directly to storage
+      // from the browser — a Server Action body must stay well under
+      // Vercel's 4.5MB request limit.
+      if (file) {
+        const [imageKey, avatarKey] = await Promise.all([
+          uploadDirect("student-original", student.classId, student.studentCode, file),
+          uploadDirect(
+            "student-display",
+            student.classId,
+            student.studentCode,
+            await compressImage(file),
+          ),
+        ]);
+        fd.set("imageKey", imageKey);
+        fd.set("avatarKey", avatarKey);
+      }
       fd.set("studentId", student.id);
 
       const result = await updateStudent(fd);

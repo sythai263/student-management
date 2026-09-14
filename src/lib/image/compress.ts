@@ -1,3 +1,5 @@
+import { createUploadUrl } from "@lib/actions";
+
 /**
  * Client-side image compression via Canvas API.
  * Resizes to max dimension and re-encodes as JPEG before upload.
@@ -29,4 +31,34 @@ export async function compressImage(
   return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
     type: "image/jpeg",
   });
+}
+
+/**
+ * Uploads a file straight to storage (MinIO/R2) via a presigned URL
+ * minted by `createUploadUrl`, bypassing Server Action body limits.
+ * Returns the storage key to pass along to the actual action.
+ */
+export async function uploadDirect(
+  kind: "student-original" | "student-display" | "attendance-original" | "attendance-display",
+  classId: string,
+  label: string,
+  file: File,
+): Promise<string> {
+  const fd = new FormData();
+  fd.set("kind", kind);
+  fd.set("classId", classId);
+  fd.set("label", label);
+  fd.set("contentType", file.type || "image/jpeg");
+
+  const result = await createUploadUrl(fd);
+  if (!result.success) throw new Error(result.error);
+
+  const res = await fetch(result.data.url, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type || "image/jpeg" },
+  });
+  if (!res.ok) throw new Error("Upload ảnh thất bại");
+
+  return result.data.key;
 }
