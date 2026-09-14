@@ -63,7 +63,7 @@ export const ROLL_CALL_SECONDS = 10;
  * Feature flag: photo-based attendance via AWS Rekognition.
  * Disabled for the manual MVP — flip to true once the AWS API is verified.
  */
-export const PHOTO_ATTENDANCE_ENABLED = true;
+export const PHOTO_ATTENDANCE_ENABLED = false;
 
 /** Rekognition similarity threshold for SearchFacesByImage (0-100). */
 export const FACE_MATCH_THRESHOLD = 70;

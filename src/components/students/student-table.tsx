@@ -54,11 +54,13 @@ export function StudentTable({ classId }: StudentTableProps) {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <h2 className="text-lg font-medium">Danh sách học sinh ({total})</h2>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-          <div className="space-y-1 sm:w-64">
-            <Label htmlFor="student-search">Tìm kiếm</Label>
+        <div className="flex gap-2 sm:items-end">
+          <div className="min-w-0 flex-1 space-y-1 sm:w-64 sm:flex-none">
+            <Label htmlFor="student-search" className="hidden sm:block">
+              Tìm kiếm
+            </Label>
             <Input
               id="student-search"
               ref={inputRef}
@@ -70,8 +72,10 @@ export function StudentTable({ classId }: StudentTableProps) {
               }}
             />
           </div>
-          <div className="space-y-1 sm:w-32">
-            <Label htmlFor="page-size">Hiển thị</Label>
+          <div className="w-24 shrink-0 space-y-1 sm:w-32">
+            <Label htmlFor="page-size" className="hidden sm:block">
+              Hiển thị
+            </Label>
             <Select
               value={String(pageSize)}
               onValueChange={(value) => {
@@ -98,49 +102,80 @@ export function StudentTable({ classId }: StudentTableProps) {
         <TableSkeleton columns={6} rows={pageSize} />
       ) : error ? (
         <p className="text-sm text-destructive">{error.message}</p>
+      ) : students.length === 0 ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          Không có học sinh nào.
+        </p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16 whitespace-nowrap">STT</TableHead>
-              <TableHead className="whitespace-nowrap">Mã HS</TableHead>
-              <TableHead className="w-max whitespace-nowrap">Họ</TableHead>
-              <TableHead className="w-max whitespace-nowrap">Tên</TableHead>
-              <TableHead>Ngày sinh</TableHead>
-              <TableHead>Face ID</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {students.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Không có học sinh nào.
-                </TableCell>
-              </TableRow>
-            ) : (
-              students.map((s, index) => (
-                <TableRow
-                  key={s.id}
-                  className="cursor-pointer"
+        <>
+          {/* Mobile: compact card list — tables don't fit phone screens. */}
+          <ul className="space-y-2 sm:hidden">
+            {students.map((s) => (
+              <li key={s.id}>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-2 rounded-md border p-3 text-left active:bg-muted"
                   onClick={() => setEditing(s)}
                 >
-                  <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
-                  <TableCell>{s.studentCode}</TableCell>
-                  <TableCell>{s.lastName}</TableCell>
-                  <TableCell>{s.firstName}</TableCell>
-                  <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
-                  <TableCell>
-                    {s.awsFaceId ? (
-                      <Badge>Đã index</Badge>
-                    ) : (
-                      <Badge variant="secondary">Chưa có</Badge>
-                    )}
-                  </TableCell>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">
+                      {s.lastName} {s.firstName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {s.studentCode}
+                      {s.dateOfBirth ? ` · ${s.dateOfBirth}` : ""}
+                    </p>
+                  </div>
+                  {s.awsFaceId ? (
+                    <Badge className="shrink-0">Đã index</Badge>
+                  ) : (
+                    <Badge variant="secondary" className="shrink-0">
+                      Chưa có
+                    </Badge>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: full table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16 whitespace-nowrap">STT</TableHead>
+                  <TableHead className="whitespace-nowrap">Mã HS</TableHead>
+                  <TableHead className="w-max whitespace-nowrap">Họ</TableHead>
+                  <TableHead className="w-max whitespace-nowrap">Tên</TableHead>
+                  <TableHead>Ngày sinh</TableHead>
+                  <TableHead>Face ID</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              </TableHeader>
+              <TableBody>
+                {students.map((s, index) => (
+                  <TableRow
+                    key={s.id}
+                    className="cursor-pointer"
+                    onClick={() => setEditing(s)}
+                  >
+                    <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
+                    <TableCell>{s.studentCode}</TableCell>
+                    <TableCell>{s.lastName}</TableCell>
+                    <TableCell>{s.firstName}</TableCell>
+                    <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
+                    <TableCell>
+                      {s.awsFaceId ? (
+                        <Badge>Đã index</Badge>
+                      ) : (
+                        <Badge variant="secondary">Chưa có</Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

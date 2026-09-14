@@ -4,8 +4,6 @@ import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  ATTENDANCE_STATUS,
-  ATTENDANCE_STATUS_LABEL,
   ATTENDANCE_STATUS_LIST,
   ATTENDANCE_STATUS_SHORT_LABEL,
   ATTENDANCE_STATUS_VARIANT,
@@ -40,30 +38,36 @@ const AttendanceCard = memo(function AttendanceCard({
 }) {
   return (
     <div
-      className={`group flex flex-col gap-1 rounded-md border p-2 transition-colors ${disabled ? "cursor-default" : "cursor-pointer hover:border-primary"}`}
+      className={`group flex flex-col gap-1.5 rounded-md border p-2 transition-colors ${disabled ? "cursor-default" : "cursor-pointer hover:border-primary active:bg-muted"}`}
       onClick={() => !disabled && onSelect(r)}
     >
-      <div className="flex items-center justify-between gap-1">
-        <span className="truncate text-sm font-medium">
-          {r.students?.lastName} {r.students?.firstName}
-        </span>
-        <Badge variant={ATTENDANCE_STATUS_VARIANT[r.status]}>
-          {ATTENDANCE_STATUS_LABEL[r.status]}
+      <div className="flex items-start justify-between gap-1.5">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium leading-tight">
+            {r.students?.lastName} {r.students?.firstName}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {r.students?.studentCode}
+          </p>
+        </div>
+        <Badge
+          variant={ATTENDANCE_STATUS_VARIANT[r.status]}
+          className="shrink-0 px-1.5 py-0 text-[10px]"
+        >
+          {ATTENDANCE_STATUS_SHORT_LABEL[r.status]}
         </Badge>
-      </div>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{r.students?.studentCode}</span>
       </div>
       {r.note && (
         <p className="truncate text-xs text-muted-foreground">{r.note}</p>
       )}
-      <div className="flex gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
+      {/* Quick-action buttons: always visible on touch devices */}
+      <div className="grid grid-cols-5 gap-1">
         {ATTENDANCE_STATUS_LIST.map((s) => (
           <Button
             key={s}
             size="sm"
             variant={r.status === s ? ATTENDANCE_STATUS_VARIANT[s] : "outline"}
-            className="h-7 flex-1 px-0 text-xs"
+            className="h-8 min-w-0 px-0 text-xs"
             disabled={pending || disabled}
             onClick={(e) => {
               e.stopPropagation();

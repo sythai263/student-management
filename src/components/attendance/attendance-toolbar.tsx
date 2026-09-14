@@ -34,43 +34,52 @@ export function AttendanceToolbar({
   onStartRollCall,
 }: AttendanceToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      {closed ? (
-        <Button size="lg" variant="secondary" disabled>
-          Đã đóng điểm danh
+    <div className="space-y-3">
+      {/* Primary actions + summary */}
+      <div className="flex items-center gap-2">
+        {closed ? (
+          <Button variant="secondary" disabled>
+            Đã đóng
+          </Button>
+        ) : (
+          <Button
+            variant="destructive"
+            disabled={closing}
+            onClick={onClose}
+          >
+            {closing ? "Đang đóng..." : "Đóng điểm danh"}
+          </Button>
+        )}
+        <Button disabled={closed} onClick={onStartRollCall}>
+          Điểm danh
         </Button>
-      ) : (
-        <Button
-          size="lg"
-          variant="destructive"
-          disabled={closing}
-          onClick={onClose}
-        >
-          {closing ? "Đang đóng..." : "Đóng điểm danh"}
-        </Button>
-      )}
-      <Button size="lg" disabled={closed} onClick={onStartRollCall}>
-        Bắt đầu điểm danh
-      </Button>
-      <Input
-        placeholder="Tìm theo tên / mã HS"
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="max-w-xs"
-      />
-      {(["ALL", "CO_MAT", "VANG", "VANG_PHEP", "BO_TIET", "DI_MUON"] as const).map((f) => (
-        <Button
-          key={f}
-          size="sm"
-          variant={filter === f ? "default" : "outline"}
-          onClick={() => onFilterChange(f)}
-        >
-          {ATTENDANCE_FILTER_LABEL[f]}
-        </Button>
-      ))}
-      <Badge variant="secondary">
-        {present}/{total} có mặt
-      </Badge>
+        <Badge variant="secondary" className="ml-auto shrink-0">
+          {present}/{total}
+        </Badge>
+      </div>
+
+      {/* Search + filters */}
+      <div className="flex flex-col gap-2">
+        <Input
+          placeholder="Tìm theo tên / mã HS"
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full"
+        />
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {(["ALL", "CO_MAT", "VANG", "VANG_PHEP", "BO_TIET", "DI_MUON"] as const).map((f) => (
+            <Button
+              key={f}
+              size="sm"
+              variant={filter === f ? "default" : "outline"}
+              onClick={() => onFilterChange(f)}
+              className="shrink-0"
+            >
+              {ATTENDANCE_FILTER_LABEL[f]}
+            </Button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

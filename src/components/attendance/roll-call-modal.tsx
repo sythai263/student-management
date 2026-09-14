@@ -145,31 +145,31 @@ export function RollCallModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-screen max-h-screen w-screen max-w-[100vw] flex-col justify-center gap-10 rounded-none border-0 p-12 sm:max-w-[100vw]">
+      <DialogContent className="flex h-screen max-h-screen w-screen max-w-[100vw] flex-col justify-center gap-6 rounded-none border-0 p-4 sm:gap-10 sm:p-12 sm:max-w-[100vw]">
         {/* Big countdown — top right corner */}
         {!pendingExcused && (
           <span
-            className={`absolute right-16 top-8 text-9xl font-bold tabular-nums ${timeLeft <= 2 ? "text-destructive" : "text-primary"
+            className={`absolute right-4 top-4 text-5xl font-bold tabular-nums sm:right-16 sm:top-8 sm:text-9xl ${timeLeft <= 2 ? "text-destructive" : "text-primary"
               }`}
           >
             {timeLeft}
           </span>
         )}
-        <DialogHeader className="items-center gap-6 text-center">
-          <DialogDescription className="text-8xl font-bold leading-tight">
+        <DialogHeader className="items-center gap-3 text-center sm:gap-6">
+          <DialogDescription className="text-3xl font-bold leading-tight sm:text-8xl">
             {s?.studentCode}
           </DialogDescription>
-          <DialogTitle className="text-7xl font-bold leading-tight">
+          <DialogTitle className="text-4xl font-bold leading-tight sm:text-7xl">
             {s?.lastName} {s?.firstName}
           </DialogTitle>
-          <div className="flex items-center gap-4 text-3xl text-muted-foreground">
-            <Badge variant="secondary" className="text-xl">
+          <div className="flex items-center gap-2 text-base text-muted-foreground sm:gap-4 sm:text-3xl">
+            <Badge variant="secondary" className="text-sm sm:text-xl">
               {index + 1}/{records.length}
             </Badge>
             {record.confidence != null && (
               <Badge
                 variant={record.confidence >= 90 ? "default" : "secondary"}
-                className="text-xl"
+                className="text-sm sm:text-xl"
               >
                 AI {record.confidence.toFixed(0)}%
               </Badge>
@@ -178,17 +178,17 @@ export function RollCallModal({
         </DialogHeader>
 
         {pendingExcused ? (
-          <div className="space-y-6">
+          <div className="space-y-6 px-4">
             <Input
               autoFocus
-              className="h-20 text-2xl"
+              className="h-16 text-xl sm:h-20 sm:text-2xl"
               placeholder="Lý do vắng (bắt buộc) — Enter để xác nhận"
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <Button
-                className="h-20 flex-1 text-2xl"
+                className="h-14 flex-1 text-xl sm:h-20 sm:text-2xl"
                 disabled={!note.trim() || updateMutation.isPending}
                 onClick={() => mark(ATTENDANCE_STATUS.EXCUSED)}
               >
@@ -196,7 +196,7 @@ export function RollCallModal({
               </Button>
               <Button
                 variant="outline"
-                className="h-20 text-2xl"
+                className="h-14 text-xl sm:h-20 sm:text-2xl"
                 onClick={() => setPendingExcused(false)}
               >
                 Quay lại
@@ -204,17 +204,17 @@ export function RollCallModal({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-3 md:grid-cols-5">
             {ATTENDANCE_STATUS_LIST.map((status) => (
               <Button
                 key={status}
                 variant={record.status === status ? "default" : "outline"}
-                className="h-32 flex-col gap-2 text-3xl"
+                className="h-16 flex-col gap-1 text-2xl sm:h-32 sm:gap-2 sm:text-3xl"
                 disabled={updateMutation.isPending}
                 onClick={() => mark(status)}
               >
                 {ATTENDANCE_STATUS_LABEL[status]}
-                <span className="text-xl opacity-60">
+                <span className="text-lg opacity-60 sm:text-xl">
                   ({ATTENDANCE_STATUS_SHORT_LABEL[status]})
                 </span>
               </Button>
@@ -222,7 +222,7 @@ export function RollCallModal({
           </div>
         )}
 
-        <p className="text-center text-lg text-muted-foreground">
+        <p className="hidden text-center text-lg text-muted-foreground sm:block">
           Phím tắt: C = Có mặt · V = Vắng · P = Vắng phép · B = Bỏ tiết · M = Đi muộn
         </p>
       </DialogContent>

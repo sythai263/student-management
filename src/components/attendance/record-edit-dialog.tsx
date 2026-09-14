@@ -83,13 +83,14 @@ export function RecordEditDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
             {ATTENDANCE_STATUS_LIST.map((st) => (
               <Button
                 key={st}
                 variant={status === st ? "default" : "outline"}
                 disabled={readOnly}
                 onClick={() => setStatus(st)}
+                className="h-12 text-base sm:text-sm"
               >
                 {ATTENDANCE_STATUS_LABEL[st]}
               </Button>
