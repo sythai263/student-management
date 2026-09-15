@@ -26,14 +26,6 @@ export function SessionList({ classId }: SessionListProps) {
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Buổi điểm danh</h2>
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={createSession.isPending}
-          onClick={onManualAttendance}
-        >
-          {createSession.isPending ? "Đang tạo..." : "Điểm danh tay"}
-        </Button>
       </div>
 
       {createSession.error && (
