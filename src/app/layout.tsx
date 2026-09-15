@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { QueryProvider } from "@components/providers";
 import { AppShell } from "@components/layout";
 import NextTopLoader from "nextjs-toploader";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -22,6 +24,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <QueryProvider>
           <AppShell>{children}</AppShell>
         </QueryProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
