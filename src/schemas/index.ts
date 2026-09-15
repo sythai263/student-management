@@ -1,7 +1,19 @@
 export { registerStudentSchema, updateStudentSchema } from "./student";
 export type { RegisterStudentInput, UpdateStudentInput } from "./student";
-export { loginSchema, changePasswordSchema, updateProfileSchema } from "./auth";
-export type { LoginInput, ChangePasswordInput, UpdateProfileInput } from "./auth";
+export {
+  loginSchema,
+  sendOtpSchema,
+  verifyOtpSchema,
+  changePasswordSchema,
+  updateProfileSchema,
+} from "./auth";
+export type {
+  LoginInput,
+  SendOtpInput,
+  VerifyOtpInput,
+  ChangePasswordInput,
+  UpdateProfileInput,
+} from "./auth";
 export { createSubjectSchema, createSubjectsFromCatalogSchema } from "./subjects";
 export type { CreateSubjectInput, CreateSubjectsFromCatalogInput } from "./subjects";
 export { updateRecordSchema } from "./attendance";

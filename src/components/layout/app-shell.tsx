@@ -8,13 +8,19 @@ import {
   GraduationCap,
   KeyRound,
   LogOut,
+  ShieldCheck,
   User,
   UserPen,
 } from "lucide-react";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChangePasswordDialog, UpdateProfileDialog } from "@components/auth";
+import {
+  ChangePasswordDialog,
+  MfaManageDialog,
+  UpdateProfileDialog,
+} from "@components/auth";
 import { logout } from "@lib/actions";
+import { FEATURE_FLAGS } from "@constants";
 
 interface AppShellProps {
   children: ReactNode;
@@ -25,6 +31,7 @@ export function AppShell({ children }: AppShellProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mfaOpen, setMfaOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,6 +48,7 @@ export function AppShell({ children }: AppShellProps) {
   const hideShell =
     pathname === "/login" ||
     pathname === "/login/" ||
+    pathname === "/mfa-verify" ||
     pathname?.endsWith("/race");
 
   if (hideShell) {
@@ -124,16 +132,30 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <UserPen className="size-4" /> Thông tin tài khoản
                 </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setPasswordOpen(true);
-                  }}
-                >
-                  <KeyRound className="size-4" /> Đổi mật khẩu
-                </button>
+                {FEATURE_FLAGS.PASSWORD_LOGIN && (
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setPasswordOpen(true);
+                    }}
+                  >
+                    <KeyRound className="size-4" /> Đổi mật khẩu
+                  </button>
+                )}
+                {FEATURE_FLAGS.MFA_TOTP && (
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setMfaOpen(true);
+                    }}
+                  >
+                    <ShieldCheck className="size-4" /> Xác thực 2 lớp (MFA)
+                  </button>
+                )}
                 <form action={logout}>
                   <button
                     type="submit"
@@ -153,6 +175,7 @@ export function AppShell({ children }: AppShellProps) {
               open={profileOpen}
               onOpenChange={setProfileOpen}
             />
+            <MfaManageDialog open={mfaOpen} onOpenChange={setMfaOpen} />
           </div>
         </div>
       </header>

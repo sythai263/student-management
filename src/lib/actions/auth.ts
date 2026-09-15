@@ -1,11 +1,14 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@lib/supabase";
 import {
   changePasswordSchema,
   loginSchema,
+  sendOtpSchema,
   updateProfileSchema,
+  verifyOtpSchema,
 } from "@schemas";
 import {
   requireTeacher,
@@ -24,6 +27,58 @@ export async function login(input: unknown): Promise<ActionResult<null>> {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
     if (error) throw new Error("Email hoặc mật khẩu không đúng");
+    return null;
+  });
+
+  // redirect() throws NEXT_REDIRECT — must stay outside withAction.
+  if (result.success) redirect("/");
+  return result;
+}
+
+/**
+ * Server Action: send a 6-digit OTP (+ magic link) to the teacher's email.
+ * shouldCreateUser=false — logging in must never create accounts.
+ */
+export async function sendLoginOtp(
+  input: unknown,
+): Promise<ActionResult<null>> {
+  return withAction(async () => {
+    const parsed = sendOtpSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
+
+    const origin = (await headers()).get("origin") ?? "";
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.signInWithOtp({
+      email: parsed.data.email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${origin}/auth/confirm`,
+      },
+    });
+    if (error) throw new Error("Không gửi được mã — kiểm tra lại email");
+    return null;
+  });
+}
+
+/** Server Action: verify the emailed OTP and start a session. */
+export async function verifyLoginOtp(
+  input: unknown,
+): Promise<ActionResult<null>> {
+  const result = await withAction(async () => {
+    const parsed = verifyOtpSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
+
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.auth.verifyOtp({
+      email: parsed.data.email,
+      token: parsed.data.token,
+      type: "email",
+    });
+    if (error) throw new Error("Mã không đúng hoặc đã hết hạn");
     return null;
   });
 

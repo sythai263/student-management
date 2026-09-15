@@ -1,0 +1,5 @@
+<h2>Đăng nhập</h2>
+<p>Nhập mã 6 số sau để đăng nhập:</p>
+<p style="font-size:24px;letter-spacing:6px"><strong>{{ .Token }}</strong></p>
+<p>Hoặc bấm vào link để đăng nhập trực tiếp:</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Đăng nhập</a></p>

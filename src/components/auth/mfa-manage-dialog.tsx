@@ -1,0 +1,206 @@
+"use client";
+
+import { useEffect, useState, type FormEvent } from "react";
+import { ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { createSupabaseBrowserClient } from "@lib/supabase/client";
+
+type MfaStatus = "loading" | "enroll" | "enabled";
+
+interface MfaManageDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * Optional TOTP MFA manager: enrolls an authenticator app via QR code,
+ * or disables MFA after re-verifying a code (unenroll requires aal2).
+ */
+export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
+  const [status, setStatus] = useState<MfaStatus>("loading");
+  const [factorId, setFactorId] = useState("");
+  const [qr, setQr] = useState("");
+  const [secret, setSecret] = useState("");
+  const [code, setCode] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setStatus("loading");
+    setError(null);
+    setCode("");
+
+    const supabase = createSupabaseBrowserClient();
+    (async () => {
+      const { data } = await supabase.auth.mfa.listFactors();
+      const verified = data?.totp.find((f) => f.status === "verified");
+      if (verified) {
+        setFactorId(verified.id);
+        setStatus("enabled");
+        return;
+      }
+      // Drop leftover unverified factors before enrolling again.
+      for (const f of data?.totp ?? []) {
+        await supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+      const { data: enrolled, error: enrollError } =
+        await supabase.auth.mfa.enroll({
+          factorType: "totp",
+          friendlyName: "Authenticator",
+        });
+      if (enrollError || !enrolled) {
+        setError(enrollError?.message ?? "Không tạo được mã QR");
+        return;
+      }
+      setFactorId(enrolled.id);
+      setQr(enrolled.totp.qr_code);
+      setSecret(enrolled.totp.secret);
+      setStatus("enroll");
+    })();
+  }, [open]);
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setBusy(true);
+    const supabase = createSupabaseBrowserClient();
+    (status === "enroll" ? enable(supabase) : disable(supabase)).finally(() =>
+      setBusy(false),
+    );
+  }
+
+  async function enable(supabase: ReturnType<typeof createSupabaseBrowserClient>) {
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId,
+      code,
+    });
+    if (error) {
+      setError("Mã không đúng — thử lại");
+      return;
+    }
+    setCode("");
+    setStatus("enabled");
+  }
+
+  async function disable(supabase: ReturnType<typeof createSupabaseBrowserClient>) {
+    // Unenroll requires an aal2 session — verify a fresh code first.
+    const { data: challenge, error: challengeError } =
+      await supabase.auth.mfa.challenge({ factorId });
+    if (challengeError || !challenge) {
+      setError(challengeError?.message ?? "Không tạo được yêu cầu xác thực");
+      return;
+    }
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId: challenge.id,
+      code,
+    });
+    if (verifyError) {
+      setError("Mã không đúng — thử lại");
+      return;
+    }
+    const { error: unenrollError } = await supabase.auth.mfa.unenroll({
+      factorId,
+    });
+    if (unenrollError) {
+      setError(unenrollError.message);
+      return;
+    }
+    onOpenChange(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Xác thực 2 lớp (MFA)</DialogTitle>
+          <DialogDescription>
+            Dùng app xác thực (Google Authenticator, Authy…) để bảo vệ tài
+            khoản.
+          </DialogDescription>
+        </DialogHeader>
+
+        {status === "loading" ? (
+          <ListSkeleton rows={3} itemClassName="h-8" />
+        ) : (
+          <form onSubmit={onSubmit} className="space-y-4">
+            {status === "enroll" && (
+              <>
+                {/* qr_code is SVG markup — encode into an img data URI. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`data:image/svg+xml;utf8,${encodeURIComponent(qr)}`}
+                  alt="QR code cho app xác thực"
+                  className="mx-auto size-44 rounded-md bg-white p-2"
+                />
+                <p className="text-center text-xs text-muted-foreground">
+                  Không quét được? Nhập mã:{" "}
+                  <code className="font-mono text-foreground">{secret}</code>
+                </p>
+              </>
+            )}
+            {status === "enabled" && (
+              <p className="flex items-center gap-2 text-sm text-green-400">
+                <ShieldCheck className="size-4" /> MFA đang bật cho tài khoản
+                này.
+              </p>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="mfa-code">
+                {status === "enroll"
+                  ? "Nhập mã 6 số từ app để kích hoạt"
+                  : "Nhập mã 6 số để tắt MFA"}
+              </Label>
+              <Input
+                id="mfa-code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                required
+                maxLength={6}
+                placeholder="123456"
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              />
+            </div>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                Đóng
+              </Button>
+              <Button
+                type="submit"
+                variant={status === "enabled" ? "destructive" : "default"}
+                disabled={busy}
+              >
+                {busy
+                  ? "Đang xử lý..."
+                  : status === "enroll"
+                    ? "Kích hoạt"
+                    : "Tắt MFA"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

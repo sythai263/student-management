@@ -64,9 +64,3 @@ export const ATTENDANCE_FILTER_LABEL: Record<AttendanceStatus | "ALL", string> =
 
 /** Seconds a student has to respond during roll-call before defaulting to VANG. */
 export const ROLL_CALL_SECONDS = 10;
-
-/**
- * Feature flag: photo-based attendance via AWS Rekognition.
- * Disabled for the manual MVP — flip to true once the AWS API is verified.
- */
-export const PHOTO_ATTENDANCE_ENABLED = false;

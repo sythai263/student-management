@@ -2,7 +2,14 @@ export { registerStudent } from "./register-student";
 export { updateStudent } from "./update-student";
 export { createUploadUrl } from "./create-upload-url";
 export type { UploadUrl } from "./create-upload-url";
-export { login, logout, changePassword, updateProfile } from "./auth";
+export {
+  login,
+  logout,
+  sendLoginOtp,
+  verifyLoginOtp,
+  changePassword,
+  updateProfile,
+} from "./auth";
 export { groupAttendance } from "./group-attendance";
 export { createClass, deleteClass } from "./classes";
 export {

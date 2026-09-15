@@ -11,7 +11,7 @@ import type { GroupAttendanceSummary } from "@types";
 import {
   ATTENDANCE_STATUS,
   FACE_MATCH_THRESHOLD,
-  PHOTO_ATTENDANCE_ENABLED,
+  FEATURE_FLAGS,
   REKOGNITION_IMAGE_MAX_BYTES,
 } from "@constants";
 import {
@@ -41,7 +41,7 @@ export async function groupAttendance(
   formData: FormData,
 ): Promise<ActionResult<GroupAttendanceSummary>> {
   return withAction(async () => {
-    if (!PHOTO_ATTENDANCE_ENABLED) {
+    if (!FEATURE_FLAGS.PHOTO_ATTENDANCE) {
       throw new Error("Điểm danh bằng ảnh đang tạm tắt");
     }
 

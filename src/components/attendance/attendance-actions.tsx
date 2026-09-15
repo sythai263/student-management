@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createManualSession } from "@lib/actions";
-import { PHOTO_ATTENDANCE_ENABLED } from "@constants";
+import { FEATURE_FLAGS } from "@constants";
 import { GroupAttendanceForm } from "./group-attendance-form";
 
 interface AttendanceActionsProps {
@@ -73,7 +73,7 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
             <PenLine />
             {isPending ? "Đang tạo..." : "Điểm danh thủ công"}
           </Button>
-          {PHOTO_ATTENDANCE_ENABLED && (
+          {FEATURE_FLAGS.PHOTO_ATTENDANCE && (
             <Button
               type="button"
               variant="secondary"
@@ -87,7 +87,7 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
         </div>
       </CardContent>
 
-      {PHOTO_ATTENDANCE_ENABLED && (
+      {FEATURE_FLAGS.PHOTO_ATTENDANCE && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent>
             <DialogHeader>

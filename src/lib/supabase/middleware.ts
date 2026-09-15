@@ -1,14 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { FEATURE_FLAGS } from "@constants";
 
-/** Routes that do not require authentication. */
-const PUBLIC_PATHS = ["/login"];
+/** Routes reachable without a session. */
+const PUBLIC_PATHS = ["/login", "/auth"];
+/** Challenge page for aal1 sessions that still owe a TOTP check. */
+const MFA_PATH = "/mfa-verify";
 
 /**
  * Refreshes the Supabase auth session on every request and enforces
  * route protection:
  *   - unauthenticated + protected path -> redirect /login
  *   - authenticated + /login           -> redirect /
+ *   - aal1 session + verified factor   -> redirect /mfa-verify
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -40,9 +44,9 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const user = data?.claims ?? null;
 
-  const isPublic = PUBLIC_PATHS.some((p) =>
-    request.nextUrl.pathname.startsWith(p),
-  );
+  const pathname = request.nextUrl.pathname;
+  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const isMfaPage = pathname.startsWith(MFA_PATH);
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
@@ -50,10 +54,32 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublic) {
+  if (user && pathname.startsWith("/login")) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
+  }
+
+  // MFA gate: an aal1 session on an account with a verified factor must
+  // complete the TOTP challenge before reaching app routes.
+  if (user && FEATURE_FLAGS.MFA_TOTP && !isPublic) {
+    const sessionAal = (user as { aal?: string }).aal ?? "aal1";
+    let needsMfa = false;
+    if (sessionAal === "aal1") {
+      const { data: level } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      needsMfa = level?.nextLevel === "aal2";
+    }
+    if (needsMfa && !isMfaPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = MFA_PATH;
+      return NextResponse.redirect(url);
+    }
+    if (!needsMfa && isMfaPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

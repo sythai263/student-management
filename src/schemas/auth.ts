@@ -7,6 +7,19 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+export const sendOtpSchema = z.object({
+  email: z.email("Email không hợp lệ"),
+});
+
+export type SendOtpInput = z.infer<typeof sendOtpSchema>;
+
+export const verifyOtpSchema = z.object({
+  email: z.email("Email không hợp lệ"),
+  token: z.string().regex(/^\d{6}$/, "Mã xác nhận gồm 6 chữ số"),
+});
+
+export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
+
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại"),
