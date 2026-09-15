@@ -46,7 +46,6 @@ export function DuckRaceCanvas({
   const stateRef = useRef<RaceState | null>(null);
   const [started, setStarted] = useState(false);
   const [duration, setDuration] = useState<number>(DEFAULT_RACE_DURATION);
-  const [timeLeft, setTimeLeft] = useState(DEFAULT_RACE_DURATION);
   const [finished, setFinished] = useState(false);
   const [winnerName, setWinnerName] = useState<string | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
@@ -71,7 +70,6 @@ export function DuckRaceCanvas({
         parsed <= MAX_RACE_DURATION
       ) {
         setDuration(parsed);
-        setTimeLeft(parsed);
       }
     }
   }, []);
@@ -192,6 +190,25 @@ export function DuckRaceCanvas({
         ctx.stroke();
       }
 
+      // Distance markers on the track — dashed ticks every 10m of a 100m race.
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      for (let m = 10; m < 100; m += 10) {
+        const mx = worldStart + (m / 100) * state.trackLength - cameraX;
+        if (mx < -20 || mx > width + 20) continue;
+        ctx.beginPath();
+        ctx.moveTo(mx, roadTop);
+        ctx.lineTo(mx, roadBottom);
+        ctx.stroke();
+        ctx.fillText(`${m}m`, mx, roadBottom + 8);
+      }
+      ctx.setLineDash([]);
+
       // Start line
       ctx.strokeStyle = "#22c55e";
       ctx.lineWidth = 4;
@@ -227,24 +244,18 @@ export function DuckRaceCanvas({
 
       for (const d of sorted) {
         const x = worldStart + d.pos - cameraX;
-        const y = roadTop + d.lane * laneHeight + laneHeight / 2;
+        const baseY = roadTop + d.lane * laneHeight + laneHeight / 2;
+        // Running motion: per-duck phased bob (vertical) + body tilt.
+        const wobble = Math.sin(elapsed * 11 + d.i * 2.4);
+        const y = baseY + wobble * laneHeight * 0.06;
+        const tilt = wobble * 0.12;
         const name = `${d.lastName} ${d.firstName}`;
         const image = duckImages[colors[d.i]];
         if (image) {
-          drawDuck(ctx, x, y, name, duckScale, image);
+          drawDuck(ctx, x, y, name, duckScale, image, tilt);
         }
       }
 
-      // Timer
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = "bold 18px sans-serif";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "top";
-      ctx.fillText(
-        `Còn lại: ${Math.max(0, duration - elapsed).toFixed(1)} giây`,
-        10,
-        10,
-      );
     };
 
     const frame = (now: number) => {
@@ -265,7 +276,6 @@ export function DuckRaceCanvas({
         }
       }
 
-      setTimeLeft(Math.max(0, duration - elapsed));
       drawFrame(elapsed);
 
       if (elapsed >= duration) {
@@ -292,7 +302,6 @@ export function DuckRaceCanvas({
     setFinished(false);
     setWinnerName(null);
     setGradeOpen(false);
-    setTimeLeft(duration);
     stateRef.current = null;
   };
 
@@ -315,9 +324,6 @@ export function DuckRaceCanvas({
                 <Timer />
                 <span className="hidden sm:inline">Cập nhật thời gian đua</span>
               </Button>
-              <span className="text-sm font-medium whitespace-nowrap tabular-nums">
-                {timeLeft.toFixed(1)} giây
-              </span>
             </div>
           }
         />
@@ -356,7 +362,6 @@ export function DuckRaceCanvas({
                   draftDuration <= MAX_RACE_DURATION
                 ) {
                   setDuration(draftDuration);
-                  setTimeLeft(draftDuration);
                   Cookies.set(RACE_DURATION_COOKIE, String(draftDuration), {
                     expires: 365,
                   });

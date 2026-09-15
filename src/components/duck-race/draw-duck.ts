@@ -5,6 +5,7 @@ export function drawDuck(
   name: string,
   scale: number,
   image: HTMLImageElement,
+  tilt = 0,
 ) {
   const duckFont = Math.min(Math.max(scale * 11, 9), 12);
   const w = 36 * scale;
@@ -13,8 +14,12 @@ export function drawDuck(
 
   if (image.complete && image.naturalWidth > 0) {
     h = (image.height / image.width) * w;
-    const top = y - h / 2;
-    ctx.drawImage(image, x, top, w, h);
+    // Rotate around the duck's centre — wobbles while running.
+    ctx.save();
+    ctx.translate(cx, y);
+    ctx.rotate(tilt);
+    ctx.drawImage(image, -w / 2, -h / 2, w, h);
+    ctx.restore();
     cx = x + w / 2;
   }
 
