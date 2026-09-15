@@ -1,0 +1,139 @@
+"use client";
+
+import { useRef, useState, useTransition } from "react";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  useDeleteSignature,
+  useSaveSignature,
+  useTeacherSignature,
+} from "@hooks";
+import { uploadSignatureDirect } from "@lib/image";
+import { friendlyErrorMessage } from "@lib/utils";
+
+interface SignatureManageDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+/**
+ * Manage the teacher's signature image (PNG, transparent background),
+ * used when printing report cards. Only one signature is kept on file;
+ * uploading a new one replaces the previous.
+ */
+export function SignatureManageDialog({
+  open,
+  onOpenChange,
+}: SignatureManageDialogProps) {
+  const { data: signature, isLoading } = useTeacherSignature();
+  const saveSignature = useSaveSignature();
+  const deleteSignature = useDeleteSignature();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setError(null);
+    startTransition(async () => {
+      try {
+        const imageKey = await uploadSignatureDirect(file);
+        await saveSignature.mutateAsync(imageKey);
+      } catch (err) {
+        setError(friendlyErrorMessage(err));
+      }
+    });
+  }
+
+  function onDelete() {
+    setError(null);
+    startTransition(async () => {
+      try {
+        await deleteSignature.mutateAsync();
+      } catch (err) {
+        setError(friendlyErrorMessage(err));
+      }
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Chữ ký giáo viên</DialogTitle>
+          <DialogDescription>
+            Ảnh PNG nền trong suốt, dùng để in vào phiếu điểm học sinh.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {isLoading ? (
+            <Skeleton className="h-24 w-full" />
+          ) : signature ? (
+            <div className="flex items-center gap-4 rounded-md border p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/image?key=${encodeURIComponent(signature.imageKey)}`}
+                alt="Chữ ký hiện tại"
+                className="h-16 w-32 object-contain"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPending}
+                onClick={onDelete}
+              >
+                <Trash2 /> Xóa chữ ký
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Chưa có chữ ký nào được lưu.
+            </p>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="signature-file">
+              {signature ? "Thay chữ ký mới" : "Tải lên chữ ký"}
+            </Label>
+            <Input
+              ref={inputRef}
+              id="signature-file"
+              type="file"
+              accept="image/png"
+              disabled={isPending}
+              onChange={onFileChange}
+            />
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
+            Đóng
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

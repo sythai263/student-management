@@ -19,7 +19,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
   const depth = pathname?.split("/").filter(Boolean).length ?? 0;
 
   return (
-    <header className="flex items-center gap-3">
+    <header className="flex items-center gap-3 print:hidden">
       {depth >= 2 && (
         <Button
           variant="ghost"

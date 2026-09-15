@@ -8,6 +8,7 @@ import {
   GraduationCap,
   KeyRound,
   LogOut,
+  PenLine,
   ShieldCheck,
   User,
   UserPen,
@@ -17,6 +18,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import {
   ChangePasswordDialog,
   MfaManageDialog,
+  SignatureManageDialog,
   UpdateProfileDialog,
 } from "@components/auth";
 import { logout } from "@lib/actions";
@@ -32,6 +34,7 @@ export function AppShell({ children }: AppShellProps) {
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mfaOpen, setMfaOpen] = useState(false);
+  const [signatureOpen, setSignatureOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,7 +65,9 @@ export function AppShell({ children }: AppShellProps) {
 
   // Navbar lines up with the page container — width varies per route.
   const contentMaxW =
-    pathname?.endsWith("/grades") || /\/attendance\/[^/]+$/.test(pathname ?? "")
+    pathname?.endsWith("/grades") ||
+      pathname?.endsWith("/report-cards") ||
+      /\/attendance\/[^/]+$/.test(pathname ?? "")
       ? "max-w-7xl"
       : pathname?.endsWith("/students/new")
         ? "max-w-2xl"
@@ -74,7 +79,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background">
+      <header className="sticky top-0 z-40 border-b bg-background print:hidden">
         <div
           className={cn(
             "mx-auto flex h-14 w-full items-center gap-2 px-4 sm:px-8",
@@ -156,6 +161,16 @@ export function AppShell({ children }: AppShellProps) {
                     <ShieldCheck className="size-4" /> Xác thực 2 lớp (MFA)
                   </button>
                 )}
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setSignatureOpen(true);
+                  }}
+                >
+                  <PenLine className="size-4" /> Chữ ký giáo viên
+                </button>
                 <form action={logout}>
                   <button
                     type="submit"
@@ -176,6 +191,10 @@ export function AppShell({ children }: AppShellProps) {
               onOpenChange={setProfileOpen}
             />
             <MfaManageDialog open={mfaOpen} onOpenChange={setMfaOpen} />
+            <SignatureManageDialog
+              open={signatureOpen}
+              onOpenChange={setSignatureOpen}
+            />
           </div>
         </div>
       </header>

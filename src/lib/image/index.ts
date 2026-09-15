@@ -1,1 +1,1 @@
-export { compressImage, uploadDirect } from "./compress";
+export { compressImage, uploadDirect, uploadSignatureDirect } from "./compress";

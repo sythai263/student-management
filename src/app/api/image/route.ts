@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from "@lib/supabase";
 
 // Only permanent display prefixes are servable — tmp/ originals are
 // Rekognition-only and deleted right after indexing.
-const ALLOWED_PREFIXES = ["students/", "attendance/"];
+const ALLOWED_PREFIXES = ["students/", "attendance/", "signatures/"];
 
 /**
  * Authenticated image proxy: the bucket has no public access, so the
@@ -21,6 +21,11 @@ export async function GET(req: Request) {
   if (!ALLOWED_PREFIXES.some((p) => key.startsWith(p))) {
     return new Response("Bạn không có quyền xem ảnh này", { status: 403 });
   }
+  // Signatures are scoped per teacher (signatures/<teacherId>/...) —
+  // enforce ownership since the key alone isn't proof of access.
+  if (key.startsWith("signatures/") && !key.startsWith(`signatures/${user.id}/`)) {
+    return new Response("Bạn không có quyền xem ảnh này", { status: 403 });
+  }
 
   try {
     const bytes = await downloadObject(key);
@@ -30,7 +35,7 @@ export async function GET(req: Request) {
     ) as ArrayBuffer;
     return new Response(body, {
       headers: {
-        "Content-Type": "image/jpeg",
+        "Content-Type": key.endsWith(".png") ? "image/png" : "image/jpeg",
         // Private to this browser session — never CDN/shared caches.
         "Cache-Control": "private, max-age=3600",
       },

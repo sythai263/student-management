@@ -29,6 +29,13 @@ export {
   saveRaceGrades,
 } from "./duck-race";
 export type { DuckRaceData } from "@types";
+export { saveSignature, deleteSignature } from "./signature";
+export {
+  saveReportCardTemplate,
+  deleteReportCardTemplate,
+  setDefaultReportCardTemplate,
+} from "./report-card-templates";
+export type { SaveReportCardTemplateInput } from "./report-card-templates";
 export { importStudents } from "./import-students";
 export type { ImportStudentsSummary } from "./import-students";
 export {

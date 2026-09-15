@@ -10,6 +10,18 @@ export { useGrades, useSaveGrades, useImportGrades } from "./grades";
 export type { GradeWithStudent } from "@types";
 export { useDebounce } from "./use-debounce";
 export {
+  useTeacherSignature,
+  useSaveSignature,
+  useDeleteSignature,
+} from "./signature";
+export {
+  useReportCardTemplates,
+  useReportCardTemplate,
+  useSaveReportCardTemplate,
+  useDeleteReportCardTemplate,
+  useSetDefaultReportCardTemplate,
+} from "./report-card-templates";
+export {
   useAttendanceSession,
   useAttendanceSessions,
   useAttendanceRecords,

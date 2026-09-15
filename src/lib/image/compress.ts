@@ -62,3 +62,36 @@ export async function uploadDirect(
 
   return result.data.key;
 }
+
+/**
+ * Uploads a teacher signature PNG straight to storage, unmodified —
+ * unlike `uploadDirect`, it is never re-encoded to JPEG so the
+ * transparent background is preserved. Scoped by teacherId, not
+ * classId (a signature is not tied to a single class).
+ */
+export async function uploadSignatureDirect(file: File): Promise<string> {
+  if (file.type !== "image/png") {
+    throw new Error("Chữ ký phải là ảnh PNG (nền trong suốt)");
+  }
+  const MAX_BYTES = 2 * 1024 * 1024;
+  if (file.size > MAX_BYTES) {
+    throw new Error("Ảnh chữ ký không được vượt quá 2MB");
+  }
+
+  const fd = new FormData();
+  fd.set("kind", "signature-display");
+  fd.set("label", "signature");
+  fd.set("contentType", file.type);
+
+  const result = await createUploadUrl(fd);
+  if (!result.success) throw new Error(result.error);
+
+  const res = await fetch(result.data.url, {
+    method: "PUT",
+    body: file,
+    headers: { "Content-Type": file.type },
+  });
+  if (!res.ok) throw new Error("Tải chữ ký lên thất bại, vui lòng thử lại");
+
+  return result.data.key;
+}
