@@ -413,14 +413,31 @@ create policy "grades_delete_via_subject" on public.grades
 -- security_invoker = true -> RLS of base tables still applies,
 -- so a teacher only sees summaries of their own data.
 -- =============================================================
-create or replace view public."studentGradeSummaries"
-  with (security_invoker = true) as
-select
-  g."studentId",
-  g."subjectId",
-  g."classId",
-  g."semester",
-  round(sum(g."score" * g."weight") / nullif(sum(g."weight"), 0), 2) as "averageScore",
-  count(*)::int as "gradeCount"
-from public.grades g
-group by g."studentId", g."subjectId", g."classId", g."semester";
+-- Guarded: on re-runs after 0004's redesign, `grades` no longer has
+-- `score`/`weight`, so only build this legacy view when they exist
+-- (0004 replaces the view with the new shape anyway).
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'grades'
+      and column_name = 'score'
+  ) then
+    execute $view$
+      create or replace view public."studentGradeSummaries"
+        with (security_invoker = true) as
+      select
+        g."studentId",
+        g."subjectId",
+        g."classId",
+        g."semester",
+        round(sum(g."score" * g."weight") / nullif(sum(g."weight"), 0), 2) as "averageScore",
+        count(*)::int as "gradeCount"
+      from public.grades g
+      group by g."studentId", g."subjectId", g."classId", g."semester";
+    $view$;
+  end if;
+end;
+$$;
