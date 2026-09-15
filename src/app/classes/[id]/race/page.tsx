@@ -29,7 +29,7 @@ export default async function RacePage({
   }
 
   return (
-    <main className="flex h-screen flex-col">
+    <main className="flex h-dvh flex-col bg-black">
       <DuckRaceCanvas
         classId={id}
         subjectId={activeSubjectId}

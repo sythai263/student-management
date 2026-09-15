@@ -143,8 +143,13 @@ export function DuckRaceCanvas({
     if (!ctx) return;
 
     const { width, height } = size;
-    canvas.width = width;
-    canvas.height = height;
+    // Scale the backing store by devicePixelRatio so the race stays sharp
+    // on high-DPI phones (e.g. DPR 2-3 on 2K panels); drawing code below
+    // keeps using CSS-pixel coordinates via setTransform.
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     const worldStart = 40;
     const trackLength = Math.max(1800, width * 2.2);
