@@ -1,6 +1,7 @@
 import { cn } from "cn";
+import type { HTMLAttributes } from "react";
 
-type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
+type SkeletonProps = HTMLAttributes<HTMLDivElement>;
 
 export function Skeleton({ className, ...props }: SkeletonProps) {
   return (

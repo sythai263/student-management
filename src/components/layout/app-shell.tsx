@@ -10,13 +10,13 @@ import {
   LogOut,
   User,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ChangePasswordDialog } from "@components/auth";
 import { logout } from "@lib/actions";
 
 interface AppShellProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {

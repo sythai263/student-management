@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import {
   ATTENDANCE_STATUS,
+  ATTENDANCE_STATUS_CLASS,
   ATTENDANCE_STATUS_LABEL,
   ATTENDANCE_STATUS_LIST,
   ATTENDANCE_STATUS_SHORT_LABEL,
@@ -208,8 +210,11 @@ export function RollCallModal({
             {ATTENDANCE_STATUS_LIST.map((status) => (
               <Button
                 key={status}
-                variant={record.status === status ? "default" : "outline"}
-                className="h-16 flex-col gap-1 text-2xl sm:h-32 sm:gap-2 sm:text-3xl"
+                variant="outline"
+                className={cn(
+                  "h-16 flex-col gap-1 text-2xl sm:h-32 sm:gap-2 sm:text-3xl",
+                  record.status === status && ATTENDANCE_STATUS_CLASS[status],
+                )}
                 disabled={updateMutation.isPending}
                 onClick={() => mark(status)}
               >

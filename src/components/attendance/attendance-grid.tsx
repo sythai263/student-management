@@ -1,12 +1,13 @@
 "use client";
 
 import { memo } from "react";
+import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  ATTENDANCE_STATUS_CLASS,
   ATTENDANCE_STATUS_LIST,
   ATTENDANCE_STATUS_SHORT_LABEL,
-  ATTENDANCE_STATUS_VARIANT,
   type AttendanceStatus,
 } from "@constants";
 import {
@@ -51,8 +52,11 @@ const AttendanceCard = memo(function AttendanceCard({
           </p>
         </div>
         <Badge
-          variant={ATTENDANCE_STATUS_VARIANT[r.status]}
-          className="shrink-0 px-1.5 py-0 text-[10px]"
+          variant="outline"
+          className={cn(
+            "shrink-0 px-1.5 py-0 text-[10px]",
+            ATTENDANCE_STATUS_CLASS[r.status],
+          )}
         >
           {ATTENDANCE_STATUS_SHORT_LABEL[r.status]}
         </Badge>
@@ -66,8 +70,11 @@ const AttendanceCard = memo(function AttendanceCard({
           <Button
             key={s}
             size="sm"
-            variant={r.status === s ? ATTENDANCE_STATUS_VARIANT[s] : "outline"}
-            className="h-8 min-w-0 px-0 text-xs"
+            variant="outline"
+            className={cn(
+              "h-8 min-w-0 px-0 text-xs",
+              r.status === s && ATTENDANCE_STATUS_CLASS[s],
+            )}
             disabled={pending || disabled}
             onClick={(e) => {
               e.stopPropagation();

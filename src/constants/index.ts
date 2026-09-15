@@ -37,16 +37,13 @@ export const ATTENDANCE_STATUS_SHORT_LABEL: Record<AttendanceStatus, string> = {
   DI_MUON: "M",
 };
 
-/** Badge variant per status. */
-export const ATTENDANCE_STATUS_VARIANT: Record<
-  AttendanceStatus,
-  "default" | "secondary" | "destructive"
-> = {
-  CO_MAT: "default",
-  VANG: "destructive",
-  VANG_PHEP: "secondary",
-  BO_TIET: "destructive",
-  DI_MUON: "secondary",
+/** Status colors — applied on top of the `outline` variant of Badge/Button. */
+export const ATTENDANCE_STATUS_CLASS: Record<AttendanceStatus, string> = {
+  CO_MAT: "border-transparent bg-green-600 text-white hover:bg-green-700",
+  VANG: "border-transparent bg-red-600 text-white hover:bg-red-700",
+  VANG_PHEP: "border-transparent bg-white text-zinc-900 hover:bg-zinc-100",
+  BO_TIET: "border-transparent bg-orange-500 text-white hover:bg-orange-600",
+  DI_MUON: "border-transparent bg-orange-200 text-orange-950 hover:bg-orange-300",
 };
 
 /** Filter-tab labels including the "all" option. */

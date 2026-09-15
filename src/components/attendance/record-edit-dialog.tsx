@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   ATTENDANCE_STATUS,
+  ATTENDANCE_STATUS_CLASS,
   ATTENDANCE_STATUS_LABEL,
   ATTENDANCE_STATUS_LIST,
   type AttendanceStatus,
@@ -87,10 +89,13 @@ export function RecordEditDialog({
             {ATTENDANCE_STATUS_LIST.map((st) => (
               <Button
                 key={st}
-                variant={status === st ? "default" : "outline"}
+                variant="outline"
                 disabled={readOnly}
                 onClick={() => setStatus(st)}
-                className="h-12 text-base sm:text-sm"
+                className={cn(
+                  "h-12 text-base sm:text-sm",
+                  status === st && ATTENDANCE_STATUS_CLASS[st],
+                )}
               >
                 {ATTENDANCE_STATUS_LABEL[st]}
               </Button>
