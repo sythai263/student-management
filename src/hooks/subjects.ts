@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createSubject, deleteSubject } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { Subject, SubjectCatalog } from "@types";
 import type { CreateSubjectInput } from "@schemas";
 
@@ -16,7 +17,7 @@ export function useSubjectCatalog() {
         .from("subjectCatalog")
         .select("*")
         .order("name");
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as SubjectCatalog[];
     },
   });
@@ -32,7 +33,7 @@ export function useSubjects() {
         .from("subjects")
         .select("*")
         .order("name");
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as Subject[];
     },
   });

@@ -16,13 +16,13 @@ export async function compressImage(
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Không khởi tạo được canvas");
+  if (!ctx) throw new Error("Trình duyệt không xử lý được ảnh này");
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
 
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
-      (b) => (b ? resolve(b) : reject(new Error("Nén ảnh thất bại"))),
+      (b) => (b ? resolve(b) : reject(new Error("Không xử lý được ảnh"))),
       "image/jpeg",
       quality,
     ),
@@ -58,7 +58,7 @@ export async function uploadDirect(
     body: file,
     headers: { "Content-Type": file.type || "image/jpeg" },
   });
-  if (!res.ok) throw new Error("Upload ảnh thất bại");
+  if (!res.ok) throw new Error("Tải ảnh lên thất bại, vui lòng thử lại");
 
   return result.data.key;
 }

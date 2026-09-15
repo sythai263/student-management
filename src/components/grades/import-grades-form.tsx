@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useImportGrades } from "@hooks";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { ImportGradesSummary } from "@lib/actions";
 import type { Student } from "@types";
 
@@ -65,7 +66,7 @@ export function ImportGradesForm({
     const file = fileRef.current?.files?.[0];
     if (!file) {
       setIsError(true);
-      setMessage("Chọn file CSV");
+      setMessage("Vui lòng chọn tệp điểm");
       return;
     }
 
@@ -92,14 +93,14 @@ export function ImportGradesForm({
         }
       } catch (err) {
         setIsError(true);
-        setMessage(err instanceof Error ? err.message : "Lỗi không xác định");
+        setMessage(friendlyErrorMessage(err));
         setErrors([]);
       }
     });
   };
 
   function downloadTemplate() {
-    const header = "maHS,Họ tên,TX1,TX2,TX3,TX4,GK,CK,Ghi chú,Nhận xét";
+    const header = "Mã HS,Họ tên,TX1,TX2,TX3,TX4,GK,CK,Ghi chú,Nhận xét";
     const rows = students.map((s) => {
       const fullName = `${s.lastName} ${s.firstName}`;
       const input = entries[s.id] ?? {
@@ -131,7 +132,7 @@ export function ImportGradesForm({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "mau_import_diem.csv";
+    a.download = "mau_bang_diem.csv";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -141,20 +142,20 @@ export function ImportGradesForm({
   return (
     <>
       <Button type="button" variant="secondary" onClick={() => setOpen(true)}>
-        <FileUp /> Import CSV
+        <FileUp /> Nhập điểm từ tệp
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Import điểm</DialogTitle>
+            <DialogTitle>Nhập điểm từ tệp</DialogTitle>
             <DialogDescription>
-              File CSV hỗ trợ tiêu đề tiếng Việt/không dấu, dấu phẩy/ dấu chấm phẩy,
-              dấu phẩy/chấm thập phân. Mỗi HS cần ít nhất 2 điểm TX.
+              Chọn tệp điểm (.csv) theo đúng mẫu tải xuống bên dưới. Mỗi học
+              sinh cần ít nhất 2 điểm thường xuyên.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="csv">File CSV</Label>
+              <Label htmlFor="csv">Tệp điểm (.csv)</Label>
               <Input
                 id="csv"
                 ref={fileRef}
@@ -191,10 +192,10 @@ export function ImportGradesForm({
                 onClick={downloadTemplate}
                 disabled={students.length === 0}
               >
-                Tải mẫu CSV
+                Tải tệp mẫu
               </Button>
               <Button type="submit" disabled={isPending || importGrades.isPending}>
-                {isPending ? "Đang import..." : "Import"}
+                {isPending ? "Đang nhập..." : "Nhập điểm"}
               </Button>
             </DialogFooter>
           </form>

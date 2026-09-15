@@ -23,6 +23,7 @@ import {
 import { GRADE_SLOT_LABEL } from "@constants";
 import { getGradeForRace, saveRaceGrades } from "@lib/actions";
 import { parseScoreInput } from "@lib/grade-utils";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { GradeSlot } from "@constants";
 
 interface RaceGradeModalProps {
@@ -67,9 +68,7 @@ export function RaceGradeModal({
           setTargetSlot(null);
         }
       })
-      .catch((e) =>
-        setMessage(e instanceof Error ? e.message : "Lỗi tải dữ liệu"),
-      )
+      .catch((e) => setMessage(friendlyErrorMessage(e)))
       .finally(() => setLoading(false));
   }, [open, classId, subjectId, studentId, semester]);
 

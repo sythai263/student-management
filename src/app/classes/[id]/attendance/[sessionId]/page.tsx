@@ -1,5 +1,6 @@
 import { AttendanceBoard } from "@components/attendance";
 import { createSupabaseServerClient } from "@lib/supabase";
+import { friendlyErrorMessage } from "@lib/utils";
 import {
   dehydrate,
   HydrationBoundary,
@@ -27,7 +28,7 @@ export default async function AttendanceSessionPage({
           .select("id, \"classId\", \"sessionDate\", imageKeys, closed, createdAt")
           .eq("id", sessionId)
           .single();
-        if (error) throw new Error(error.message);
+        if (error) throw new Error(friendlyErrorMessage(error));
         return data;
       },
     }),
@@ -40,7 +41,7 @@ export default async function AttendanceSessionPage({
             "id, status, note, sessionId, \"studentId\", confidence, students!inner(studentCode, lastName, firstName)",
           )
           .eq("sessionId", sessionId);
-        if (error) throw new Error(error.message);
+        if (error) throw new Error(friendlyErrorMessage(error));
         return data ?? [];
       },
     }),

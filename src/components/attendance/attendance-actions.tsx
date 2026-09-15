@@ -93,7 +93,7 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
             <DialogHeader>
               <DialogTitle>Điểm danh bằng ảnh</DialogTitle>
               <DialogDescription>
-                Upload ảnh nhóm để hệ thống tự nhận diện học sinh có mặt.
+                Tải ảnh nhóm lên để hệ thống tự nhận diện học sinh có mặt.
               </DialogDescription>
             </DialogHeader>
             <GroupAttendanceForm

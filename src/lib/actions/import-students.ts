@@ -48,9 +48,15 @@ function parseCsv(text: string): CsvRow[] {
     .filter(Boolean)
     .flatMap((line, index) => {
       const cells = line.split(",").map((c) => c.trim());
+      const firstCell = (cells[0] ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
       if (
         index === 0 &&
-        /^(ma|student)\s*(hs|code)?$/i.test(cells[0] ?? "")
+        /^(stt|ma|so|sbd|id|student)\s*(hs|hocsinh|hoc sinh|code|id|so|bao danh)?$/i.test(
+          firstCell,
+        )
       ) {
         return [];
       }
@@ -79,16 +85,16 @@ export async function importStudents(
     const { supabase } = await requireTeacher();
 
     if (typeof classId !== "string" || classId.length === 0) {
-      throw new Error("Thiếu classId");
+      throw new Error("Thiếu thông tin lớp học");
     }
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
-      throw new Error("Thiếu file CSV");
+      throw new Error("Chưa chọn tệp danh sách");
     }
 
     const rows = parseCsv(await file.text());
     if (rows.length === 0) {
-      throw new Error("File CSV không có dữ liệu hợp lệ");
+      throw new Error("Tệp danh sách không có dữ liệu hợp lệ");
     }
 
     const codes = rows.map((r) => r.studentCode);

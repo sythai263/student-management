@@ -76,7 +76,7 @@ export function RecordEditDialog({
             <span>{s?.studentCode}</span>
             {record.confidence != null && (
               <Badge variant={record.confidence >= 90 ? "default" : "secondary"}>
-                AI {record.confidence.toFixed(0)}%
+                Nhận diện {record.confidence.toFixed(0)}%
               </Badge>
             )}
           </DialogDescription>

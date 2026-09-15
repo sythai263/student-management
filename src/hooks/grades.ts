@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { importGrades, saveGradesBulk } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { GradeWithStudent, Student } from "@types";
 
 const gradesKey = (classId: string, subjectId: string, semester: number) => [
@@ -29,7 +30,7 @@ export function useGrades(
         .eq("subjectId", subjectId)
         .eq("semester", semester)
         .order("createdAt", { ascending: true });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as GradeWithStudent[];
     },
     enabled: !!classId && !!subjectId && semester > 0,

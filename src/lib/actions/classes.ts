@@ -40,7 +40,7 @@ export async function deleteClass(classId: unknown): Promise<ActionResult<void>>
     const { supabase, user } = await requireTeacher();
 
     const id = deleteClassSchema.safeParse(classId);
-    if (!id.success) throw new Error(id.error.issues[0]?.message ?? "ID lớp không hợp lệ");
+    if (!id.success) throw new Error(id.error.issues[0]?.message ?? "Lớp học không hợp lệ");
 
     const { error } = await supabase
       .from("classes")

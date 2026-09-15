@@ -55,7 +55,7 @@ export async function downloadObject(objectKey: string): Promise<Uint8Array> {
   const { Body } = await s3.send(
     new GetObjectCommand({ Bucket: S3_BUCKET, Key: objectKey }),
   );
-  if (!Body) throw new Error(`Không tải được object: ${objectKey}`);
+  if (!Body) throw new Error("Không đọc được ảnh đã lưu");
   return Body.transformToByteArray();
 }
 

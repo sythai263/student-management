@@ -50,7 +50,7 @@ export async function groupAttendance(
 
     const classId = formData.get("classId");
     if (typeof classId !== "string" || classId.length === 0) {
-      throw new Error("Thiếu classId");
+      throw new Error("Thiếu thông tin lớp học");
     }
     const sessionDate =
       (formData.get("sessionDate") as string | null) ||

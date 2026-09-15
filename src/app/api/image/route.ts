@@ -15,11 +15,11 @@ export async function GET(req: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new Response("Unauthorized", { status: 401 });
+  if (!user) return new Response("Bạn cần đăng nhập", { status: 401 });
 
   const key = new URL(req.url).searchParams.get("key") ?? "";
   if (!ALLOWED_PREFIXES.some((p) => key.startsWith(p))) {
-    return new Response("Forbidden", { status: 403 });
+    return new Response("Bạn không có quyền xem ảnh này", { status: 403 });
   }
 
   try {
@@ -36,6 +36,6 @@ export async function GET(req: Request) {
       },
     });
   } catch {
-    return new Response("Not found", { status: 404 });
+    return new Response("Không tìm thấy ảnh", { status: 404 });
   }
 }

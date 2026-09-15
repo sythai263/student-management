@@ -18,8 +18,8 @@ export async function assignSubjectToClass(
 
     const parsed = z
       .object({
-        classId: z.string().uuid("classId không hợp lệ"),
-        subjectId: z.string().uuid("subjectId không hợp lệ"),
+        classId: z.string().uuid("Lớp học không hợp lệ"),
+        subjectId: z.string().uuid("Môn học không hợp lệ"),
       })
       .safeParse(input);
     if (!parsed.success) {
@@ -48,8 +48,10 @@ export async function removeSubjectFromClass(
   const result = await withAction(async () => {
     const { supabase } = await requireTeacher();
 
-    const parsed = z.string().uuid("ID phân công không hợp lệ").safeParse(id);
-    if (!parsed.success) throw new Error(parsed.error.message);
+    const parsed = z.string().uuid("Phân công môn học không hợp lệ").safeParse(id);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
 
     const { error } = await supabase
       .from("classSubjects")

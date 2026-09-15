@@ -243,7 +243,7 @@ export function DuckRaceCanvas({
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
       ctx.fillText(
-        `Còn lại: ${Math.max(0, duration - elapsed).toFixed(1)}s`,
+        `Còn lại: ${Math.max(0, duration - elapsed).toFixed(1)} giây`,
         10,
         10,
       );
@@ -330,7 +330,7 @@ export function DuckRaceCanvas({
             Cập nhật thời gian đua
           </Button>
           <span className="text-sm font-medium tabular-nums">
-            {timeLeft.toFixed(1)}s
+            {timeLeft.toFixed(1)} giây
           </span>
         </div>
       </header>

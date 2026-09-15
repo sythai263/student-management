@@ -59,7 +59,7 @@ export async function createManualSession(
 ): Promise<ActionResult<{ sessionId: string }>> {
   const result = await withAction(async () => {
     const { supabase } = await requireTeacher();
-    if (!classId) throw new Error("Thiếu classId");
+    if (!classId) throw new Error("Thiếu thông tin lớp học");
 
     const date = sessionDate ?? new Date().toISOString().slice(0, 10);
     const { data: session, error: sessionError } = await supabase

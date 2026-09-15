@@ -6,6 +6,7 @@ import {
   removeSubjectFromClass,
 } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { ClassSubjectWithSubject } from "@types";
 
 const classSubjectsKey = (classId: string) => ["class-subjects", classId];
@@ -21,7 +22,7 @@ export function useClassSubjects(classId: string) {
         .select("*, subjects(name, code)")
         .eq("classId", classId)
         .order("createdAt", { ascending: true });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as ClassSubjectWithSubject[];
     },
     enabled: !!classId,

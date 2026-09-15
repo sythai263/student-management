@@ -35,7 +35,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
     const file = fileRef.current?.files?.[0];
     if (!file) {
       setIsError(true);
-      setMessage("Chọn file CSV");
+      setMessage("Vui lòng chọn tệp danh sách học sinh");
       return;
     }
 
@@ -63,7 +63,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
 
   function downloadTemplate() {
     const rows = [
-      "maHS,ho,ten,ngay-sinh",
+      "Mã HS,Họ đệm,Tên,Ngày sinh",
       "HS001,Nguyễn Văn,An,2010-03-15",
       "HS002,Trần Thị,Bình,03/15/2010",
       "HS003,Lê Hoàng,Cường,",
@@ -72,7 +72,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "mau_import_hoc_sinh.csv";
+    a.download = "mau_danh_sach_hoc_sinh.csv";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -86,21 +86,21 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
         variant="secondary"
         onClick={() => setOpen(true)}
       >
-        <FileUp /> Import CSV
+        <FileUp /> Thêm học sinh từ tệp
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Import học sinh</DialogTitle>
+            <DialogTitle>Thêm học sinh từ tệp</DialogTitle>
             <DialogDescription>
               {classData
                 ? `Lớp: ${classData.name} (${classData.classCode}) - Năm học ${classData.schoolYear}`
-                : "Tải lên file CSV để thêm nhiều học sinh cùng lúc"}
+                : "Tải lên tệp danh sách để thêm nhiều học sinh cùng lúc"}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="csv">File CSV (maHS,ho,ten,ngay-sinh)</Label>
+              <Label htmlFor="csv">Tệp danh sách học sinh (.csv)</Label>
               <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
             </div>
             {message && (
@@ -118,10 +118,10 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
                 variant="outline"
                 onClick={downloadTemplate}
               >
-                Tải mẫu CSV
+                Tải tệp mẫu
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Đang import..." : "Import"}
+                {isPending ? "Đang thêm..." : "Thêm vào lớp"}
               </Button>
             </DialogFooter>
           </form>

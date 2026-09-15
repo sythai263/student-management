@@ -12,7 +12,7 @@ export const createClassSchema = z.object({
   schoolYear: z
     .string()
     .trim()
-    .regex(/^\d{4}-\d{4}$/, "Năm học theo định dạng YYYY-YYYY"),
+    .regex(/^\d{4}-\d{4}$/, "Năm học chưa đúng (ví dụ: 2025-2026)"),
 });
 
 export type CreateClassInput = z.infer<typeof createClassSchema>;
@@ -20,4 +20,4 @@ export type CreateClassInput = z.infer<typeof createClassSchema>;
 /** Validation for the class id used when deleting a class. */
 export const deleteClassSchema = z
   .string()
-  .uuid("ID lớp không hợp lệ");
+  .uuid("Lớp học không hợp lệ");

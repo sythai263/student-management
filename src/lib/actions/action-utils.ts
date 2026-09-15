@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@lib/supabase";
+import { friendlyErrorMessage } from "@lib/utils";
 
 /**
  * Standardized return type for every Server Action.
@@ -19,7 +20,7 @@ export async function requireTeacher() {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getClaims();
   const claims = data?.claims;
-  if (error || !claims) throw new Error("Chưa đăng nhập");
+  if (error || !claims) throw new Error("Bạn chưa đăng nhập");
   return { supabase, user: { id: claims.sub, email: claims.email } };
 }
 
@@ -36,7 +37,7 @@ export async function withAction<T>(
   } catch (err) {
     return {
       success: false,
-      error: err instanceof Error ? err.message : "Lỗi không xác định",
+      error: friendlyErrorMessage(err),
     };
   }
 }

@@ -92,7 +92,7 @@ export function AttendanceGrid({
   const updateMutation = useUpdateAttendance(sessionId);
 
   if (records.length === 0) {
-    return <p className="text-muted-foreground">Không có bản ghi nào.</p>;
+    return <p className="text-muted-foreground">Không có học sinh nào.</p>;
   }
 
   return (

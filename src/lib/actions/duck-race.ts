@@ -34,7 +34,7 @@ export async function pickReviewStudent(
 ): Promise<ActionResult<DuckRaceData>> {
   return withAction(async () => {
     const { supabase } = await requireTeacher();
-    if (!classId) throw new Error("Thiếu classId");
+    if (!classId) throw new Error("Thiếu thông tin lớp học");
 
     const { data: students, error: studentsError } = await supabase
       .from("students")
@@ -163,7 +163,7 @@ export async function saveRaceGrades(
     }
 
     if (scoreIdx !== scores.length) {
-      throw new Error("Có điểm thừa không tìm được cột trống để lưu");
+      throw new Error("Không còn ô điểm thường xuyên trống để lưu");
     }
 
     const base = { ...existing, ...updates } as Partial<Grade>;

@@ -146,10 +146,10 @@ export function StudentTable({ classId }: StudentTableProps) {
                     </p>
                   </div>
                   {s.awsFaceId ? (
-                    <Badge className="shrink-0">Đã index</Badge>
+                    <Badge className="shrink-0">Đã có ảnh</Badge>
                   ) : (
                     <Badge variant="secondary" className="shrink-0">
-                      Chưa có
+                      Chưa có ảnh
                     </Badge>
                   )}
                 </button>
@@ -167,7 +167,7 @@ export function StudentTable({ classId }: StudentTableProps) {
                   <TableHead className="w-max whitespace-nowrap">Họ</TableHead>
                   <TableHead className="w-max whitespace-nowrap">Tên</TableHead>
                   <TableHead>Ngày sinh</TableHead>
-                  <TableHead>Face ID</TableHead>
+                  <TableHead>Ảnh khuôn mặt</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -184,9 +184,9 @@ export function StudentTable({ classId }: StudentTableProps) {
                     <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
                     <TableCell>
                       {s.awsFaceId ? (
-                        <Badge>Đã index</Badge>
+                        <Badge>Đã có ảnh</Badge>
                       ) : (
-                        <Badge variant="secondary">Chưa có</Badge>
+                        <Badge variant="secondary">Chưa có ảnh</Badge>
                       )}
                     </TableCell>
                   </TableRow>

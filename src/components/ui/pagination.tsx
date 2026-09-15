@@ -26,7 +26,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
   return (
     <nav
       className="flex flex-wrap items-center justify-center gap-1"
-      aria-label="Pagination"
+      aria-label="Chuyển trang"
     >
       <Button
         type="button"

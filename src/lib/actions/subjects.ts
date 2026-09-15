@@ -42,8 +42,10 @@ export async function deleteSubject(
   const result = await withAction(async () => {
     const { supabase, user } = await requireTeacher();
 
-    const parsed = z.string().uuid("ID môn học không hợp lệ").safeParse(id);
-    if (!parsed.success) throw new Error(parsed.error.message);
+    const parsed = z.string().uuid("Môn học không hợp lệ").safeParse(id);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
 
     const { error } = await supabase
       .from("subjects")

@@ -75,8 +75,8 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
       <CardHeader>
         <CardTitle>Đăng ký học sinh</CardTitle>
         <CardDescription>
-          Ảnh chân dung không bắt buộc — nếu có sẽ được nén và index vào AWS
-          Rekognition
+          Ảnh chân dung không bắt buộc — nếu có sẽ được dùng để điểm danh
+          bằng khuôn mặt
         </CardDescription>
       </CardHeader>
       <CardContent>

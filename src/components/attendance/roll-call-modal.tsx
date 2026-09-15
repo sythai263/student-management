@@ -171,7 +171,7 @@ export function RollCallModal({
                 variant={record.confidence >= 90 ? "default" : "secondary"}
                 className="text-sm sm:text-xl"
               >
-                AI {record.confidence.toFixed(0)}%
+                Nhận diện {record.confidence.toFixed(0)}%
               </Badge>
             )}
           </div>

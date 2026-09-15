@@ -3,6 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteClass } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { Class } from "@types";
 
 /** Fetch all classes owned by the current teacher. */
@@ -15,7 +16,7 @@ export function useClasses() {
         .from("classes")
         .select("*")
         .order("createdAt", { ascending: false });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as Class[];
     },
   });
@@ -32,7 +33,7 @@ export function useClass(classId: string) {
         .select("*")
         .eq("id", classId)
         .single();
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return data as Class;
     },
   });

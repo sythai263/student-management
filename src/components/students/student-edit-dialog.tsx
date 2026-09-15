@@ -105,9 +105,9 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
           <DialogDescription className="flex items-center gap-2">
             <span>{student.studentCode}</span>
             {student.awsFaceId ? (
-              <Badge>Đã index</Badge>
+              <Badge>Đã có ảnh</Badge>
             ) : (
-              <Badge variant="secondary">Chưa có</Badge>
+              <Badge variant="secondary">Chưa có ảnh</Badge>
             )}
           </DialogDescription>
         </DialogHeader>

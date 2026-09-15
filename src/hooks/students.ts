@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { Student } from "@types";
 
 interface PaginationParams {
@@ -27,7 +28,7 @@ export function useStudents(classId: string) {
         .select("*")
         .eq("classId", classId)
         .order("studentCode");
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as Student[];
     },
   });
@@ -48,7 +49,7 @@ export function usePaginatedStudents(
         p_page: page,
         p_page_size: pageSize,
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
 
       const raw = (data ?? { students: [], total: 0 }) as {
         students: unknown[];

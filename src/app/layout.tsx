@@ -10,8 +10,8 @@ import NextTopLoader from "nextjs-toploader";
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: "Student Management",
-  description: "Facial recognition attendance SaaS",
+  title: "Quản lý học sinh",
+  description: "Ứng dụng giúp giáo viên quản lý lớp học, điểm danh và nhập điểm",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

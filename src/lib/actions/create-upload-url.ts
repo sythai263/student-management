@@ -46,11 +46,11 @@ export async function createUploadUrl(
 
     const kind = formData.get("kind");
     if (typeof kind !== "string" || !(kind in KIND_PREFIX)) {
-      throw new Error("Loại upload không hợp lệ");
+      throw new Error("Yêu cầu tải tệp lên không hợp lệ");
     }
     const classId = formData.get("classId");
     if (typeof classId !== "string" || classId.length === 0) {
-      throw new Error("Thiếu classId");
+      throw new Error("Thiếu thông tin lớp học");
     }
     const label = formData.get("label");
     const contentType =

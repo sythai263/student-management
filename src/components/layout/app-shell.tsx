@@ -64,7 +64,7 @@ export function AppShell({ children }: AppShellProps) {
         </Button>
 
         <Link href="/" className="text-sm font-semibold sm:text-base">
-          Student Management
+          Quản lý học sinh
         </Link>
 
         <nav className="ml-2 flex items-center gap-1">

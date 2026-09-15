@@ -7,6 +7,7 @@ import {
   createManualSession,
   updateAttendanceRecord,
 } from "@lib/actions";
+import { friendlyErrorMessage } from "@lib/utils";
 import type { UpdateAttendanceInput } from "@schemas";
 import type { AttendanceStatus } from "@constants";
 import type {
@@ -27,7 +28,7 @@ export function useAttendanceSession(sessionId: string) {
         .select("*")
         .eq("id", sessionId)
         .single();
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return data as AttendanceSession;
     },
   });
@@ -44,7 +45,7 @@ export function useAttendanceSessions(classId: string) {
         .select("*")
         .eq("classId", classId)
         .order("sessionDate", { ascending: false });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as AttendanceSession[];
     },
   });
@@ -68,7 +69,7 @@ export function useAttendanceRecords(
         .eq("sessionId", sessionId);
       if (status !== "ALL") query = query.eq("status", status);
       const { data, error } = await query;
-      if (error) throw new Error(error.message);
+      if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as AttendanceRecordWithStudent[];
     },
   });

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { Grade, ImportGradesError, ImportGradesSummary } from "@types";
+import { GRADE_SLOT_LABEL } from "@constants";
 import { parseGradeCsv, calculateAverage } from "@lib/grade-utils";
 import {
   requireTeacher,
@@ -132,12 +133,12 @@ export async function importGrades(
     }
 
     if (!(file instanceof File) || file.size === 0) {
-      throw new Error("Thiếu file CSV");
+      throw new Error("Chưa chọn tệp điểm");
     }
 
     const { rows, hasHeader } = parseGradeCsv(await file.text());
     if (rows.length === 0) {
-      throw new Error(hasHeader ? "File CSV không có dòng dữ liệu" : "File CSV không có dữ liệu hợp lệ");
+      throw new Error(hasHeader ? "Tệp điểm không có dòng dữ liệu" : "Tệp điểm không có dữ liệu hợp lệ");
     }
 
     const codes = rows.map((r) => r.studentCode).filter((c): c is string => c != null && c !== "");
@@ -166,7 +167,11 @@ export async function importGrades(
       }
 
       if (row.invalidScores.length > 0) {
-        messages.push(`Điểm không hợp lệ: ${row.invalidScores.join(", ")}`);
+        messages.push(
+          `Điểm không hợp lệ: ${row.invalidScores
+            .map((s) => GRADE_SLOT_LABEL[s])
+            .join(", ")}`,
+        );
       }
 
       const regularCount = [row.scores.tx1, row.scores.tx2, row.scores.tx3, row.scores.tx4].filter(

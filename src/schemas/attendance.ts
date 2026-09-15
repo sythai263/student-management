@@ -4,7 +4,7 @@ import { ATTENDANCE_STATUS } from "@constants";
 /** Validation for the "Update Attendance Record" server action input. */
 export const updateRecordSchema = z
   .object({
-    recordId: z.uuid("recordId không hợp lệ"),
+    recordId: z.uuid("Dữ liệu điểm danh không hợp lệ"),
     status: z.enum([
       ATTENDANCE_STATUS.PRESENT,
       ATTENDANCE_STATUS.ABSENT,
