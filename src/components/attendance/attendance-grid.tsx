@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ATTENDANCE_STATUS_CLASS,
+  ATTENDANCE_STATUS_HOVER,
   ATTENDANCE_STATUS_LIST,
   ATTENDANCE_STATUS_SHORT_LABEL,
   type AttendanceStatus,
@@ -73,6 +74,7 @@ const AttendanceCard = memo(function AttendanceCard({
             variant="outline"
             className={cn(
               "h-8 min-w-0 px-0 text-xs",
+              ATTENDANCE_STATUS_HOVER[s],
               r.status === s && ATTENDANCE_STATUS_CLASS[s],
             )}
             disabled={pending || disabled}

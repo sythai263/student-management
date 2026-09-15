@@ -37,13 +37,22 @@ export const ATTENDANCE_STATUS_SHORT_LABEL: Record<AttendanceStatus, string> = {
   DI_MUON: "M",
 };
 
-/** Status colors — applied on top of the `outline` variant of Badge/Button. */
+/** Status colors (pastel) — applied on top of the `outline` variant of Badge/Button. */
 export const ATTENDANCE_STATUS_CLASS: Record<AttendanceStatus, string> = {
-  CO_MAT: "border-transparent bg-green-600 text-white hover:bg-green-700",
-  VANG: "border-transparent bg-red-600 text-white hover:bg-red-700",
-  VANG_PHEP: "border-transparent bg-white text-zinc-900 hover:bg-zinc-100",
-  BO_TIET: "border-transparent bg-orange-500 text-white hover:bg-orange-600",
-  DI_MUON: "border-transparent bg-orange-200 text-orange-950 hover:bg-orange-300",
+  CO_MAT: "border-green-500/30 bg-green-500/15 text-green-400",
+  VANG: "border-red-500/30 bg-red-500/15 text-red-400",
+  VANG_PHEP: "border-white/20 bg-white/10 text-zinc-100",
+  BO_TIET: "border-orange-500/30 bg-orange-500/15 text-orange-400",
+  DI_MUON: "border-orange-300/30 bg-orange-300/10 text-orange-300",
+};
+
+/** Hover tint for status pickers — previews the status color before selecting. */
+export const ATTENDANCE_STATUS_HOVER: Record<AttendanceStatus, string> = {
+  CO_MAT: "hover:border-green-500/30 hover:bg-green-500/15 hover:text-green-400",
+  VANG: "hover:border-red-500/30 hover:bg-red-500/15 hover:text-red-400",
+  VANG_PHEP: "hover:border-white/20 hover:bg-white/10 hover:text-zinc-100",
+  BO_TIET: "hover:border-orange-500/30 hover:bg-orange-500/15 hover:text-orange-400",
+  DI_MUON: "hover:border-orange-300/30 hover:bg-orange-300/10 hover:text-orange-300",
 };
 
 /** Filter-tab labels including the "all" option. */

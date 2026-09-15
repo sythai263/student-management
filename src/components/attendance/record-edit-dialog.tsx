@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import {
   ATTENDANCE_STATUS,
   ATTENDANCE_STATUS_CLASS,
+  ATTENDANCE_STATUS_HOVER,
   ATTENDANCE_STATUS_LABEL,
   ATTENDANCE_STATUS_LIST,
   type AttendanceStatus,
@@ -94,6 +95,7 @@ export function RecordEditDialog({
                 onClick={() => setStatus(st)}
                 className={cn(
                   "h-12 text-base sm:text-sm",
+                  ATTENDANCE_STATUS_HOVER[st],
                   status === st && ATTENDANCE_STATUS_CLASS[st],
                 )}
               >

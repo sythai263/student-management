@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import {
   ATTENDANCE_STATUS,
   ATTENDANCE_STATUS_CLASS,
+  ATTENDANCE_STATUS_HOVER,
   ATTENDANCE_STATUS_LABEL,
   ATTENDANCE_STATUS_LIST,
   ATTENDANCE_STATUS_SHORT_LABEL,
@@ -213,6 +214,7 @@ export function RollCallModal({
                 variant="outline"
                 className={cn(
                   "h-16 flex-col gap-1 text-2xl sm:h-32 sm:gap-2 sm:text-3xl",
+                  ATTENDANCE_STATUS_HOVER[status],
                   record.status === status && ATTENDANCE_STATUS_CLASS[status],
                 )}
                 disabled={updateMutation.isPending}
