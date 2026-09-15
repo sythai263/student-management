@@ -18,5 +18,11 @@ export { createSubjectSchema, createSubjectsFromCatalogSchema } from "./subjects
 export type { CreateSubjectInput, CreateSubjectsFromCatalogInput } from "./subjects";
 export { updateRecordSchema, renameSessionSchema } from "./attendance";
 export type { UpdateAttendanceInput, RenameSessionInput } from "./attendance";
-export { createClassSchema, deleteClassSchema } from "./classes";
+export {
+  createClassSchema,
+  deleteClassSchema,
+  updateClassSchoolSchema,
+} from "./classes";
 export type { CreateClassInput } from "./classes";
+export { createSchoolSchema, renameSchoolSchema } from "./schools";
+export type { CreateSchoolInput, RenameSchoolInput } from "./schools";

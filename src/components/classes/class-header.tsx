@@ -1,8 +1,19 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PageHeader } from "@components/layout";
-import { useClass } from "@hooks";
+import { useClass, useSchools, useUpdateClassSchool } from "@hooks";
+import { friendlyErrorMessage } from "@lib/utils";
+
+const NO_SCHOOL = "__none__";
 
 interface ClassHeaderProps {
   classId: string;
@@ -10,6 +21,10 @@ interface ClassHeaderProps {
 
 export function ClassHeader({ classId }: ClassHeaderProps) {
   const { data: cls, isLoading, error } = useClass(classId);
+  const { data: schools } = useSchools();
+  const updateClassSchool = useUpdateClassSchool();
+  const [schoolError, setSchoolError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   if (isLoading) {
     return (
@@ -23,10 +38,56 @@ export function ClassHeader({ classId }: ClassHeaderProps) {
     return <PageHeader title="Không tìm thấy lớp" />;
   }
 
+  const onSchoolChange = (value: string | null) => {
+    setSchoolError(null);
+    startTransition(async () => {
+      try {
+        await updateClassSchool.mutateAsync({
+          classId,
+          schoolId: !value || value === NO_SCHOOL ? null : value,
+        });
+      } catch (err) {
+        setSchoolError(friendlyErrorMessage(err));
+      }
+    });
+  };
+
   return (
     <PageHeader
       title={`Lớp ${cls.name}`}
-      description={`Năm học ${cls.schoolYear}`}
+      description={
+        <div className="flex flex-wrap items-center gap-2">
+          <span>Năm học {cls.schoolYear}</span>
+          <span aria-hidden>·</span>
+          <Select
+            value={cls.schoolId ?? NO_SCHOOL}
+            onValueChange={onSchoolChange}
+            disabled={isPending}
+          >
+            <SelectTrigger className="h-8 w-auto gap-1 text-sm">
+              <SelectValue>
+                {(value: string) =>
+                  value === NO_SCHOOL
+                    ? "Chưa gắn trường"
+                    : (schools?.find((s) => s.id === value)?.name ??
+                      "Chưa gắn trường")
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_SCHOOL}>Chưa gắn trường</SelectItem>
+              {(schools ?? []).map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {schoolError && (
+            <span className="text-sm text-destructive">{schoolError}</span>
+          )}
+        </div>
+      }
     />
   );
 }

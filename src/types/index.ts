@@ -4,6 +4,7 @@ export * from "./class-subject";
 export * from "./duck-race";
 export * from "./grade";
 export * from "./report-card-template";
+export * from "./school";
 export * from "./signature";
 export * from "./student";
 export * from "./subject";

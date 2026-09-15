@@ -1,4 +1,15 @@
-export { useClasses, useClass, useDeleteClass } from "./classes";
+export {
+  useClasses,
+  useClass,
+  useDeleteClass,
+  useUpdateClassSchool,
+} from "./classes";
+export {
+  useSchools,
+  useCreateSchool,
+  useRenameSchool,
+  useDeleteSchool,
+} from "./schools";
 export { useStudents, usePaginatedStudents } from "./students";
 export { useSubjects, useCreateSubject, useDeleteSubject, useSubjectCatalog } from "./subjects";
 export {

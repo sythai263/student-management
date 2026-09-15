@@ -9,6 +9,7 @@ import {
   KeyRound,
   LogOut,
   PenLine,
+  School,
   ShieldCheck,
   User,
   UserPen,
@@ -21,6 +22,7 @@ import {
   SignatureManageDialog,
   UpdateProfileDialog,
 } from "@components/auth";
+import { SchoolsManageDialog } from "@components/schools";
 import { logout } from "@lib/actions";
 import { FEATURE_FLAGS } from "@constants";
 
@@ -35,6 +37,7 @@ export function AppShell({ children }: AppShellProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [mfaOpen, setMfaOpen] = useState(false);
   const [signatureOpen, setSignatureOpen] = useState(false);
+  const [schoolsOpen, setSchoolsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -171,6 +174,16 @@ export function AppShell({ children }: AppShellProps) {
                 >
                   <PenLine className="size-4" /> Chữ ký giáo viên
                 </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setSchoolsOpen(true);
+                  }}
+                >
+                  <School className="size-4" /> Trường giảng dạy
+                </button>
                 <form action={logout}>
                   <button
                     type="submit"
@@ -194,6 +207,10 @@ export function AppShell({ children }: AppShellProps) {
             <SignatureManageDialog
               open={signatureOpen}
               onOpenChange={setSignatureOpen}
+            />
+            <SchoolsManageDialog
+              open={schoolsOpen}
+              onOpenChange={setSchoolsOpen}
             />
           </div>
         </div>

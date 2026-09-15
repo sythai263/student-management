@@ -49,6 +49,7 @@ export function ClassList() {
                     <CardTitle>{c.classCode}</CardTitle>
                     <CardDescription>
                       {c.name} · Năm học {c.schoolYear}
+                      {c.school?.name ? ` · ${c.school.name}` : ""}
                     </CardDescription>
                   </div>
                   <Button

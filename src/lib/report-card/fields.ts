@@ -14,6 +14,7 @@ export const REPORT_CARD_FIELDS: ReportCardFieldDef[] = [
   { key: "studentCode", label: "Mã học sinh", group: "Thông tin" },
   { key: "classCode", label: "Mã lớp", group: "Thông tin" },
   { key: "className", label: "Tên lớp", group: "Thông tin" },
+  { key: "schoolName", label: "Tên trường", group: "Thông tin" },
   { key: "semesterLabel", label: "Học kỳ", group: "Thông tin" },
   { key: "tx1", label: GRADE_SLOT_LABEL.tx1, group: "Điểm" },
   { key: "tx2", label: GRADE_SLOT_LABEL.tx2, group: "Điểm" },

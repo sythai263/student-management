@@ -63,7 +63,6 @@ export function ReportCardDashboard({
   const [subjectId, setSubjectId] = useState(subjectIdProp ?? "");
   const [semester, setSemester] = useState(1);
   const [signDateIso, setSignDateIso] = useState(todayIso());
-  const [schoolName, setSchoolName] = useState("");
   const [cardsPerPage, setCardsPerPage] = useState<CardsPerPage>(6);
 
   const subjectOptions = (classSubjects ?? []).map((cs) => ({
@@ -128,6 +127,7 @@ export function ReportCardDashboard({
         studentName: `${s.lastName} ${s.firstName}`,
         classCode: classInfo.classCode,
         className: classInfo.name,
+        schoolName: classInfo.school?.name ?? "",
         subjectName: activeSubjectName,
         semesterLabel,
         scores,
@@ -254,16 +254,6 @@ export function ReportCardDashboard({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="schoolName">Tên trường</Label>
-              <Input
-                id="schoolName"
-                placeholder="VD: Trường THPT ..."
-                value={schoolName}
-                onChange={(e) => setSchoolName(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="cardsPerPage">Bố cục</Label>
               <Select
                 value={String(cardsPerPage)}
@@ -316,7 +306,7 @@ export function ReportCardDashboard({
           signDate={formatSignDate(signDateIso)}
           signatureImageKey={signature?.imageKey ?? null}
           teacherName={teacherName}
-          schoolName={schoolName}
+          schoolName={classInfo?.school?.name}
           cardsPerPage={cardsPerPage}
         />
       )}

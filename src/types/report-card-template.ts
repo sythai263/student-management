@@ -5,6 +5,7 @@ export type ReportCardFieldKey =
   | "studentCode"
   | "classCode"
   | "className"
+  | "schoolName"
   | "semesterLabel"
   | "tx1"
   | "tx2"
@@ -76,7 +77,7 @@ export interface ScoreTableBlock {
 }
 
 /** Width split between the school name (left) and the national heading (right). */
-export type LetterheadRatio = "1-3" | "1-2" | "1-1" | "2-1" | "3-1";
+export type LetterheadRatio = "1-3" | "1-2" | "2-3" | "1-1" | "2-1" | "3-1";
 
 /**
  * Header row: school name (left) + the Vietnamese national heading —

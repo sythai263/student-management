@@ -6,5 +6,9 @@ export interface Class {
   name: string;
   schoolYear: string;
   teacherId: string;
+  /** Optional FK to `teacherSchools` — the school this class belongs to. */
+  schoolId: string | null;
+  /** Embedded join (`school:teacherSchools(name)`) — present when selected. */
+  school?: { name: string } | null;
   createdAt: string;
 }

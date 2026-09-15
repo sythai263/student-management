@@ -10,6 +10,7 @@ interface LetterheadBlockViewProps {
 const RATIO_CLASSES: Record<LetterheadRatio, { left: string; right: string }> = {
   "1-3": { left: "w-1/4", right: "w-3/4" },
   "1-2": { left: "w-1/3", right: "w-2/3" },
+  "2-3": { left: "w-2/5", right: "w-3/5" },
   "1-1": { left: "w-1/2", right: "w-1/2" },
   "2-1": { left: "w-2/3", right: "w-1/3" },
   "3-1": { left: "w-3/4", right: "w-1/4" },
@@ -32,7 +33,9 @@ export function LetterheadBlockView({
   return (
     <div className="space-y-1">
       <div className="flex items-start justify-between gap-2">
-        <div className={`${widths.left} font-bold uppercase`}>{school}</div>
+        <div className={`${widths.left} text-center font-bold uppercase`}>
+          {school}
+        </div>
         <div className={`${widths.right} text-center`}>
           <p className="font-bold uppercase">
             Cộng hòa xã hội chủ nghĩa Việt Nam

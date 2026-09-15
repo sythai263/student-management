@@ -14,7 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useSchools } from "@hooks";
 import { assignSubjectToClass, createClass } from "@lib/actions";
+
+const NO_SCHOOL = "__none__";
 
 interface CreateClassFormProps {
   subjectId?: string;
@@ -24,7 +34,9 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
+  const { data: schools } = useSchools();
   const [open, setOpen] = useState(false);
+  const [schoolId, setSchoolId] = useState(NO_SCHOOL);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -37,6 +49,7 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
       name: (form.elements.namedItem("name") as HTMLInputElement).value,
       schoolYear: (form.elements.namedItem("schoolYear") as HTMLInputElement)
         .value,
+      schoolId: schoolId === NO_SCHOOL ? undefined : schoolId,
     };
 
     startTransition(async () => {
@@ -64,6 +77,7 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
       }
 
       formRef.current?.reset();
+      setSchoolId(NO_SCHOOL);
       await queryClient.invalidateQueries({ queryKey: ["classes"] });
       setOpen(false);
       router.push(redirectPath);
@@ -107,6 +121,35 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
                 placeholder="2025-2026"
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="school">Trường</Label>
+              <Select value={schoolId} onValueChange={(v) => setSchoolId(v ?? NO_SCHOOL)}>
+                <SelectTrigger id="school">
+                  <SelectValue placeholder="Không gắn trường">
+                    {(value: string) =>
+                      value === NO_SCHOOL
+                        ? "Không gắn trường"
+                        : (schools?.find((s) => s.id === value)?.name ??
+                          "Không gắn trường")
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_SCHOOL}>Không gắn trường</SelectItem>
+                  {(schools ?? []).map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!schools?.length && (
+                <p className="text-xs text-muted-foreground">
+                  Chưa có trường nào — thêm trong menu tài khoản → Trường
+                  giảng dạy.
+                </p>
+              )}
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
             <DialogFooter>

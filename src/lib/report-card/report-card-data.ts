@@ -7,6 +7,8 @@ export interface ReportCardData {
   studentName: string;
   classCode: string;
   className: string;
+  /** School the class is mapped to — empty string when unmapped. */
+  schoolName: string;
   subjectName: string;
   semesterLabel: string;
   scores: Record<GradeSlot, number | null>;
@@ -34,6 +36,7 @@ export function buildFieldValues(
     studentCode: data.studentCode,
     classCode: data.classCode,
     className: data.className,
+    schoolName: data.schoolName,
     semesterLabel: data.semesterLabel,
     tx1: formatScore(data.scores.tx1),
     tx2: formatScore(data.scores.tx2),

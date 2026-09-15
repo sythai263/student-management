@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import type { Class } from "@types";
-import { createClassSchema, deleteClassSchema } from "@schemas";
+import {
+  createClassSchema,
+  deleteClassSchema,
+  updateClassSchoolSchema,
+} from "@schemas";
 import {
   requireTeacher,
   withAction,
@@ -51,5 +55,36 @@ export async function deleteClass(classId: unknown): Promise<ActionResult<void>>
   });
 
   if (result.success) revalidatePath("/");
+  return result;
+}
+
+/**
+ * Server Action: map a class to one of the teacher's schools
+ * (schoolId null = unmapped). RLS enforces the school belongs to
+ * the same teacher.
+ */
+export async function updateClassSchool(
+  input: unknown,
+): Promise<ActionResult<Class>> {
+  const result = await withAction(async () => {
+    const { supabase, user } = await requireTeacher();
+
+    const parsed = updateClassSchoolSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
+
+    const { data, error } = await supabase
+      .from("classes")
+      .update({ schoolId: parsed.data.schoolId })
+      .eq("id", parsed.data.classId)
+      .eq("teacherId", user.id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as Class;
+  });
+
+  if (result.success) revalidatePath("/classes");
   return result;
 }

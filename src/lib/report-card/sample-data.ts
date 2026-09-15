@@ -7,6 +7,7 @@ export const REPORT_CARD_SAMPLE_VALUES: ReportCardFieldValues = {
   studentCode: "HS0001",
   classCode: "10A1",
   className: "Lớp 10 Chuyên Toán",
+  schoolName: "Trường THPT Nguyễn Du",
   semesterLabel: "Học kỳ 1",
   tx1: "8",
   tx2: "9",

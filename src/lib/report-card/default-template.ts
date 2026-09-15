@@ -18,7 +18,7 @@ export function defaultReportCardBlocks(): ReportCardBlock[] {
       type: "letterhead",
       schoolName: "Tên trường",
       title: "Phiếu điểm",
-      ratio: "1-2",
+      ratio: "2-3",
     },
     {
       id: createBlockId(),

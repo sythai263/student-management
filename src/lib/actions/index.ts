@@ -11,7 +11,7 @@ export {
   updateProfile,
 } from "./auth";
 export { groupAttendance } from "./group-attendance";
-export { createClass, deleteClass } from "./classes";
+export { createClass, deleteClass, updateClassSchool } from "./classes";
 export {
   createSubject,
   deleteSubject,
@@ -30,6 +30,7 @@ export {
 } from "./duck-race";
 export type { DuckRaceData } from "@types";
 export { saveSignature, deleteSignature } from "./signature";
+export { createSchool, renameSchool, deleteSchool } from "./schools";
 export {
   saveReportCardTemplate,
   deleteReportCardTemplate,

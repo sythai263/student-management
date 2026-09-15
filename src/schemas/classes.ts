@@ -13,9 +13,16 @@ export const createClassSchema = z.object({
     .string()
     .trim()
     .regex(/^\d{4}-\d{4}$/, "Năm học chưa đúng (ví dụ: 2025-2026)"),
+  schoolId: z.string().uuid("Trường không hợp lệ").optional(),
 });
 
 export type CreateClassInput = z.infer<typeof createClassSchema>;
+
+/** Validation for re-mapping a class to a school (null = unmapped). */
+export const updateClassSchoolSchema = z.object({
+  classId: z.string().uuid("Lớp học không hợp lệ"),
+  schoolId: z.string().uuid("Trường không hợp lệ").nullable(),
+});
 
 /** Validation for the class id used when deleting a class. */
 export const deleteClassSchema = z

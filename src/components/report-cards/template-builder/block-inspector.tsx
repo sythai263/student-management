@@ -28,6 +28,7 @@ const GROUPS = Array.from(new Set(REPORT_CARD_FIELDS.map((f) => f.group)));
 const LETTERHEAD_RATIO_LABEL: Record<LetterheadRatio, string> = {
   "1-3": "Trường 1/4 - Quốc hiệu 3/4",
   "1-2": "Trường 1/3 - Quốc hiệu 2/3",
+  "2-3": "Trường 2/5 - Quốc hiệu 3/5",
   "1-1": "Trường 1/2 - Quốc hiệu 1/2",
   "2-1": "Trường 2/3 - Quốc hiệu 1/3",
   "3-1": "Trường 3/4 - Quốc hiệu 1/4",
@@ -36,6 +37,7 @@ const LETTERHEAD_RATIO_LABEL: Record<LetterheadRatio, string> = {
 const SIGNATURE_RATIO_LABEL: Record<LetterheadRatio, string> = {
   "1-3": "Nhận xét 1/4 - Chữ ký 3/4",
   "1-2": "Nhận xét 1/3 - Chữ ký 2/3",
+  "2-3": "Nhận xét 2/5 - Chữ ký 3/5",
   "1-1": "Nhận xét 1/2 - Chữ ký 1/2",
   "2-1": "Nhận xét 2/3 - Chữ ký 1/3",
   "3-1": "Nhận xét 3/4 - Chữ ký 1/4",
