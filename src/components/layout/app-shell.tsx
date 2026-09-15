@@ -5,8 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
-  ChevronLeft,
-  ChevronRight,
   GraduationCap,
   KeyRound,
   LogOut,
@@ -24,7 +22,6 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [collapsed, setCollapsed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,113 +52,89 @@ export function AppShell({ children }: AppShellProps) {
   ];
 
   return (
-    <div className="flex min-h-screen">
-      <aside
-        className={`hidden flex-col border-r bg-card transition-all duration-200 md:flex ${collapsed ? "w-16" : "w-64"}`}
-      >
-        <div
-          className={`p-4 ${collapsed ? "flex items-center justify-center" : "text-lg font-semibold"}`}
+    <div className="flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b bg-background px-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.back()}
+          aria-label="Quay lại"
         >
-          {collapsed ? (
-            <span className="text-lg font-bold">SM</span>
-          ) : (
-            "Student Management"
-          )}
-        </div>
+          <ArrowLeft />
+        </Button>
 
-        <nav className="flex flex-1 flex-col gap-1 p-2">
+        <Link href="/" className="text-sm font-semibold sm:text-base">
+          Student Management
+        </Link>
+
+        <nav className="ml-2 flex items-center gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname?.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={buttonVariants({
-                  variant: "ghost",
-                  size: collapsed ? "icon" : "sm",
-                  className: `w-full ${collapsed ? "justify-center" : "justify-start"}`,
+                  variant: active ? "secondary" : "ghost",
+                  size: "sm",
                 })}
               >
-                <Icon className={collapsed ? "size-4" : "mr-2 size-4"} />
-                {!collapsed && item.label}
+                <Icon className="size-4" />
+                <span className="hidden sm:inline">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t p-2">
+        <div className="flex-1" />
+
+        <div className="relative" ref={menuRef}>
           <Button
             variant="ghost"
-            size="sm"
-            className={`w-full gap-2 ${collapsed ? "justify-center" : "justify-start"}`}
-            onClick={() => setCollapsed((c) => !c)}
-            aria-label={collapsed ? "Mở rộng" : "Thu gọn"}
+            size="icon"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-label="Menu tài khoản"
           >
-            {collapsed ? (
-              <ChevronRight className="size-4" />
-            ) : (
-              <>
-                <ChevronLeft className="size-4" /> Thu gọn
-              </>
-            )}
-          </Button>
-        </div>
-      </aside>
-
-      <div className="flex flex-1 flex-col">
-        <header className="flex h-14 items-center gap-2 border-b px-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            aria-label="Quay lại"
-          >
-            <ArrowLeft /> Quay lại
+            <User className="size-5" />
           </Button>
 
-          <div className="flex-1" />
-
-          <div className="relative" ref={menuRef}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Menu tài khoản"
-            >
-              <User className="size-5" />
-            </Button>
-
-            {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border bg-popover p-1 shadow-md">
+          {menuOpen && (
+            <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border bg-popover p-1 shadow-md">
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setPasswordOpen(true);
+                }}
+              >
+                <KeyRound className="size-4" /> Đổi mật khẩu
+              </button>
+              <form action={logout}>
                 <button
-                  type="button"
+                  type="submit"
                   className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setPasswordOpen(true);
-                  }}
                 >
-                  <KeyRound className="size-4" /> Đổi mật khẩu
+                  <LogOut className="size-4" /> Đăng xuất
                 </button>
-                <form action={logout}>
-                  <button
-                    type="submit"
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                  >
-                    <LogOut className="size-4" /> Đăng xuất
-                  </button>
-                </form>
-              </div>
-            )}
+              </form>
+            </div>
+          )}
 
-            <ChangePasswordDialog
-              open={passwordOpen}
-              onOpenChange={setPasswordOpen}
-            />
-          </div>
-        </header>
-        <main className="flex-1 overflow-auto">{children}</main>
-      </div>
+          <ChangePasswordDialog
+            open={passwordOpen}
+            onOpenChange={setPasswordOpen}
+          />
+        </div>
+      </header>
+
+      <main className="min-w-0 flex-1 overflow-y-auto overflow-x-clip">
+        {children}
+      </main>
     </div>
   );
 }

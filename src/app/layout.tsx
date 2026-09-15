@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="vi" className={cn("dark", "font-sans", geist.variable)}>
-      <body>
+      <body className="overflow-x-hidden">
         <QueryProvider>
           <AppShell>{children}</AppShell>
         </QueryProvider>

@@ -145,7 +145,7 @@ export function RollCallModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-screen max-h-screen w-screen max-w-[100vw] flex-col justify-center gap-6 rounded-none border-0 p-4 sm:gap-10 sm:p-12 sm:max-w-[100vw]">
+      <DialogContent className="flex h-dvh w-dvw max-w-none flex-col justify-center gap-6 overflow-hidden rounded-none border-0 p-4 sm:gap-10 sm:p-12">
         {/* Big countdown — top right corner */}
         {!pendingExcused && (
           <span
