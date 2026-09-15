@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, useTransition, type SubmitEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OtpCodeInput } from "@/components/ui/otp-input";
 import {
   Card,
   CardContent,
@@ -28,7 +29,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function onSubmit(e: FormEvent) {
+  function onSubmit(e: SubmitEvent) {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
@@ -96,19 +97,7 @@ export function LoginForm() {
             otpSent && (
               <div className="space-y-2">
                 <Label htmlFor="code">Mã xác nhận</Label>
-                <Input
-                  id="code"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  autoFocus
-                  required
-                  maxLength={6}
-                  placeholder="123456"
-                  value={code}
-                  onChange={(e) =>
-                    setCode(e.target.value.replace(/\D/g, ""))
-                  }
-                />
+                <OtpCodeInput value={code} onChange={setCode} autoFocus />
               </div>
             )
           )}

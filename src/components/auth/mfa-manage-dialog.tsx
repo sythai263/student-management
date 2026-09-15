@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OtpCodeInput } from "@/components/ui/otp-input";
 import { ListSkeleton } from "@/components/ui/list-skeleton";
 import {
   Dialog,
@@ -71,7 +71,7 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
     })();
   }, [open]);
 
-  function onSubmit(e: FormEvent) {
+  function onSubmit(e: SubmitEvent) {
     e.preventDefault();
     setError(null);
     setBusy(true);
@@ -164,16 +164,7 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
                   ? "Nhập mã 6 số từ app để kích hoạt"
                   : "Nhập mã 6 số để tắt MFA"}
               </Label>
-              <Input
-                id="mfa-code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                required
-                maxLength={6}
-                placeholder="123456"
-                value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              />
+              <OtpCodeInput value={code} onChange={setCode} autoFocus />
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}

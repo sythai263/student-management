@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { OtpCodeInput } from "@/components/ui/otp-input";
 import {
   Card,
   CardContent,
@@ -36,7 +36,7 @@ export function MfaChallengeForm() {
       });
   }, []);
 
-  function onSubmit(e: FormEvent) {
+  function onSubmit(e: SubmitEvent) {
     e.preventDefault();
     if (!factorId) {
       setError("Không tìm thấy thiết bị MFA — hãy đăng nhập lại");
@@ -77,17 +77,7 @@ export function MfaChallengeForm() {
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="mfa-code">Mã xác nhận</Label>
-            <Input
-              id="mfa-code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              autoFocus
-              required
-              maxLength={6}
-              placeholder="123456"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-            />
+            <OtpCodeInput value={code} onChange={setCode} autoFocus />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={busy}>
