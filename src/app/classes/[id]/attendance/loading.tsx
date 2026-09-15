@@ -5,6 +5,10 @@ import { ListSkeleton } from "@/components/ui/list-skeleton";
 export default function Loading() {
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-4 sm:space-y-8 sm:p-8">
+      <header className="flex items-center gap-3">
+        <Skeleton className="size-9 shrink-0" />
+        <Skeleton className="h-8 w-32" />
+      </header>
       <Card>
         <CardHeader>
           <Skeleton className="h-5 w-28" />

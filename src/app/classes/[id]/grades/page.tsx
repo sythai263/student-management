@@ -1,4 +1,5 @@
 import { GradeDashboard } from "@components/grades";
+import { PageHeader } from "@components/layout";
 import { requireTeacher } from "@lib/actions/action-utils";
 
 interface GradesPageProps {
@@ -29,6 +30,7 @@ export default async function GradesPage({
 
   return (
     <main className="mx-auto max-w-7xl space-y-8 p-8">
+      <PageHeader title="Nhập điểm" />
       <GradeDashboard
         classId={id}
         subjectId={activeSubjectId}

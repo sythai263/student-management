@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
-  ArrowLeft,
   BookOpen,
   GraduationCap,
   KeyRound,
@@ -21,7 +20,6 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -54,15 +52,6 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b bg-background px-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-          aria-label="Quay lại"
-        >
-          <ArrowLeft />
-        </Button>
-
         <Link href="/" className="text-sm font-semibold sm:text-base">
           Quản lý học sinh
         </Link>

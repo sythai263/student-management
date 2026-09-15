@@ -4,7 +4,10 @@ import { AttendanceBoardSkeleton } from "@components/attendance";
 export default function Loading() {
   return (
     <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
-      <Skeleton className="h-8 w-48" />
+      <header className="flex items-center gap-3">
+        <Skeleton className="size-9 shrink-0" />
+        <Skeleton className="h-8 w-48" />
+      </header>
       <AttendanceBoardSkeleton />
     </main>
   );

@@ -1,4 +1,5 @@
 import { AttendanceBoard } from "@components/attendance";
+import { PageHeader } from "@components/layout";
 import { createSupabaseServerClient } from "@lib/supabase";
 import { friendlyErrorMessage } from "@lib/utils";
 import {
@@ -49,7 +50,7 @@ export default async function AttendanceSessionPage({
 
   return (
     <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-8">
-      <h1 className="text-2xl font-semibold">Kết quả điểm danh</h1>
+      <PageHeader title="Kết quả điểm danh" />
       <HydrationBoundary state={dehydrate(queryClient)}>
         <AttendanceBoard sessionId={sessionId} />
       </HydrationBoundary>

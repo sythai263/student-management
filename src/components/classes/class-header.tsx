@@ -1,6 +1,7 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@components/layout";
 import { useClass } from "@hooks";
 
 interface ClassHeaderProps {
@@ -12,20 +13,20 @@ export function ClassHeader({ classId }: ClassHeaderProps) {
 
   if (isLoading) {
     return (
-      <header className="space-y-2">
-        <Skeleton className="h-8 w-56" />
-        <Skeleton className="h-5 w-32" />
-      </header>
+      <PageHeader
+        title={<Skeleton className="h-8 w-56" />}
+        description={<Skeleton className="mt-2 h-5 w-32" />}
+      />
     );
   }
   if (error || !cls) {
-    return <p className="text-sm text-destructive">Không tìm thấy lớp</p>;
+    return <PageHeader title="Không tìm thấy lớp" />;
   }
 
   return (
-    <header>
-      <h1 className="text-2xl font-semibold">Lớp {cls.name}</h1>
-      <p className="text-muted-foreground">Năm học {cls.schoolYear}</p>
-    </header>
+    <PageHeader
+      title={`Lớp ${cls.name}`}
+      description={`Năm học ${cls.schoolYear}`}
+    />
   );
 }
