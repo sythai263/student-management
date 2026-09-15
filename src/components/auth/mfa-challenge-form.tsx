@@ -36,12 +36,12 @@ export function MfaChallengeForm() {
       });
   }, []);
 
-  function onSubmit(e: SubmitEvent) {
-    e.preventDefault();
+  function verifyCode(fullCode: string) {
     if (!factorId) {
       setError("Không tìm thấy thiết bị MFA — hãy đăng nhập lại");
       return;
     }
+    if (busy) return;
     setError(null);
     setBusy(true);
     const supabase = createSupabaseBrowserClient();
@@ -55,7 +55,7 @@ export function MfaChallengeForm() {
       const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
         challengeId: challenge.id,
-        code,
+        code: fullCode,
       });
       if (verifyError) {
         setError("Mã không đúng — thử lại");
@@ -63,6 +63,16 @@ export function MfaChallengeForm() {
       }
       router.replace("/");
     })().finally(() => setBusy(false));
+  }
+
+  function onSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    verifyCode(code);
+  }
+
+  function onOtpChange(value: string) {
+    setCode(value);
+    if (value.length === 6 && !busy) verifyCode(value);
   }
 
   return (
@@ -77,7 +87,7 @@ export function MfaChallengeForm() {
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="mfa-code">Mã xác nhận</Label>
-            <OtpCodeInput value={code} onChange={setCode} autoFocus />
+            <OtpCodeInput value={code} onChange={onOtpChange} autoFocus />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={busy}>

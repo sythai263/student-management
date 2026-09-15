@@ -25,9 +25,13 @@ export function OtpCodeInput({ value, onChange, autoFocus }: OtpCodeInputProps) 
       autoFocus={autoFocus}
       containerClassName="justify-center"
     >
-      <InputOTPGroup className="w-full *:flex-1">
+      <InputOTPGroup className="w-full gap-2 *:flex-1">
         {Array.from({ length: 6 }, (_, i) => (
-          <InputOTPSlot key={i} index={i} />
+          <InputOTPSlot
+            key={i}
+            index={i}
+            className="rounded-md border first:rounded-md first:border-l last:rounded-md"
+          />
         ))}
       </InputOTPGroup>
     </InputOTP>

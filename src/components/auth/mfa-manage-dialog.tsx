@@ -71,20 +71,34 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
     })();
   }, [open]);
 
-  function onSubmit(e: SubmitEvent) {
-    e.preventDefault();
+  function verifyCode(fullCode: string) {
+    if (busy) return;
     setError(null);
     setBusy(true);
     const supabase = createSupabaseBrowserClient();
-    (status === "enroll" ? enable(supabase) : disable(supabase)).finally(() =>
-      setBusy(false),
-    );
+    (status === "enroll"
+      ? enable(supabase, fullCode)
+      : disable(supabase, fullCode)
+    ).finally(() => setBusy(false));
   }
 
-  async function enable(supabase: ReturnType<typeof createSupabaseBrowserClient>) {
+  function onSubmit(e: SubmitEvent) {
+    e.preventDefault();
+    verifyCode(code);
+  }
+
+  function onOtpChange(value: string) {
+    setCode(value);
+    if (value.length === 6 && !busy) verifyCode(value);
+  }
+
+  async function enable(
+    supabase: ReturnType<typeof createSupabaseBrowserClient>,
+    fullCode: string,
+  ) {
     const { error } = await supabase.auth.mfa.challengeAndVerify({
       factorId,
-      code,
+      code: fullCode,
     });
     if (error) {
       setError("Mã không đúng — thử lại");
@@ -94,7 +108,10 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
     setStatus("enabled");
   }
 
-  async function disable(supabase: ReturnType<typeof createSupabaseBrowserClient>) {
+  async function disable(
+    supabase: ReturnType<typeof createSupabaseBrowserClient>,
+    fullCode: string,
+  ) {
     // Unenroll requires an aal2 session — verify a fresh code first.
     const { data: challenge, error: challengeError } =
       await supabase.auth.mfa.challenge({ factorId });
@@ -105,7 +122,7 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
     const { error: verifyError } = await supabase.auth.mfa.verify({
       factorId,
       challengeId: challenge.id,
-      code,
+      code: fullCode,
     });
     if (verifyError) {
       setError("Mã không đúng — thử lại");
@@ -164,7 +181,7 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
                   ? "Nhập mã 6 số từ app để kích hoạt"
                   : "Nhập mã 6 số để tắt MFA"}
               </Label>
-              <OtpCodeInput value={code} onChange={setCode} autoFocus />
+              <OtpCodeInput value={code} onChange={onOtpChange} autoFocus />
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}

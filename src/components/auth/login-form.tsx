@@ -29,6 +29,14 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  function verifyCode(token: string) {
+    setError(null);
+    startTransition(async () => {
+      const result = await verifyLoginOtp({ email, token });
+      if (!result.success) setError(result.error);
+    });
+  }
+
   function onSubmit(e: SubmitEvent) {
     e.preventDefault();
     setError(null);
@@ -45,6 +53,11 @@ export function LoginForm() {
         if (!result.success) setError(result.error);
       }
     });
+  }
+
+  function onOtpChange(value: string) {
+    setCode(value);
+    if (value.length === 6 && !isPending) verifyCode(value);
   }
 
   function switchMode() {
@@ -97,7 +110,7 @@ export function LoginForm() {
             otpSent && (
               <div className="space-y-2">
                 <Label htmlFor="code">Mã xác nhận</Label>
-                <OtpCodeInput value={code} onChange={setCode} autoFocus />
+                <OtpCodeInput value={code} onChange={onOtpChange} autoFocus />
               </div>
             )
           )}
