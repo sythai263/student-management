@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { cn } from "cn";
 import {
   BookOpen,
   GraduationCap,
@@ -49,75 +50,94 @@ export function AppShell({ children }: AppShellProps) {
     { href: "/classes", label: "Lớp học", icon: GraduationCap },
   ];
 
+  // Navbar lines up with the page container — width varies per route.
+  const contentMaxW =
+    pathname?.endsWith("/grades") || /\/attendance\/[^/]+$/.test(pathname ?? "")
+      ? "max-w-7xl"
+      : pathname?.endsWith("/students/new")
+        ? "max-w-2xl"
+        : ["/", "/classes", "/subjects", "/classes/new"].includes(
+          pathname ?? "",
+        )
+          ? "max-w-4xl"
+          : "max-w-5xl";
+
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b bg-background px-4">
-        <Link href="/" className="text-sm font-semibold sm:text-base">
-          Quản lý học sinh
-        </Link>
-
-        <nav className="ml-2 flex items-center gap-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname?.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={buttonVariants({
-                  variant: active ? "secondary" : "ghost",
-                  size: "sm",
-                })}
-              >
-                <Icon className="size-4" />
-                <span className="hidden sm:inline">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex-1" />
-
-        <div className="relative" ref={menuRef}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Menu tài khoản"
-          >
-            <User className="size-5" />
-          </Button>
-
-          {menuOpen && (
-            <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border bg-popover p-1 shadow-md">
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setPasswordOpen(true);
-                }}
-              >
-                <KeyRound className="size-4" /> Đổi mật khẩu
-              </button>
-              <form action={logout}>
-                <button
-                  type="submit"
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                >
-                  <LogOut className="size-4" /> Đăng xuất
-                </button>
-              </form>
-            </div>
+      <header className="sticky top-0 z-40 border-b bg-background">
+        <div
+          className={cn(
+            "mx-auto flex h-14 w-full items-center gap-2 px-4 sm:px-8",
+            contentMaxW,
           )}
+        >
+          <Link href="/" className="text-sm font-semibold sm:text-base">
+            Quản lý học sinh
+          </Link>
 
-          <ChangePasswordDialog
-            open={passwordOpen}
-            onOpenChange={setPasswordOpen}
-          />
+          <nav className="ml-2 flex items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname?.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={buttonVariants({
+                    variant: active ? "secondary" : "ghost",
+                    size: "sm",
+                  })}
+                >
+                  <Icon className="size-4" />
+                  <span className="hidden sm:inline">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex-1" />
+
+          <div className="relative" ref={menuRef}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label="Menu tài khoản"
+            >
+              <User className="size-5" />
+            </Button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border bg-popover p-1 shadow-md">
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setPasswordOpen(true);
+                  }}
+                >
+                  <KeyRound className="size-4" /> Đổi mật khẩu
+                </button>
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  >
+                    <LogOut className="size-4" /> Đăng xuất
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <ChangePasswordDialog
+              open={passwordOpen}
+              onOpenChange={setPasswordOpen}
+            />
+          </div>
         </div>
       </header>
 
