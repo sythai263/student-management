@@ -18,6 +18,11 @@ export function createS3Client(): S3Client {
     endpoint: process.env.S3_ENDPOINT,
     region: process.env.S3_REGION ?? "auto",
     forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+    // Recent AWS SDKs auto-sign a CRC32 body checksum into presigned PUT
+    // URLs; MinIO/R2 then reject browser uploads with 403 SignatureDoesNotMatch.
+    // WHEN_REQUIRED keeps checksums only for operations that demand them.
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
     credentials: {
       accessKeyId: process.env.S3_ACCESS_KEY_ID!,
       secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,

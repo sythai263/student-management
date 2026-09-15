@@ -21,6 +21,7 @@ import {
 } from "@hooks";
 import { uploadSignatureDirect } from "@lib/image";
 import { friendlyErrorMessage } from "@lib/utils";
+import { SignaturePad, type SignaturePadHandle } from "./signature-pad";
 
 interface SignatureManageDialogProps {
   open: boolean;
@@ -42,6 +43,7 @@ export function SignatureManageDialog({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  const padRef = useRef<SignaturePadHandle>(null);
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -53,6 +55,19 @@ export function SignatureManageDialog({
       try {
         const imageKey = await uploadSignatureDirect(file);
         await saveSignature.mutateAsync(imageKey);
+      } catch (err) {
+        setError(friendlyErrorMessage(err));
+      }
+    });
+  }
+
+  function onPadSave(file: File) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        const imageKey = await uploadSignatureDirect(file);
+        await saveSignature.mutateAsync(imageKey);
+        padRef.current?.clear();
       } catch (err) {
         setError(friendlyErrorMessage(err));
       }
@@ -72,11 +87,12 @@ export function SignatureManageDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Chữ ký giáo viên</DialogTitle>
           <DialogDescription>
-            Ảnh PNG nền trong suốt, dùng để in vào phiếu điểm học sinh.
+            Ký trực tiếp hoặc tải ảnh PNG nền trong suốt, dùng để in vào
+            phiếu điểm học sinh.
           </DialogDescription>
         </DialogHeader>
 
@@ -108,8 +124,18 @@ export function SignatureManageDialog({
           )}
 
           <div className="space-y-2">
+            <Label>Ký trực tiếp</Label>
+            <SignaturePad
+              ref={padRef}
+              disabled={isPending}
+              onSave={onPadSave}
+              onError={setError}
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="signature-file">
-              {signature ? "Thay chữ ký mới" : "Tải lên chữ ký"}
+              {signature ? "Hoặc thay bằng ảnh PNG" : "Hoặc tải ảnh PNG"}
             </Label>
             <Input
               ref={inputRef}
