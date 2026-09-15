@@ -5,10 +5,12 @@ import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import {
   closeAttendanceSession,
   createManualSession,
+  deleteAttendanceSession,
+  renameAttendanceSession,
   updateAttendanceRecord,
 } from "@lib/actions";
 import { friendlyErrorMessage } from "@lib/utils";
-import type { UpdateAttendanceInput } from "@schemas";
+import type { RenameSessionInput, UpdateAttendanceInput } from "@schemas";
 import type { AttendanceStatus } from "@constants";
 import type {
   AttendanceSession,
@@ -136,5 +138,36 @@ export function useCreateSession(classId: string) {
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["sessions", classId] }),
+  });
+}
+
+/** Mutation: rename a session — refreshes both list and detail caches. */
+export function useRenameSession(classId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: RenameSessionInput) => {
+      const result = await renameAttendanceSession(input);
+      if (!result.success) throw new Error(result.error);
+    },
+    onSuccess: (_data, input) => {
+      queryClient.invalidateQueries({ queryKey: ["sessions", classId] });
+      queryClient.invalidateQueries({ queryKey: ["session", input.sessionId] });
+    },
+  });
+}
+
+/** Mutation: hard delete a session (records cascade, photos removed). */
+export function useDeleteSession(classId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const result = await deleteAttendanceSession(sessionId);
+      if (!result.success) throw new Error(result.error);
+    },
+    onSuccess: (_data, sessionId) => {
+      queryClient.removeQueries({ queryKey: ["session", sessionId] });
+      queryClient.removeQueries({ queryKey: ["attendance", sessionId] });
+      queryClient.invalidateQueries({ queryKey: ["sessions", classId] });
+    },
   });
 }

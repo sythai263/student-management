@@ -16,5 +16,7 @@ export {
   useUpdateAttendance,
   useCloseSession,
   useCreateSession,
+  useRenameSession,
+  useDeleteSession,
 } from "./attendance";
 export type { AttendanceRecordWithStudent } from "@types";

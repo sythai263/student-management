@@ -26,7 +26,9 @@ export default async function AttendanceSessionPage({
       queryFn: async () => {
         const { data, error } = await supabase
           .from("attendanceSessions")
-          .select("id, \"classId\", \"sessionDate\", imageKeys, closed, createdAt")
+          .select(
+            "id, \"classId\", \"sessionDate\", name, imageKeys, closed, createdAt",
+          )
           .eq("id", sessionId)
           .single();
         if (error) throw new Error(friendlyErrorMessage(error));

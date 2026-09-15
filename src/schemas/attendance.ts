@@ -20,3 +20,11 @@ export const updateRecordSchema = z
   });
 
 export type UpdateAttendanceInput = z.infer<typeof updateRecordSchema>;
+
+/** Validation for the "Rename Attendance Session" server action input. */
+export const renameSessionSchema = z.object({
+  sessionId: z.uuid("Buổi điểm danh không hợp lệ"),
+  name: z.string().trim().min(1, "Tên buổi không được trống").max(120),
+});
+
+export type RenameSessionInput = z.infer<typeof renameSessionSchema>;

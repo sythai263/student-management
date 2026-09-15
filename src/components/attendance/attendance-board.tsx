@@ -7,6 +7,7 @@ import {
   useAttendanceSession,
   useCloseSession,
 } from "@hooks";
+import { sessionDisplayName } from "@lib/attendance-session";
 import { AttendanceBoardSkeleton } from "./attendance-board-skeleton";
 import { AttendanceToolbar } from "./attendance-toolbar";
 import { AttendanceGrid } from "./attendance-grid";
@@ -65,6 +66,9 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
 
   return (
     <div className="space-y-4">
+      {session && (
+        <h2 className="text-lg font-medium">{sessionDisplayName(session)}</h2>
+      )}
       <AttendanceToolbar
         search={search}
         onSearchChange={setSearch}

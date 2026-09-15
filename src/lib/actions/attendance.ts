@@ -2,7 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { ATTENDANCE_STATUS } from "@constants";
-import { updateRecordSchema } from "@schemas";
+import { renameSessionSchema, updateRecordSchema } from "@schemas";
+import { deleteObject } from "@lib/storage";
+import { defaultSessionName } from "@lib/attendance-session";
 import type { AttendanceRecord } from "@types";
 import {
   requireTeacher,
@@ -64,7 +66,12 @@ export async function createManualSession(
     const date = sessionDate ?? new Date().toISOString().slice(0, 10);
     const { data: session, error: sessionError } = await supabase
       .from("attendanceSessions")
-      .insert({ classId, sessionDate: date, imageKeys: [] })
+      .insert({
+        classId,
+        sessionDate: date,
+        name: defaultSessionName(date),
+        imageKeys: [],
+      })
       .select("id")
       .single();
     if (sessionError) throw new Error(sessionError.message);
@@ -92,5 +99,61 @@ export async function createManualSession(
   });
 
   if (result.success) revalidatePath(`/classes/${classId}`);
+  return result;
+}
+
+/** Server Action: rename an attendance session. */
+export async function renameAttendanceSession(
+  input: unknown,
+): Promise<ActionResult<null>> {
+  return withAction(async () => {
+    const { supabase } = await requireTeacher();
+    const parsed = renameSessionSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
+
+    const { error } = await supabase
+      .from("attendanceSessions")
+      .update({ name: parsed.data.name })
+      .eq("id", parsed.data.sessionId);
+    if (error) throw new Error(error.message);
+    return null;
+  });
+}
+
+/**
+ * Server Action: hard delete a session — attendanceRecords cascade in DB,
+ * group photos in storage are removed alongside (best-effort).
+ */
+export async function deleteAttendanceSession(
+  sessionId: string,
+): Promise<ActionResult<null>> {
+  let classId = "";
+  const result = await withAction(async () => {
+    const { supabase } = await requireTeacher();
+    if (!sessionId) throw new Error("Thiếu thông tin buổi điểm danh");
+
+    // RLS already guards ownership; fetch the row only to reach imageKeys.
+    const { data: session, error: fetchError } = await supabase
+      .from("attendanceSessions")
+      .select("classId, imageKeys")
+      .eq("id", sessionId)
+      .single();
+    if (fetchError) throw new Error(fetchError.message);
+    classId = session.classId as string;
+
+    const imageKeys = (session.imageKeys as string[] | null) ?? [];
+    await Promise.all(imageKeys.map((key) => deleteObject(key)));
+
+    const { error } = await supabase
+      .from("attendanceSessions")
+      .delete()
+      .eq("id", sessionId);
+    if (error) throw new Error(error.message);
+    return null;
+  });
+
+  if (result.success && classId) revalidatePath(`/classes/${classId}`);
   return result;
 }

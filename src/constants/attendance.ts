@@ -62,5 +62,16 @@ export const ATTENDANCE_FILTER_LABEL: Record<AttendanceStatus | "ALL", string> =
   ...ATTENDANCE_STATUS_LABEL,
 };
 
+/** Part-of-day shift labels used in the auto session name. */
+export const SESSION_SHIFT = {
+  MORNING: "Sáng",
+  AFTERNOON: "Chiều",
+} as const;
+
+export type SessionShift = (typeof SESSION_SHIFT)[keyof typeof SESSION_SHIFT];
+
+/** Hour boundary: created before this hour => Sáng, otherwise => Chiều. */
+export const SESSION_SHIFT_NOON_HOUR = 12;
+
 /** Seconds a student has to respond during roll-call before defaulting to VANG. */
 export const ROLL_CALL_SECONDS = 10;

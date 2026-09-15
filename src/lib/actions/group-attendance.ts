@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-rekognition";
 import sharp from "sharp";
 import { deleteObject, downloadObject } from "@lib/storage";
+import { defaultSessionName } from "@lib/attendance-session";
 import { createRekognitionClient, getCollectionId } from "@lib/rekognition";
 import type { GroupAttendanceSummary } from "@types";
 import {
@@ -76,7 +77,12 @@ export async function groupAttendance(
     // --- 3. Create the attendance session ---
     const { data: session, error: sessionError } = await supabase
       .from("attendanceSessions")
-      .insert({ classId, sessionDate, imageKeys })
+      .insert({
+        classId,
+        sessionDate,
+        name: defaultSessionName(sessionDate),
+        imageKeys,
+      })
       .select("id")
       .single();
     if (sessionError) throw new Error(sessionError.message);

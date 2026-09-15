@@ -16,7 +16,7 @@ export type {
 } from "./auth";
 export { createSubjectSchema, createSubjectsFromCatalogSchema } from "./subjects";
 export type { CreateSubjectInput, CreateSubjectsFromCatalogInput } from "./subjects";
-export { updateRecordSchema } from "./attendance";
-export type { UpdateAttendanceInput } from "./attendance";
+export { updateRecordSchema, renameSessionSchema } from "./attendance";
+export type { UpdateAttendanceInput, RenameSessionInput } from "./attendance";
 export { createClassSchema, deleteClassSchema } from "./classes";
 export type { CreateClassInput } from "./classes";

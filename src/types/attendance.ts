@@ -5,6 +5,7 @@ export interface AttendanceSession {
   id: string;
   classId: string;
   sessionDate: string;
+  name: string | null;
   imageKeys: string[];
   closed: boolean;
   createdAt: string;

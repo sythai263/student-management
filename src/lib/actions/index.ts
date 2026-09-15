@@ -35,6 +35,8 @@ export {
   updateAttendanceRecord,
   closeAttendanceSession,
   createManualSession,
+  renameAttendanceSession,
+  deleteAttendanceSession,
 } from "./attendance";
 export type { GroupAttendanceSummary } from "@types";
 export type { ActionResult } from "./action-utils";
