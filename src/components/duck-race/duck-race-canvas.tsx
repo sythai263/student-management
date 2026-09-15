@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
 import confetti from "canvas-confetti";
-import { ArrowLeft, Pencil, Play, X } from "lucide-react";
-import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Pencil, Play, Timer, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -16,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { RaceState, Student } from "@types";
+import { PageHeader } from "@components/layout";
 import {
   RACE_DURATION_COOKIE,
   DEFAULT_RACE_DURATION,
@@ -172,19 +172,12 @@ export function DuckRaceCanvas({
       let cameraX = worldStart + maxPos - pan;
       if (cameraX < 0) cameraX = 0;
 
-      ctx.clearRect(0, 0, width, height);
-
-      // Track road
-      ctx.fillStyle = "#e2e8f0";
-      ctx.fillRect(
-        worldStart - cameraX,
-        roadTop,
-        state.trackLength,
-        roadBottom - roadTop,
-      );
+      // Black race background — the whole race screen runs on black.
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, width, height);
 
       // Lane dividers
-      ctx.strokeStyle = "#cbd5e1";
+      ctx.strokeStyle = "#334155";
       ctx.lineWidth = 1;
       for (let lane = 0; lane <= laneCount; lane++) {
         const y = roadTop + lane * laneHeight;
@@ -238,7 +231,7 @@ export function DuckRaceCanvas({
       }
 
       // Timer
-      ctx.fillStyle = "#0f172a";
+      ctx.fillStyle = "#f8fafc";
       ctx.font = "bold 18px sans-serif";
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
@@ -298,42 +291,32 @@ export function DuckRaceCanvas({
     stateRef.current = null;
   };
 
-  const backHref = subjectId
-    ? `/classes/${classId}?subjectId=${subjectId}`
-    : `/classes/${classId}`;
-
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-background">
-      <header className="grid h-14 grid-cols-3 items-center border-b px-4">
-        <div className="flex items-center gap-2">
-          <Link
-            href={backHref}
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            <ArrowLeft /> Quay lại
-          </Link>
-          <h1 className="text-base font-semibold sm:text-lg">
-            Kiểm tra bài cũ
-          </h1>
-        </div>
-        <div className="flex items-center justify-center" />
-        <div className="flex items-center justify-end gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setDraftDuration(duration);
-              setModalOpen(true);
-            }}
-            disabled={started}
-          >
-            Cập nhật thời gian đua
-          </Button>
-          <span className="text-sm font-medium tabular-nums">
-            {timeLeft.toFixed(1)} giây
-          </span>
-        </div>
-      </header>
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-black">
+      <div className="border-b border-white/10 px-2 py-2.5 sm:px-4">
+        <PageHeader
+          title="Kiểm tra bài cũ"
+          actions={
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setDraftDuration(duration);
+                  setModalOpen(true);
+                }}
+                disabled={started}
+              >
+                <Timer />
+                <span className="hidden sm:inline">Cập nhật thời gian đua</span>
+              </Button>
+              <span className="text-sm font-medium whitespace-nowrap tabular-nums">
+                {timeLeft.toFixed(1)} giây
+              </span>
+            </div>
+          }
+        />
+      </div>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
