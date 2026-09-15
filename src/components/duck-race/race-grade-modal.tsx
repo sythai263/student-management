@@ -139,7 +139,9 @@ export function RaceGradeModal({
               disabled={loading || saving}
             >
               <SelectTrigger id="race-grade-semester">
-                <SelectValue />
+                <SelectValue>
+                  {(value: string) => `Học kỳ ${value}`}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">Học kỳ 1</SelectItem>

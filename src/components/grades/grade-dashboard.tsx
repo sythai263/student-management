@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSubjects } from "@hooks";
+import { useClassSubjects } from "@hooks";
 import { GradeEntryGrid } from "./grade-entry-grid";
 
 interface GradeDashboardProps {
@@ -26,16 +26,22 @@ export function GradeDashboard({
   subjectId: subjectIdProp,
   subjectName: subjectNameProp,
 }: GradeDashboardProps) {
-  const { data: subjects, isLoading } = useSubjects();
+  const { data: classSubjects, isLoading } = useClassSubjects(classId);
   const [subjectId, setSubjectId] = useState(subjectIdProp ?? "");
   const [semester, setSemester] = useState(1);
+
+  const subjectOptions = (classSubjects ?? []).map((cs) => ({
+    id: cs.subjectId,
+    name: cs.subjects?.name ?? "",
+    code: cs.subjects?.code,
+  }));
 
   const isLocked = !!subjectIdProp;
   const selectedSubject = isLocked
     ? { id: subjectIdProp, name: subjectNameProp ?? "" }
-    : subjects?.find((s) => s.id === subjectId);
+    : (subjectOptions.find((s) => s.id === subjectId) ?? subjectOptions[0]);
 
-  const activeSubjectId = isLocked ? subjectIdProp! : subjectId;
+  const activeSubjectId = selectedSubject?.id ?? "";
   const activeSubjectName = selectedSubject?.name ?? "";
 
   return (
@@ -56,18 +62,27 @@ export function GradeDashboard({
               >
                 {activeSubjectName}
               </p>
-            ) : !subjects?.length ? (
-              <p className="text-sm text-destructive">Chưa có môn học.</p>
+            ) : !subjectOptions.length ? (
+              <p className="text-sm text-destructive">
+                Lớp chưa được gán môn học nào.
+              </p>
             ) : (
               <Select
-                value={subjectId}
+                value={activeSubjectId}
                 onValueChange={(v) => setSubjectId(v ?? "")}
               >
                 <SelectTrigger id="subject">
-                  <SelectValue placeholder="Chọn môn học" />
+                  <SelectValue placeholder="Chọn môn học">
+                    {(value: string) => {
+                      const s = subjectOptions.find((o) => o.id === value);
+                      return s
+                        ? `${s.name}${s.code ? ` (${s.code})` : ""}`
+                        : "Chọn môn học";
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {subjects.map((s) => (
+                  {subjectOptions.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name} {s.code ? `(${s.code})` : ""}
                     </SelectItem>
@@ -83,7 +98,9 @@ export function GradeDashboard({
               onValueChange={(v) => setSemester(Number(v))}
             >
               <SelectTrigger id="semester">
-                <SelectValue />
+                <SelectValue>
+                  {(value: string) => `Học kỳ ${value}`}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">Học kỳ 1</SelectItem>
