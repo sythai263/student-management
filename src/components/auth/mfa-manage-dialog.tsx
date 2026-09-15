@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { TOTP_ISSUER } from "@constants";
 
 type MfaStatus = "loading" | "enroll" | "enabled";
 
@@ -35,13 +36,27 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Enrolling twice with the same friendly name hits a 422
+  // (mfa_factor_name_conflict) — StrictMode double-invokes effects in dev,
+  // so guard against parallel runs.
+  const enrollInFlight = useRef(false);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      // Reset for the next open — state below is re-initialised per open.
+      enrollInFlight.current = false;
+      return;
+    }
+    if (enrollInFlight.current) return;
+    enrollInFlight.current = true;
     setStatus("loading");
     setError(null);
     setCode("");
 
+    // NOTE: no effect-cleanup/-cancelled flag here — StrictMode runs the
+    // effect+cleanup immediately on mount, so cancelling in cleanup would
+    // kill the ONLY run (the duplicate run is blocked by the ref above).
+    // The async flow must complete on its own.
     const supabase = createSupabaseBrowserClient();
     (async () => {
       const { data } = await supabase.auth.mfa.listFactors();
@@ -55,10 +70,14 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
       for (const f of data?.totp ?? []) {
         await supabase.auth.mfa.unenroll({ factorId: f.id });
       }
+      // Unique friendly name per attempt — GoTrue rejects duplicates with
+      // HTTP 422 (mfa_factor_name_conflict).
+      const friendlyName = `Authenticator ${Date.now().toString(36)}`;
       const { data: enrolled, error: enrollError } =
         await supabase.auth.mfa.enroll({
           factorType: "totp",
-          friendlyName: "Authenticator",
+          friendlyName,
+          issuer: TOTP_ISSUER,
         });
       if (enrollError || !enrolled) {
         setError(enrollError?.message ?? "Không tạo được mã QR");
@@ -150,15 +169,31 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
         </DialogHeader>
 
         {status === "loading" ? (
-          <ListSkeleton rows={3} itemClassName="h-8" />
+          error ? (
+            <div className="space-y-4">
+              <p className="text-sm text-destructive">{error}</p>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Đóng
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <ListSkeleton rows={3} itemClassName="h-8" />
+          )
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             {status === "enroll" && (
               <>
-                {/* qr_code is SVG markup — encode into an img data URI. */}
+                {/* auth-js already prefixes qr_code with the
+                    `data:image/svg+xml;utf-8,` data URI — use it as-is. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`data:image/svg+xml;utf8,${encodeURIComponent(qr)}`}
+                  src={qr}
                   alt="QR code cho app xác thực"
                   className="mx-auto size-44 rounded-md bg-white p-2"
                 />
