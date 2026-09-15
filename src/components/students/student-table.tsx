@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pagination } from "@/components/ui/pagination";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import {
   Table,
@@ -101,20 +102,11 @@ export function StudentTable({ classId }: StudentTableProps) {
       {isLoading ? (
         <>
           {/* Mobile: skeleton rows matching the card list */}
-          <ul className="space-y-2 sm:hidden">
-            {Array.from({ length: Math.min(pageSize, 10) }).map((_, i) => (
-              <li
-                key={i}
-                className="flex items-center justify-between gap-2 rounded-md border p-3"
-              >
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
-                  <div className="h-3 w-1/3 animate-pulse rounded bg-muted" />
-                </div>
-                <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
-              </li>
-            ))}
-          </ul>
+          <ListSkeleton
+            rows={Math.min(pageSize, 10)}
+            className="sm:hidden"
+            itemClassName="h-[3.75rem]"
+          />
           <div className="hidden sm:block">
             <TableSkeleton columns={6} rows={pageSize} />
           </div>

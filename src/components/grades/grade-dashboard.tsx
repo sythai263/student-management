@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BookOpen } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -47,7 +48,7 @@ export function GradeDashboard({
           <div className="space-y-2">
             <Label htmlFor="subject">Môn học</Label>
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Đang tải...</p>
+              <Skeleton className="h-9 w-full" />
             ) : isLocked ? (
               <p
                 id="subject"

@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,7 @@ export function ClassList() {
   const [classToDelete, setClassToDelete] = useState<Class | null>(null);
 
   if (isLoading) {
-    return <p className="text-muted-foreground">Đang tải...</p>;
+    return <CardGridSkeleton />;
   }
   if (error) {
     return <p className="text-sm text-destructive">{error.message}</p>;

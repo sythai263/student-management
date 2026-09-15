@@ -7,6 +7,7 @@ import {
   useAttendanceSession,
   useCloseSession,
 } from "@hooks";
+import { AttendanceBoardSkeleton } from "./attendance-board-skeleton";
 import { AttendanceToolbar } from "./attendance-toolbar";
 import { AttendanceGrid } from "./attendance-grid";
 import { RecordEditDialog } from "./record-edit-dialog";
@@ -56,7 +57,7 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
     [records],
   );
 
-  if (sessionLoading || recordsLoading) return <p className="text-muted-foreground">Đang tải...</p>;
+  if (sessionLoading || recordsLoading) return <AttendanceBoardSkeleton />;
   if (error) return <p className="text-sm text-destructive">{error.message}</p>;
 
   const present = records?.filter((r) => r.status === "CO_MAT").length ?? 0;

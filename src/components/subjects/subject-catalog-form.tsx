@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
 import { createSubjectsFromCatalog } from "@lib/actions";
 import { useSubjectCatalog, useSubjects } from "@hooks";
 
@@ -65,7 +66,11 @@ export function SubjectCatalogForm() {
           </DialogHeader>
 
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Đang tải...</p>
+            <ListSkeleton
+              rows={8}
+              className="grid max-h-72 gap-2 space-y-0 overflow-y-auto sm:grid-cols-2"
+              itemClassName="h-9"
+            />
           ) : available.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Bạn đã thêm tất cả các môn trong danh mục.

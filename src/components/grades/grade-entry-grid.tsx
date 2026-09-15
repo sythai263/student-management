@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { useGrades, useSaveGrades, useStudents } from "@hooks";
 import { GRADE_SLOT_FULL_LABEL, GRADE_SLOTS } from "@constants";
 import { calculateAverage } from "@lib/grade-utils";
@@ -205,10 +205,8 @@ export function GradeEntryGrid({
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-8 w-full" />
+      <div className="overflow-x-auto rounded-md border">
+        <TableSkeleton columns={13} rows={12} />
       </div>
     );
   }

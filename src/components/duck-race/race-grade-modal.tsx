@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { GRADE_SLOT_LABEL } from "@constants";
 import { getGradeForRace, saveRaceGrades } from "@lib/actions";
 import { parseScoreInput } from "@lib/grade-utils";
@@ -152,7 +153,7 @@ export function RaceGradeModal({
               Thiếu môn học. Vui lòng quay lại chọn môn trước khi chạy đua.
             </p>
           ) : loading ? (
-            <p className="text-sm text-muted-foreground">Đang tải...</p>
+            <Skeleton className="h-9 w-full" />
           ) : !targetSlot ? (
             <p className="text-sm text-muted-foreground">
               Học sinh đã có đủ 4 điểm thường xuyên cho môn này.

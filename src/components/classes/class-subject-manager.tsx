@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
 import {
   useSubjects,
   useClassSubjects,
@@ -51,7 +52,11 @@ export function ClassSubjectManager({ classId }: ClassSubjectManagerProps) {
       </CardHeader>
       <CardContent>
         {subjectsLoading || classSubjectsLoading ? (
-          <p className="text-sm text-muted-foreground">Đang tải...</p>
+          <ListSkeleton
+            rows={6}
+            className="grid gap-2 space-y-0 sm:grid-cols-2"
+            itemClassName="h-9"
+          />
         ) : !subjects?.length ? (
           <p className="text-sm text-muted-foreground">
             Bạn chưa có môn học nào. Hãy thêm ở trang Môn học.

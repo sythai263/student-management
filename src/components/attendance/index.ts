@@ -1,6 +1,7 @@
 export { AttendanceActions } from "./attendance-actions";
 export { GroupAttendanceForm } from "./group-attendance-form";
 export { AttendanceBoard } from "./attendance-board";
+export { AttendanceBoardSkeleton } from "./attendance-board-skeleton";
 export { AttendanceToolbar } from "./attendance-toolbar";
 export { AttendanceGrid } from "./attendance-grid";
 export { RecordEditDialog } from "./record-edit-dialog";

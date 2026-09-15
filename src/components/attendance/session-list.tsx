@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ListSkeleton } from "@/components/ui/list-skeleton";
 import { useAttendanceSessions, useCreateSession } from "@hooks";
 
 interface SessionListProps {
@@ -31,7 +32,7 @@ export function SessionList({ classId }: SessionListProps) {
       {createSession.error && (
         <p className="text-sm text-destructive">{createSession.error.message}</p>
       )}
-      {isLoading && <p className="text-muted-foreground">Đang tải...</p>}
+      {isLoading && <ListSkeleton rows={4} />}
       {error && <p className="text-sm text-destructive">{error.message}</p>}
 
       <ul className="space-y-2">

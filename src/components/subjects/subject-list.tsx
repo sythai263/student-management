@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
 import {
   Card,
   CardDescription,
@@ -27,7 +28,7 @@ export function SubjectList() {
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
 
   if (isLoading) {
-    return <p className="text-muted-foreground">Đang tải...</p>;
+    return <CardGridSkeleton />;
   }
   if (error) {
     return <p className="text-sm text-destructive">{error.message}</p>;
