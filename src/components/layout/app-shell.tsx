@@ -9,10 +9,11 @@ import {
   KeyRound,
   LogOut,
   User,
+  UserPen,
 } from "lucide-react";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { ChangePasswordDialog } from "@components/auth";
+import { ChangePasswordDialog, UpdateProfileDialog } from "@components/auth";
 import { logout } from "@lib/actions";
 
 interface AppShellProps {
@@ -23,6 +24,7 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -117,6 +119,16 @@ export function AppShell({ children }: AppShellProps) {
                   className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
                   onClick={() => {
                     setMenuOpen(false);
+                    setProfileOpen(true);
+                  }}
+                >
+                  <UserPen className="size-4" /> Thông tin tài khoản
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => {
+                    setMenuOpen(false);
                     setPasswordOpen(true);
                   }}
                 >
@@ -136,6 +148,10 @@ export function AppShell({ children }: AppShellProps) {
             <ChangePasswordDialog
               open={passwordOpen}
               onOpenChange={setPasswordOpen}
+            />
+            <UpdateProfileDialog
+              open={profileOpen}
+              onOpenChange={setProfileOpen}
             />
           </div>
         </div>

@@ -19,3 +19,9 @@ export const changePasswordSchema = z
   });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+export const updateProfileSchema = z.object({
+  fullName: z.string().trim().min(1, "Vui lòng nhập họ tên"),
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

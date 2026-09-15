@@ -2,7 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@lib/supabase";
-import { changePasswordSchema, loginSchema } from "@schemas";
+import {
+  changePasswordSchema,
+  loginSchema,
+  updateProfileSchema,
+} from "@schemas";
 import {
   requireTeacher,
   withAction,
@@ -54,6 +58,27 @@ export async function changePassword(
 
     const { error } = await supabase.auth.updateUser({
       password: parsed.data.newPassword,
+    });
+    if (error) throw new Error(error.message);
+    return null;
+  });
+}
+
+/** Server Action: update the current teacher's display name. */
+export async function updateProfile(
+  input: unknown,
+): Promise<ActionResult<null>> {
+  return withAction(async () => {
+    const parsed = updateProfileSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new Error(
+        parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ",
+      );
+    }
+
+    const { supabase } = await requireTeacher();
+    const { error } = await supabase.auth.updateUser({
+      data: { fullName: parsed.data.fullName },
     });
     if (error) throw new Error(error.message);
     return null;
