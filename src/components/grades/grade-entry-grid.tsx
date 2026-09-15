@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition, type FormEventHandler } from "react";
-import { Save } from "lucide-react";
+import { MessageSquarePlus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ import { useGrades, useSaveGrades, useStudents } from "@hooks";
 import { GRADE_SLOT_FULL_LABEL, GRADE_SLOTS } from "@constants";
 import { calculateAverage } from "@lib/grade-utils";
 import { friendlyErrorMessage } from "@lib/utils";
+import { CommentDialog } from "./comment-dialog";
 import { ImportGradesForm } from "./import-grades-form";
 import type { GradeWithStudent } from "@types";
 
@@ -90,6 +91,7 @@ export function GradeEntryGrid({
   const [entries, setEntries] = useState<Record<string, ScoreInput>>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<string | null>(null);
+  const [commentStudentId, setCommentStudentId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const isLoading = studentsLoading || gradesLoading;
@@ -310,12 +312,23 @@ export function GradeEntryGrid({
                     />
                   </TableCell>
                   <TableCell className="p-1">
-                    <Input
-                      value={input.comment}
-                      onChange={(e) => updateField(s.id, "comment", e.target.value)}
-                      placeholder="Nhận xét"
-                      className="h-8"
-                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-full justify-start gap-1 font-normal"
+                      title={input.comment || "Thêm nhận xét"}
+                      onClick={() => setCommentStudentId(s.id)}
+                    >
+                      {input.comment ? (
+                        <span className="truncate">{input.comment}</span>
+                      ) : (
+                        <>
+                          <MessageSquarePlus className="size-3.5" />
+                          Nhận xét
+                        </>
+                      )}
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -323,6 +336,22 @@ export function GradeEntryGrid({
           </TableBody>
         </Table>
       </div>
+
+      {commentStudentId && (
+        <CommentDialog
+          key={commentStudentId}
+          open
+          onOpenChange={(open) => !open && setCommentStudentId(null)}
+          studentName={(() => {
+            const s = students.find((st) => st.id === commentStudentId);
+            return s ? `${s.lastName} ${s.firstName}` : "";
+          })()}
+          value={entries[commentStudentId]?.comment ?? ""}
+          onSave={(value) =>
+            updateField(commentStudentId, "comment", value)
+          }
+        />
+      )}
     </form>
   );
 }

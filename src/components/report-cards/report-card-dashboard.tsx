@@ -26,7 +26,11 @@ import {
 import { calculateAverage } from "@lib/grade-utils";
 import { defaultReportCardBlocks, type ReportCardData } from "@lib/report-card";
 import { GRADE_SLOTS } from "@constants";
-import { ReportCardSheet } from "./report-card-sheet";
+import {
+  CARDS_PER_PAGE_OPTIONS,
+  ReportCardSheet,
+  type CardsPerPage,
+} from "./report-card-sheet";
 
 const BUILTIN_TEMPLATE_ID = "__builtin__";
 
@@ -34,6 +38,7 @@ interface ReportCardDashboardProps {
   classId: string;
   subjectId?: string;
   subjectName?: string;
+  teacherName: string;
 }
 
 function todayIso(): string {
@@ -50,6 +55,7 @@ export function ReportCardDashboard({
   classId,
   subjectId: subjectIdProp,
   subjectName: subjectNameProp,
+  teacherName,
 }: ReportCardDashboardProps) {
   const { data: classInfo, isLoading: classLoading } = useClass(classId);
   const { data: classSubjects, isLoading: subjectsLoading } =
@@ -57,6 +63,8 @@ export function ReportCardDashboard({
   const [subjectId, setSubjectId] = useState(subjectIdProp ?? "");
   const [semester, setSemester] = useState(1);
   const [signDateIso, setSignDateIso] = useState(todayIso());
+  const [schoolName, setSchoolName] = useState("");
+  const [cardsPerPage, setCardsPerPage] = useState<CardsPerPage>(6);
 
   const subjectOptions = (classSubjects ?? []).map((cs) => ({
     id: cs.subjectId,
@@ -156,7 +164,15 @@ export function ReportCardDashboard({
                   }}
                 >
                   <SelectTrigger id="template">
-                    <SelectValue placeholder="Chọn mẫu" />
+                    <SelectValue placeholder="Chọn mẫu">
+                      {(value: string) => {
+                        if (value === BUILTIN_TEMPLATE_ID) return "Mẫu mặc định";
+                        const t = templates?.find((tpl) => tpl.id === value);
+                        return t
+                          ? `${t.name}${t.isDefault ? " (mặc định)" : ""}`
+                          : "Chọn mẫu";
+                      }}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={BUILTIN_TEMPLATE_ID}>Mẫu mặc định</SelectItem>
@@ -216,7 +232,9 @@ export function ReportCardDashboard({
                 onValueChange={(v) => setSemester(Number(v ?? 1))}
               >
                 <SelectTrigger id="semester">
-                  <SelectValue placeholder="Học kỳ" />
+                  <SelectValue placeholder="Học kỳ">
+                    {(value: string) => `Học kỳ ${value}`}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">Học kỳ 1</SelectItem>
@@ -233,6 +251,39 @@ export function ReportCardDashboard({
                 value={signDateIso}
                 onChange={(e) => setSignDateIso(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="schoolName">Tên trường</Label>
+              <Input
+                id="schoolName"
+                placeholder="VD: Trường THPT ..."
+                value={schoolName}
+                onChange={(e) => setSchoolName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cardsPerPage">Bố cục</Label>
+              <Select
+                value={String(cardsPerPage)}
+                onValueChange={(v) =>
+                  setCardsPerPage(Number(v ?? 6) as CardsPerPage)
+                }
+              >
+                <SelectTrigger id="cardsPerPage">
+                  <SelectValue>
+                    {(value: string) => `${value} phiếu / trang`}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {CARDS_PER_PAGE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n} phiếu / trang
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -264,6 +315,9 @@ export function ReportCardDashboard({
           cards={cards}
           signDate={formatSignDate(signDateIso)}
           signatureImageKey={signature?.imageKey ?? null}
+          teacherName={teacherName}
+          schoolName={schoolName}
+          cardsPerPage={cardsPerPage}
         />
       )}
     </div>

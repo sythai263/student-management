@@ -1,9 +1,34 @@
-import { Columns3, MessageSquare, Minus, PenLine, Sigma } from "lucide-react";
+import {
+  Columns3,
+  Flag,
+  Landmark,
+  MessageSquare,
+  Minus,
+  PenLine,
+  Sigma,
+  Table,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createBlockId } from "@lib/report-card";
 import type { ReportCardBlock } from "@types";
 
 const PALETTE: { label: string; icon: typeof Columns3; build: () => ReportCardBlock }[] = [
+  {
+    label: "Quốc hiệu & tiêu đề",
+    icon: Landmark,
+    build: () => ({
+      id: createBlockId(),
+      type: "letterhead",
+      schoolName: "Tên trường",
+      title: "Phiếu điểm",
+      ratio: "1-2",
+    }),
+  },
+  {
+    label: "Quốc hiệu tiêu ngữ",
+    icon: Flag,
+    build: () => ({ id: createBlockId(), type: "nationalMotto" }),
+  },
   {
     label: "Hàng thông tin",
     icon: Columns3,
@@ -13,6 +38,11 @@ const PALETTE: { label: string; icon: typeof Columns3; build: () => ReportCardBl
       columns: 1,
       items: [{ field: "studentName", label: "Nhãn" }],
     }),
+  },
+  {
+    label: "Bảng điểm",
+    icon: Table,
+    build: () => ({ id: createBlockId(), type: "scoreTable" }),
   },
   {
     label: "Điểm trung bình",
@@ -30,8 +60,8 @@ const PALETTE: { label: string; icon: typeof Columns3; build: () => ReportCardBl
     build: () => ({
       id: createBlockId(),
       type: "signature",
-      dateLabel: "Ngày ký",
-      roleLabel: "Giáo viên",
+      dateLabel: "Ngày",
+      roleLabel: "Giáo viên bộ môn",
     }),
   },
   {

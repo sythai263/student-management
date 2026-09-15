@@ -15,10 +15,14 @@ export default async function ReportCardsPage({
   const { subjectId } = await searchParams;
   const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
 
+  const { supabase, user } = await requireTeacher();
+  const { data: userData } = await supabase.auth.getUser();
+  const teacherName =
+    (userData.user?.user_metadata?.fullName as string | undefined) ?? "";
+
   let subjectName: string | undefined;
 
   if (activeSubjectId) {
-    const { supabase, user } = await requireTeacher();
     const { data } = await supabase
       .from("subjects")
       .select("name")
@@ -35,6 +39,7 @@ export default async function ReportCardsPage({
         classId={id}
         subjectId={activeSubjectId}
         subjectName={subjectName}
+        teacherName={teacherName}
       />
     </main>
   );

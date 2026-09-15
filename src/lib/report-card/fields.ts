@@ -24,6 +24,7 @@ export const REPORT_CARD_FIELDS: ReportCardFieldDef[] = [
   { key: "average", label: "Điểm trung bình", group: "Điểm" },
   { key: "comment", label: "Nhận xét", group: "Khác" },
   { key: "signDate", label: "Ngày ký", group: "Khác" },
+  { key: "teacherName", label: "Tên giáo viên", group: "Khác" },
 ];
 
 export const REPORT_CARD_FIELD_LABEL: Record<ReportCardFieldKey, string> =

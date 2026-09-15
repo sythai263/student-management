@@ -19,7 +19,10 @@ export function FieldRowBlockView({ block, values }: FieldRowBlockViewProps) {
       )}
     >
       {block.items.map((item, i) => (
-        <div key={i} className="min-w-0 truncate">
+        <div
+          key={i}
+          className={cn("min-w-0 truncate", block.align === "center" && "text-center")}
+        >
           {item.label && <span className="text-black/60">{item.label}: </span>}
           <span className="font-medium">{values[item.field]}</span>
         </div>

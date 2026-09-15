@@ -15,12 +15,18 @@ export function defaultReportCardBlocks(): ReportCardBlock[] {
   return [
     {
       id: createBlockId(),
+      type: "letterhead",
+      schoolName: "Tên trường",
+      title: "Phiếu điểm",
+      ratio: "1-2",
+    },
+    {
+      id: createBlockId(),
       type: "fieldRow",
-      columns: 3,
+      columns: 2,
       items: [
-        { field: "subjectName", label: "Môn" },
-        { field: "studentName", label: "Học sinh" },
-        { field: "studentCode", label: "Mã HS" },
+        { field: "semesterLabel", label: "Học kỳ" },
+        { field: "subjectName", label: "Môn học" },
       ],
     },
     {
@@ -28,8 +34,8 @@ export function defaultReportCardBlocks(): ReportCardBlock[] {
       type: "fieldRow",
       columns: 2,
       items: [
-        { field: "classCode", label: "Mã lớp" },
         { field: "className", label: "Tên lớp" },
+        { field: "classCode", label: "Mã Lớp" },
       ],
     },
     {
@@ -37,28 +43,20 @@ export function defaultReportCardBlocks(): ReportCardBlock[] {
       type: "fieldRow",
       columns: 2,
       items: [
-        { field: "tx1", label: "TX1" },
-        { field: "tx2", label: "TX2" },
-        { field: "tx3", label: "TX3" },
-        { field: "tx4", label: "TX4" },
+        { field: "studentName", label: "Tên học sinh" },
+        { field: "studentCode", label: "Mã học sinh" },
       ],
     },
-    {
-      id: createBlockId(),
-      type: "fieldRow",
-      columns: 1,
-      items: [
-        { field: "gk", label: "Giữa kỳ" },
-        { field: "ck", label: "Cuối kỳ" },
-      ],
-    },
+    { id: createBlockId(), type: "scoreTable" },
     { id: createBlockId(), type: "average", label: "Điểm trung bình" },
-    { id: createBlockId(), type: "comment", label: "Nhận xét" },
     {
       id: createBlockId(),
       type: "signature",
-      dateLabel: "Ngày ký",
-      roleLabel: "Giáo viên",
+      dateLabel: "Ngày",
+      roleLabel: "Giáo viên bộ môn",
+      showComment: true,
+      commentLabel: "Nhận xét",
+      ratio: "2-1",
     },
   ];
 }

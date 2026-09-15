@@ -26,6 +26,7 @@ function formatAverage(value: number | null): string {
 export function buildFieldValues(
   data: ReportCardData,
   signDate: string,
+  teacherName: string,
 ): ReportCardFieldValues {
   return {
     subjectName: data.subjectName,
@@ -43,5 +44,6 @@ export function buildFieldValues(
     average: formatAverage(data.average),
     comment: data.comment || "",
     signDate,
+    teacherName,
   };
 }

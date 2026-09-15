@@ -17,4 +17,5 @@ export const REPORT_CARD_SAMPLE_VALUES: ReportCardFieldValues = {
   average: "8.35",
   comment: "Học sinh tích cực, cần cố gắng hơn ở phần bài tập về nhà.",
   signDate: "15/09/2026",
+  teacherName: "Trần Thị B",
 };

@@ -4,3 +4,6 @@ export { AverageBlockView } from "./average-block";
 export { CommentBlockView } from "./comment-block";
 export { SignatureBlockView } from "./signature-block";
 export { DividerBlockView } from "./divider-block";
+export { LetterheadBlockView } from "./letterhead-block";
+export { NationalMottoBlockView } from "./national-motto-block";
+export { ScoreTableBlockView } from "./score-table-block";

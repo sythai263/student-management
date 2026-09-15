@@ -21,7 +21,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSaveReportCardTemplate } from "@hooks";
-import { defaultReportCardBlocks } from "@lib/report-card";
+import {
+  defaultReportCardBlocks,
+  REPORT_CARD_FONT_FAMILY,
+} from "@lib/report-card";
 import { friendlyErrorMessage } from "@lib/utils";
 import type { ReportCardBlock, ReportCardTemplateRow } from "@types";
 import { BlockInspector } from "./block-inspector";
@@ -103,7 +106,10 @@ export function TemplateBuilder({ template }: TemplateBuilderProps) {
                   items={blocks.map((b) => b.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="flex h-full flex-col gap-1 overflow-y-auto border border-black p-2">
+                  <div
+                    style={{ fontFamily: REPORT_CARD_FONT_FAMILY }}
+                    className="flex h-full flex-col gap-1 overflow-y-auto border border-black p-2"
+                  >
                     {blocks.map((block) => (
                       <SortableBlockItem
                         key={block.id}
