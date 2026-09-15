@@ -2,6 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -291,10 +292,15 @@ export function BlockInspector({ block, onChange }: BlockInspectorProps) {
       <div className="space-y-3">
         <div className="space-y-2">
           <Label>Tên trường</Label>
-          <Input
+          <Textarea
             value={block.schoolName}
+            rows={2}
             onChange={(e) => onChange({ ...block, schoolName: e.target.value })}
           />
+          <p className="text-xs text-muted-foreground">
+            Enter để xuống dòng. Khi lớp đã gắn trường, tên trường của lớp sẽ
+            thay thế nội dung này.
+          </p>
         </div>
         <div className="space-y-2">
           <Label>Tiêu đề phiếu</Label>

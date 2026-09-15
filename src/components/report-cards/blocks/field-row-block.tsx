@@ -24,7 +24,9 @@ export function FieldRowBlockView({ block, values }: FieldRowBlockViewProps) {
           className={cn("min-w-0 truncate", block.align === "center" && "text-center")}
         >
           {item.label && <span className="text-black/60">{item.label}: </span>}
-          <span className="font-medium">{values[item.field]}</span>
+          <span className="font-medium whitespace-pre-line">
+            {values[item.field]}
+          </span>
         </div>
       ))}
     </div>

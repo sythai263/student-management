@@ -3,11 +3,13 @@ import type { CsvMappedRow, ParseGradeCsvResult } from "@types";
 
 /**
  * Calculate the weighted average for a grade row.
- * Returns null when no scores are present.
+ * Returns null until both GK and CK scores are present.
  */
 export function calculateAverage(
   scores: Partial<Record<GradeSlot, number | null | undefined>>,
 ): number | null {
+  if (scores.gk == null || scores.ck == null) return null;
+
   let total = 0;
   let weight = 0;
   for (const slot of GRADE_SLOTS) {

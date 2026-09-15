@@ -33,7 +33,9 @@ export function LetterheadBlockView({
   return (
     <div className="space-y-1">
       <div className="flex items-start justify-between gap-2">
-        <div className={`${widths.left} text-center font-bold uppercase`}>
+        <div
+          className={`${widths.left} text-center font-bold uppercase whitespace-pre-line`}
+        >
           {school}
         </div>
         <div className={`${widths.right} text-center`}>

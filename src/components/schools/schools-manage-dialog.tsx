@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -95,14 +95,15 @@ export function SchoolsManageDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="new-school">Thêm trường</Label>
-            <div className="flex gap-2">
-              <Input
+            <div className="flex items-start gap-2">
+              <Textarea
                 id="new-school"
-                placeholder="VD: Trường THPT Nguyễn Du"
+                placeholder={"VD: Trường THPT\nNguyễn Du"}
                 value={name}
                 disabled={isPending}
+                rows={2}
+                className="min-h-0"
                 onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onAdd()}
               />
               <Button
                 type="button"
@@ -112,6 +113,10 @@ export function SchoolsManageDialog({
                 <Plus /> Thêm
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Enter để xuống dòng — tên trường sẽ ngắt dòng đúng chỗ đó trên
+              phiếu điểm.
+            </p>
           </div>
 
           {isLoading ? (
@@ -126,12 +131,13 @@ export function SchoolsManageDialog({
                 <li key={s.id} className="flex items-center gap-2 p-2">
                   {editingId === s.id ? (
                     <>
-                      <Input
+                      <Textarea
                         value={editingName}
                         disabled={isPending}
+                        rows={2}
+                        className="min-h-0"
                         onChange={(e) => setEditingName(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") onSaveRename(s.id);
                           if (e.key === "Escape") setEditingId(null);
                         }}
                         autoFocus
