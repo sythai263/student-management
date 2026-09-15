@@ -34,10 +34,11 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: do not run code between createServerClient and getUser()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // IMPORTANT: do not run code between createServerClient and getClaims()
+  // getClaims verifies the JWT locally via JWKS (no Auth-server round-trip)
+  // when the project uses asymmetric signing keys.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const isPublic = PUBLIC_PATHS.some((p) =>
     request.nextUrl.pathname.startsWith(p),

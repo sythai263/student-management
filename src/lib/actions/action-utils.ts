@@ -12,15 +12,15 @@ export type ActionResult<T> =
 /**
  * Auth guard for server actions: returns the Supabase client bound to
  * the current teacher's session. Throws if not logged in.
+ * Uses getClaims() — verifies the JWT locally via JWKS instead of a
+ * network round-trip to the Auth server on every action call.
  */
 export async function requireTeacher() {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Chưa đăng nhập");
-  return { supabase, user };
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (error || !claims) throw new Error("Chưa đăng nhập");
+  return { supabase, user: { id: claims.sub, email: claims.email } };
 }
 
 /**
