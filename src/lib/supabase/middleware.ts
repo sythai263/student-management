@@ -66,9 +66,12 @@ export async function updateSession(request: NextRequest) {
     const sessionAal = (user as { aal?: string }).aal ?? "aal1";
     let needsMfa = false;
     if (sessionAal === "aal1") {
-      const { data: level } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      needsMfa = level?.nextLevel === "aal2";
+      // getUser() authenticates against the Auth server — getSession()'s
+      // user object would only be an untrusted cookie copy.
+      const { data: userData } = await supabase.auth.getUser();
+      needsMfa = (userData.user?.factors ?? []).some(
+        (factor) => factor.status === "verified",
+      );
     }
     if (needsMfa && !isMfaPage) {
       const url = request.nextUrl.clone();
