@@ -37,9 +37,13 @@ const CENTER: Partial<ExcelJS.Alignment> = {
   vertical: "middle",
 };
 
+const LAST_COL = 12; // column L
+const HEADER_ROW = 12;
+const FIRST_DATA_ROW = 14;
+
 function borderRange(ws: ExcelJS.Worksheet, firstRow: number, lastRow: number) {
   for (let r = firstRow; r <= lastRow; r++) {
-    for (let c = 1; c <= 11; c++) {
+    for (let c = 1; c <= LAST_COL; c++) {
       ws.getCell(r, c).border = THIN_BORDER;
     }
   }
@@ -48,8 +52,8 @@ function borderRange(ws: ExcelJS.Worksheet, firstRow: number, lastRow: number) {
 /**
  * Build one SMAS-style grade sheet ("Bảng kết quả đánh giá môn … - lớp …")
  * inside the given workbook. Layout mirrors the Viettel SMAS import template:
- * ministry/school header, merged title, two-row table header with the
- * ĐĐG TX group spanning 4 columns.
+ * ministry/school header at A3:C4, title rows 6–7, two-row table header on
+ * rows 12–13 (ĐĐG TX spans E:H, Họ và tên spans C:D), data from row 14.
  */
 export function addSmasGradeSheet(
   workbook: ExcelJS.Workbook,
@@ -59,9 +63,10 @@ export function addSmasGradeSheet(
   const roman = SEMESTER_ROMAN[input.semester] ?? String(input.semester);
 
   ws.columns = [
-    { key: "stt", width: 6 },
-    { key: "code", width: 18 },
-    { key: "name", width: 28 },
+    { key: "stt", width: 7 },
+    { key: "code", width: 20 },
+    { key: "nameC", width: 9 },
+    { key: "nameD", width: 16 },
     { key: "tx1", width: 6 },
     { key: "tx2", width: 6 },
     { key: "tx3", width: 6 },
@@ -69,97 +74,94 @@ export function addSmasGradeSheet(
     { key: "gk", width: 8 },
     { key: "ck", width: 8 },
     { key: "tbm", width: 9 },
-    { key: "comment", width: 40 },
+    { key: "comment", width: 45 },
   ];
 
-  // Ministry + school block (top-left).
-  ws.mergeCells("A1:D1");
-  ws.mergeCells("A2:D2");
-  ws.getCell("A1").value = "BỘ GIÁO DỤC VÀ ĐÀO TẠO";
+  // Ministry + school block (top-left, rows 3–4).
+  ws.mergeCells("A3:C3");
+  ws.mergeCells("A4:C4");
+  ws.getCell("A3").value = "BỘ GIÁO DỤC VÀ ĐÀO TẠO";
   // School names may contain intentional line breaks — keep them.
-  ws.getCell("A2").value = normalizeSchoolName(input.schoolName, {
-    keepLineBreaks: false,
+  ws.getCell("A4").value = normalizeSchoolName(input.schoolName, {
+    keepLineBreaks: true,
   }).toUpperCase();
-  for (const addr of ["A1", "A2"]) {
+  for (const addr of ["A3", "A4"]) {
     const cell = ws.getCell(addr);
     cell.font = { ...FONT, bold: true };
     cell.alignment = { ...CENTER, wrapText: true };
   }
 
-  // Title + semester lines, centered across the table.
-  ws.mergeCells("A4:K4");
-  const title = ws.getCell("A4");
+  // Title + semester lines, centered across the table (rows 6–7).
+  ws.mergeCells("A6:L6");
+  const title = ws.getCell("A6");
   title.value = `BẢNG KẾT QUẢ ĐÁNH GIÁ MÔN ${input.subjectName.toUpperCase()} - LỚP ${input.className.toUpperCase()}`;
   title.font = { ...FONT, bold: true, size: 13 };
   title.alignment = CENTER;
 
-  ws.mergeCells("A5:K5");
-  const subtitle = ws.getCell("A5");
+  ws.mergeCells("A7:L7");
+  const subtitle = ws.getCell("A7");
   subtitle.value = `Học kỳ ${roman} - Năm học ${input.schoolYear}`;
   subtitle.font = FONT;
   subtitle.alignment = CENTER;
 
-  // Two-row table header (rows 7–8).
-  ws.mergeCells("A7:A8");
-  ws.mergeCells("B7:B8");
-  ws.mergeCells("C7:C8");
-  ws.mergeCells("D7:G7");
-  ws.mergeCells("H7:H8");
-  ws.mergeCells("I7:I8");
-  ws.mergeCells("J7:J8");
-  ws.mergeCells("K7:K8");
+  // Two-row table header (rows 12–13).
+  ws.mergeCells("A12:A13");
+  ws.mergeCells("B12:B13");
+  ws.mergeCells("C12:D13");
+  ws.mergeCells("E12:H12");
+  ws.mergeCells("I12:I13");
+  ws.mergeCells("J12:J13");
+  ws.mergeCells("K12:K13");
+  ws.mergeCells("L12:L13");
 
-  ws.getCell("A7").value = "STT";
-  ws.getCell("B7").value = "Mã học sinh";
-  ws.getCell("C7").value = "Họ và tên";
-  ws.getCell("D7").value = "ĐĐG TX";
-  ws.getCell("D8").value = 1;
-  ws.getCell("E8").value = 2;
-  ws.getCell("F8").value = 3;
-  ws.getCell("G8").value = 4;
-  ws.getCell("H7").value = "ĐĐG GK";
-  ws.getCell("I7").value = "ĐĐG CK";
-  ws.getCell("J7").value = `TBM HK${roman}`;
-  ws.getCell("K7").value = `Nhận xét HK${roman}`;
+  ws.getCell("A12").value = "STT";
+  ws.getCell("B12").value = "Mã học sinh";
+  ws.getCell("C12").value = "Họ và tên";
+  ws.getCell("E12").value = "ĐĐG TX";
+  ws.getCell("E13").value = 1;
+  ws.getCell("F13").value = 2;
+  ws.getCell("G13").value = 3;
+  ws.getCell("H13").value = 4;
+  ws.getCell("I12").value = "ĐĐG GK";
+  ws.getCell("J12").value = "ĐĐG CK";
+  ws.getCell("K12").value = `TBM HK${roman}`;
+  ws.getCell("L12").value = `Nhận xét HK${roman}`;
 
-  for (let r = 7; r <= 8; r++) {
-    for (let c = 1; c <= 11; c++) {
+  for (let r = HEADER_ROW; r <= HEADER_ROW + 1; r++) {
+    for (let c = 1; c <= LAST_COL; c++) {
       const cell = ws.getCell(r, c);
       cell.font = { ...FONT, bold: true };
       cell.alignment = { ...CENTER, wrapText: true };
     }
   }
-  ws.getRow(7).height = 20;
-  ws.getRow(8).height = 20;
+  ws.getRow(HEADER_ROW).height = 20;
+  ws.getRow(HEADER_ROW + 1).height = 20;
 
-  // Data rows.
-  const firstDataRow = 9;
+  // Data rows (from row 14); "Họ và tên" occupies C:D merged.
   input.rows.forEach((row, i) => {
-    const r = firstDataRow + i;
-    const values: (string | number | null)[] = [
-      i + 1,
-      row.studentCode,
-      row.fullName,
-      row.scores.tx1,
-      row.scores.tx2,
-      row.scores.tx3,
-      row.scores.tx4,
-      row.scores.gk,
-      row.scores.ck,
-      row.average,
-      row.comment || null,
+    const r = FIRST_DATA_ROW + i;
+    ws.mergeCells(r, 3, r, 4);
+    const values: { col: number; value: string | number | null }[] = [
+      { col: 1, value: i + 1 },
+      { col: 2, value: row.studentCode },
+      { col: 3, value: row.fullName },
+      { col: 5, value: row.scores.tx1 },
+      { col: 6, value: row.scores.tx2 },
+      { col: 7, value: row.scores.tx3 },
+      { col: 8, value: row.scores.tx4 },
+      { col: 9, value: row.scores.gk },
+      { col: 10, value: row.scores.ck },
+      { col: 11, value: row.average },
+      { col: 12, value: row.comment || null },
     ];
-    values.forEach((value, c) => {
-      const cell = ws.getCell(r, c + 1);
+    for (const { col, value } of values) {
+      const cell = ws.getCell(r, col);
       cell.value = value;
       cell.font = FONT;
-      cell.alignment =
-        c === 2 || c === 10
-          ? { vertical: "middle", wrapText: c === 10 }
-          : CENTER;
-    });
+      cell.alignment = col === 12 ? { vertical: "middle", wrapText: true } : CENTER;
+    }
   });
 
-  borderRange(ws, 7, firstDataRow + Math.max(input.rows.length, 1) - 1);
+  borderRange(ws, HEADER_ROW, FIRST_DATA_ROW + Math.max(input.rows.length, 1) - 1);
   return ws;
 }
