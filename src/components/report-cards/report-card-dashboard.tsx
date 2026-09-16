@@ -121,7 +121,7 @@ export function ReportCardDashboard({
       ) as ReportCardData["scores"];
 
       return {
-        studentCode: s.studentCode,
+        studentCode: s.studentCode ?? "",
         studentName: `${s.lastName} ${s.firstName}`,
         classCode: classInfo.classCode,
         className: classInfo.name,

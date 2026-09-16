@@ -85,7 +85,7 @@ export function RecordEditDialog({
             {s?.lastName} {s?.firstName}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
-            <span>{s?.studentCode}</span>
+            <span>{s?.studentCode ?? "—"}</span>
             {record.confidence != null && (
               <Badge variant={record.confidence >= 90 ? "default" : "secondary"}>
                 Nhận diện {record.confidence.toFixed(0)}%

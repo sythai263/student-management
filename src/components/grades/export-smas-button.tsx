@@ -67,7 +67,7 @@ export function ExportSmasButton({
             ]),
           ) as Record<GradeSlot, number | null>;
           return {
-            studentCode: s.studentCode,
+            studentCode: s.studentCode ?? "",
             fullName: `${s.lastName} ${s.firstName}`,
             scores,
             average: calculateAverage(scores),

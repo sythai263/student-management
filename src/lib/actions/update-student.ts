@@ -13,7 +13,7 @@ import {
  * Server Action: Update Student.
  * Edits name/dateOfBirth and, when a new portrait is attached, runs the
  * same pipeline as register-student: upload to S3, IndexFaces with
- * ExternalImageId = studentCode, then swap awsFaceId + avatarKey on the row.
+ * ExternalImageId = student id, then swap awsFaceId + avatarKey on the row.
  */
 export async function updateStudent(
   formData: FormData,
@@ -34,7 +34,7 @@ export async function updateStudent(
 
     const { data: existing, error: fetchError } = await supabase
       .from("students")
-      .select("id, classId, studentCode, awsFaceId")
+      .select("id, classId, awsFaceId")
       .eq("id", input.studentId)
       .single();
     if (fetchError || !existing) throw new Error("Không tìm thấy học sinh");
@@ -42,7 +42,7 @@ export async function updateStudent(
     const classId = existing.classId as string;
 
     // Optional new portrait -> re-index the face under the same
-    // studentCode. Both keys point at files already uploaded directly
+    // student id. Both keys point at files already uploaded directly
     // to storage by the client (see `uploadDirect`).
     const imageKey = formData.get("imageKey");
     const avatarKey = formData.get("avatarKey");
@@ -53,7 +53,7 @@ export async function updateStudent(
         avatarKey.length > 0
         ? await indexStudentFace(
           classId,
-          existing.studentCode as string,
+          existing.id as string,
           imageKey,
           avatarKey,
         )

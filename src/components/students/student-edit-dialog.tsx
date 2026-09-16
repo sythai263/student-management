@@ -65,12 +65,13 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
       // from the browser — a Server Action body must stay well under
       // Vercel's 4.5MB request limit.
       if (file) {
+        const label = student.studentCode ?? student.id;
         const [imageKey, avatarKey] = await Promise.all([
-          uploadDirect("student-original", student.classId, student.studentCode, file),
+          uploadDirect("student-original", student.classId, label, file),
           uploadDirect(
             "student-display",
             student.classId,
-            student.studentCode,
+            label,
             await compressImage(file),
           ),
         ]);
@@ -106,7 +107,7 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
         <DialogHeader>
           <DialogTitle>Sửa học sinh</DialogTitle>
           <DialogDescription className="flex items-center gap-2">
-            <span>{student.studentCode}</span>
+            <span>{student.studentCode ?? "—"}</span>
             {student.awsFaceId ? (
               <Badge>Đã có ảnh</Badge>
             ) : (

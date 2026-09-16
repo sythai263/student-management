@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /** Validation for the "Register New Student" server action input. */
 export const registerStudentSchema = z.object({
-  studentCode: z.string().trim().min(1, "Mã học sinh không được trống"),
+  studentCode: z.string().trim().min(1, "Mã học sinh không được trống").optional(),
   lastName: z.string().trim().min(1, "Họ không được trống"),
   firstName: z.string().trim().min(1, "Tên không được trống"),
   dateOfBirth: z

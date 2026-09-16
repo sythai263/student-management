@@ -49,7 +49,7 @@ const AttendanceCard = memo(function AttendanceCard({
             {r.students?.lastName} {r.students?.firstName}
           </p>
           <p className="text-xs text-muted-foreground">
-            {r.students?.studentCode}
+            {r.students?.studentCode ?? "—"}
           </p>
         </div>
         <Badge

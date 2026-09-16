@@ -114,7 +114,7 @@ export function ImportGradesForm({
         comment: "",
       };
       return [
-        csvCell(s.studentCode),
+        csvCell(s.studentCode ?? ""),
         csvCell(fullName),
         input.tx1,
         input.tx2,

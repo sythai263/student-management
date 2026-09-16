@@ -4,8 +4,16 @@ import { useRef, useState, useTransition, type SubmitEventHandler } from "react"
 import { useQueryClient } from "@tanstack/react-query";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +34,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
+  const [matchBy, setMatchBy] = useState<"code" | "name">("code");
   const [isPending, startTransition] = useTransition();
   const { data: classData } = useClass(classId);
 
@@ -38,9 +47,10 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
     }
 
     startTransition(async () => {
-      const fd = new FormData();
+      const fd = new FormData(e.currentTarget);
       fd.set("classId", classId);
       fd.set("file", file);
+      fd.set("matchBy", matchBy);
 
       const result = await importStudents(fd);
       if (result.success) {
@@ -66,6 +76,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
       "HS001,Nguyễn Văn,An,2010-03-15",
       "HS002,Trần Thị,Bình,03/15/2010",
       "HS003,Lê Hoàng,Cường,",
+      ",Phạm Minh,Đức,2010-01-20",
     ];
     const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -101,7 +112,29 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
             <div className="space-y-2">
               <Label htmlFor="csv">Tệp danh sách học sinh (.csv)</Label>
               <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
+              <p className="text-xs text-muted-foreground">
+                Cột Mã HS có thể để trống.
+              </p>
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="match-by">Kiểm tra trùng theo</Label>
+              <Select
+                value={matchBy}
+                onValueChange={(v) => setMatchBy(v as "code" | "name")}
+              >
+                <SelectTrigger id="match-by">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="code">Mã học sinh</SelectItem>
+                  <SelectItem value="name">Họ và tên</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Label className="flex items-center gap-2 font-normal">
+              <Checkbox name="addToAllSessions" />
+              Thêm học sinh mới vào tất cả buổi điểm danh
+            </Label>
             <DialogFooter>
               <Button
                 type="button"

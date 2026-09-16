@@ -28,7 +28,7 @@ export interface IndexedFace {
  */
 export async function indexStudentFace(
   classId: string,
-  studentCode: string,
+  studentId: string,
   imageKey: string,
   avatarKey: string,
 ): Promise<IndexedFace> {
@@ -54,7 +54,7 @@ export async function indexStudentFace(
     new IndexFacesCommand({
       CollectionId: collectionId,
       Image: { Bytes: imageBytes },
-      ExternalImageId: studentCode,
+      ExternalImageId: studentId,
       MaxFaces: 1,
       QualityFilter: "AUTO",
     }),
@@ -84,6 +84,6 @@ export async function deleteFaceVector(
       }),
     );
   } catch {
-    // Stale vector still maps to the same studentCode — harmless.
+    // Stale vector still maps to the same student — harmless.
   }
 }

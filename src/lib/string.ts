@@ -22,3 +22,17 @@ export function normalizeSchoolName(
     .filter(Boolean);
   return options?.keepLineBreaks ? lines.join("\n") : lines.join(" ");
 }
+
+/**
+ * Vietnamese roster order: Tên (firstName) first, then Họ đệm
+ * (lastName), using the "vi" collation so diacritics sort properly.
+ */
+export function compareStudentNames(
+  a: { firstName: string; lastName: string },
+  b: { firstName: string; lastName: string },
+): number {
+  return (
+    a.firstName.localeCompare(b.firstName, "vi") ||
+    a.lastName.localeCompare(b.lastName, "vi")
+  );
+}

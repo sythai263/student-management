@@ -42,6 +42,7 @@ export {
   useAttendanceSessions,
   useAttendanceRecords,
   useUpdateAttendance,
+  useAddAttendanceRecord,
   useCloseSession,
   useCreateSession,
   useRenameSession,

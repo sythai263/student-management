@@ -15,7 +15,7 @@
 ## 2. Table: students
 Class rosters are fixed per school year: 1 student belongs to exactly 1 class.
 - `id` (UUID, Primary Key)
-- `studentCode` (Text, Unique within a class — `unique ("studentCode", "classId")`)
+- `studentCode` (Text, nullable — optional label; unique within a class when set — `unique ("studentCode", "classId")`, NULLs never conflict)
 - `lastName` (Text, họ + tên đệm)
 - `firstName` (Text, tên)
 - `dateOfBirth` (Date, nullable)

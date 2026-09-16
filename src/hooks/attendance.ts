@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import {
+  addAttendanceRecord,
   closeAttendanceSession,
   createManualSession,
   deleteAttendanceSession,
@@ -11,13 +12,15 @@ import {
 } from "@lib/actions";
 import { localToday } from "@lib/attendance-session";
 import { friendlyErrorMessage } from "@lib/utils";
-import type { RenameSessionInput, UpdateAttendanceInput } from "@schemas";
+import type {
+  AddAttendanceInput,
+  RenameSessionInput,
+  UpdateAttendanceInput,
+} from "@schemas";
 import type { AttendanceStatus } from "@constants";
 import type {
   AttendanceSession,
-  AttendanceRecord,
   AttendanceRecordWithStudent,
-  Student,
 } from "@types";
 
 /** Fetch a single attendance session. */
@@ -111,6 +114,23 @@ export function useUpdateAttendance(sessionId: string) {
         if (data) queryClient.setQueryData(key, data);
       });
     },
+  });
+}
+
+/**
+ * Mutation: add a supplementary record for a student missing from the
+ * session — works on closed sessions (admin-side insert).
+ */
+export function useAddAttendanceRecord(sessionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Omit<AddAttendanceInput, "sessionId">) => {
+      const result = await addAttendanceRecord({ ...input, sessionId });
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: attendanceKey(sessionId) }),
   });
 }
 

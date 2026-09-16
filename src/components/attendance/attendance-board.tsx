@@ -9,11 +9,13 @@ import {
 } from "@hooks";
 import { toast } from "sonner";
 import { sessionDisplayName } from "@lib/attendance-session";
+import { compareStudentNames } from "@lib/string";
 import { AttendanceBoardSkeleton } from "./attendance-board-skeleton";
 import { AttendanceToolbar } from "./attendance-toolbar";
 import { AttendanceGrid } from "./attendance-grid";
 import { RecordEditDialog } from "./record-edit-dialog";
 import { RollCallModal } from "./roll-call-modal";
+import { SupplementaryAttendance } from "./supplementary-attendance";
 import type { AttendanceRecordWithStudent } from "@hooks";
 
 interface AttendanceBoardProps {
@@ -37,25 +39,46 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
   } = useAttendanceRecords(sessionId, filter);
   const closeSessionMutation = useCloseSession(sessionId);
 
-  // Search stays client-side (name/code substring on the fetched subset).
+  // Search stays client-side (name/code substring on the fetched subset);
+  // display order is Tên -> Họ like the rest of the app.
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return records ?? [];
-    return (records ?? []).filter((r) => {
-      const s = r.students;
-      const name = `${s?.lastName ?? ""} ${s?.firstName ?? ""}`.toLowerCase();
-      return name.includes(q) || s?.studentCode?.toLowerCase().includes(q);
-    });
+    const subset = !q
+      ? (records ?? [])
+      : (records ?? []).filter((r) => {
+        const s = r.students;
+        const name = `${s?.lastName ?? ""} ${s?.firstName ?? ""}`.toLowerCase();
+        return name.includes(q) || s?.studentCode?.toLowerCase().includes(q);
+      });
+    return [...subset].sort((a, b) =>
+      compareStudentNames(
+        {
+          firstName: a.students?.firstName ?? "",
+          lastName: a.students?.lastName ?? "",
+        },
+        {
+          firstName: b.students?.firstName ?? "",
+          lastName: b.students?.lastName ?? "",
+        },
+      ),
+    );
   }, [records, search]);
 
-  // Roll-call order: roster order (lastName, firstName) — top to bottom.
+  // Roll-call order: roster order (firstName, lastName) — top to bottom.
   const rollCallOrder = useMemo(
     () =>
-      [...(records ?? [])].sort((a, b) => {
-        const an = `${a.students?.lastName ?? ""} ${a.students?.firstName ?? ""}`;
-        const bn = `${b.students?.lastName ?? ""} ${b.students?.firstName ?? ""}`;
-        return an.localeCompare(bn, "vi");
-      }),
+      [...(records ?? [])].sort((a, b) =>
+        compareStudentNames(
+          {
+            firstName: a.students?.firstName ?? "",
+            lastName: a.students?.lastName ?? "",
+          },
+          {
+            firstName: b.students?.firstName ?? "",
+            lastName: b.students?.lastName ?? "",
+          },
+        ),
+      ),
     [records],
   );
 
@@ -94,6 +117,14 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         disabled={closed}
         onSelect={setEditing}
       />
+
+      {closed && session && (
+        <SupplementaryAttendance
+          sessionId={sessionId}
+          classId={session.classId}
+          records={records ?? []}
+        />
+      )}
 
       <RecordEditDialog
         sessionId={sessionId}

@@ -72,9 +72,9 @@ export function ReportCardSheet({
           <div
             className={cn("grid h-full w-full gap-3", LAYOUT[cardsPerPage])}
           >
-            {page.map((card) => (
+            {page.map((card, cardIndex) => (
               <ReportCardCard
-                key={card.studentCode}
+                key={card.studentCode || cardIndex}
                 blocks={blocks}
                 values={buildFieldValues(card, signDate, teacherName)}
                 signatureImageKey={signatureImageKey}

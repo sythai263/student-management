@@ -3,6 +3,7 @@
 import { useRef, useTransition, type SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -41,12 +42,13 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
       // from the browser — a Server Action body must stay well under
       // Vercel's 4.5MB request limit.
       if (file) {
+        const label = studentCode || "hoc-sinh";
         const [imageKey, avatarKey] = await Promise.all([
-          uploadDirect("student-original", classId, studentCode, file),
+          uploadDirect("student-original", classId, label, file),
           uploadDirect(
             "student-display",
             classId,
-            studentCode,
+            label,
             await compressImage(file),
           ),
         ]);
@@ -83,8 +85,8 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
         <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="studentCode">Mã HS</Label>
-              <Input id="studentCode" name="studentCode" required />
+              <Label htmlFor="studentCode">Mã HS (không bắt buộc)</Label>
+              <Input id="studentCode" name="studentCode" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="dateOfBirth">Ngày sinh</Label>
@@ -103,6 +105,10 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
             <Label htmlFor="image">Ảnh chân dung (không bắt buộc)</Label>
             <Input id="image" name="image" type="file" accept="image/*" />
           </div>
+          <Label className="flex items-center gap-2 font-normal">
+            <Checkbox name="addToAllSessions" />
+            Thêm vào tất cả buổi điểm danh của lớp
+          </Label>
           <Button type="submit" disabled={isPending}>
             {isPending ? "Đang xử lý..." : "Đăng ký"}
           </Button>

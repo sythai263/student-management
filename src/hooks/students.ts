@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { compareStudentNames } from "@lib/string";
 import { friendlyErrorMessage } from "@lib/utils";
 import type { Student } from "@types";
 
@@ -17,7 +18,7 @@ interface PaginatedResult {
   totalPages: number;
 }
 
-/** Fetch the student roster of a class. */
+/** Fetch the student roster of a class, ordered Tên -> Họ (vi collation). */
 export function useStudents(classId: string) {
   return useQuery({
     queryKey: ["students", classId],
@@ -26,10 +27,9 @@ export function useStudents(classId: string) {
       const { data, error } = await supabase
         .from("students")
         .select("*")
-        .eq("classId", classId)
-        .order("studentCode");
+        .eq("classId", classId);
       if (error) throw new Error(friendlyErrorMessage(error));
-      return (data ?? []) as Student[];
+      return ((data ?? []) as Student[]).sort(compareStudentNames);
     },
   });
 }

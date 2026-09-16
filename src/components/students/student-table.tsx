@@ -133,7 +133,7 @@ export function StudentTable({ classId }: StudentTableProps) {
                       {s.lastName} {s.firstName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {s.studentCode}
+                      {s.studentCode ?? "—"}
                       {s.dateOfBirth ? ` · ${s.dateOfBirth}` : ""}
                     </p>
                   </div>
@@ -170,7 +170,7 @@ export function StudentTable({ classId }: StudentTableProps) {
                     onClick={() => setEditing(s)}
                   >
                     <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
-                    <TableCell>{s.studentCode}</TableCell>
+                    <TableCell>{s.studentCode ?? "—"}</TableCell>
                     <TableCell>{s.lastName}</TableCell>
                     <TableCell>{s.firstName}</TableCell>
                     <TableCell>{s.dateOfBirth ?? "—"}</TableCell>

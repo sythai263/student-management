@@ -170,7 +170,7 @@ export function RollCallModal({
         )}
         <DialogHeader className="items-center gap-3 text-center sm:gap-6">
           <DialogDescription className="text-3xl font-bold leading-tight sm:text-8xl">
-            {s?.studentCode}
+            {s?.studentCode ?? "—"}
           </DialogDescription>
           <DialogTitle className="text-4xl font-bold leading-tight sm:text-7xl">
             {s?.lastName} {s?.firstName}

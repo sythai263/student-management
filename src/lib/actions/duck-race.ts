@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { DuckRaceData, Grade, Student } from "@types";
 import { GRADE_SLOTS, type GradeSlot } from "@constants";
 import { calculateAverage } from "@lib/grade-utils";
+import { compareStudentNames } from "@lib/string";
 import {
   requireTeacher,
   withAction,
@@ -36,13 +37,18 @@ export async function pickReviewStudent(
     const { supabase } = await requireTeacher();
     if (!classId) throw new Error("Thiếu thông tin lớp học");
 
-    const { data: students, error: studentsError } = await supabase
+    const { data: fetched, error: studentsError } = await supabase
       .from("students")
       .select("*")
-      .eq("classId", classId)
-      .order("studentCode");
+      .eq("classId", classId);
     if (studentsError) throw new Error(studentsError.message);
-    if (!students || students.length === 0)
+    const students = (fetched ?? []).sort((a, b) =>
+      compareStudentNames(
+        a as { firstName: string; lastName: string },
+        b as { firstName: string; lastName: string },
+      ),
+    );
+    if (students.length === 0)
       throw new Error("Lớp chưa có học sinh");
 
     const ids = students.map((s) => s.id as string);

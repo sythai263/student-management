@@ -33,10 +33,11 @@ import {
  *   4. Per original: download bytes -> DetectFaces -> crop each face ->
  *      SearchFacesByImage per crop (the API only matches the largest
  *      face, so crops are required) -> delete the temp original.
- *   5. Collect ExternalImageIds (= studentCode) into a Map to dedupe
- *      students appearing in multiple photos; keep the best confidence.
- *   6. Insert attendanceRecords: CO_MAT if studentCode in the Set,
- *      VANG otherwise.
+ *   5. Collect ExternalImageIds into a Map to dedupe students
+ *      appearing in multiple photos; keep the best confidence.
+ *      ExternalImageId is the student id — faces indexed before
+ *      migration 0013 used studentCode, so both keys resolve.
+ *   6. Insert attendanceRecords: CO_MAT if matched, VANG otherwise.
  */
 export async function groupAttendance(
   formData: FormData,
@@ -167,15 +168,15 @@ export async function groupAttendance(
             ),
         );
 
-        // Dedupe: studentCode -> best similarity across all crops/photos.
+        // Dedupe: ExternalImageId -> best similarity across all crops/photos.
         for (const matches of results) {
           for (const match of matches) {
-            const code = match.Face?.ExternalImageId;
+            const externalId = match.Face?.ExternalImageId;
             const confidence = match.Similarity ?? match.Face?.Confidence ?? 0;
-            if (!code) continue;
-            const prev = presentMap.get(code);
+            if (!externalId) continue;
+            const prev = presentMap.get(externalId);
             if (prev === undefined || confidence > prev) {
-              presentMap.set(code, confidence);
+              presentMap.set(externalId, confidence);
             }
           }
         }
@@ -192,13 +193,32 @@ export async function groupAttendance(
       .eq("classId", classId);
     if (studentsError) throw new Error(studentsError.message);
 
+    // ExternalImageId -> studentId. New faces are indexed under the
+    // student id; pre-0013 faces used studentCode, so map both.
+    const externalToStudentId = new Map<string, string>();
+    for (const s of students ?? []) {
+      externalToStudentId.set(s.id as string, s.id as string);
+      if (s.studentCode) {
+        externalToStudentId.set(s.studentCode as string, s.id as string);
+      }
+    }
+    const presentIds = new Map<string, number>();
+    for (const [externalId, confidence] of presentMap) {
+      const studentId = externalToStudentId.get(externalId);
+      if (!studentId) continue;
+      const prev = presentIds.get(studentId);
+      if (prev === undefined || confidence > prev) {
+        presentIds.set(studentId, confidence);
+      }
+    }
+
     const records = (students ?? []).map((s) => ({
       sessionId: session.id,
       studentId: s.id as string,
-      status: presentMap.has(s.studentCode as string)
+      status: presentIds.has(s.id as string)
         ? ATTENDANCE_STATUS.PRESENT
         : ATTENDANCE_STATUS.ABSENT,
-      confidence: presentMap.get(s.studentCode as string) ?? null,
+      confidence: presentIds.get(s.id as string) ?? null,
     }));
 
     if (records.length > 0) {

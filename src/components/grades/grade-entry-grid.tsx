@@ -204,7 +204,7 @@ export function GradeEntryGrid({
       ).length;
       if (regularCount < 2) {
         toast.error(
-          `Học sinh ${s.studentCode} cần ít nhất 2 điểm thường xuyên`,
+          `Học sinh ${s.lastName} ${s.firstName} cần ít nhất 2 điểm thường xuyên`,
         );
         return;
       }
@@ -298,13 +298,13 @@ export function GradeEntryGrid({
               return (
                 <TableRow key={s.id}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{s.studentCode}</TableCell>
+                  <TableCell>{s.studentCode ?? "—"}</TableCell>
                   <TableCell>{s.lastName}</TableCell>
                   <TableCell>{s.firstName}</TableCell>
                   {GRADE_SLOTS.map((slot) => (
                     <TableCell key={slot} className="p-1">
                       <Label htmlFor={`${slot}-${s.id}`} className="sr-only">
-                        {GRADE_SLOT_FULL_LABEL[slot]} {s.studentCode}
+                        {GRADE_SLOT_FULL_LABEL[slot]} {s.lastName} {s.firstName}
                       </Label>
                       <Input
                         id={`${slot}-${s.id}`}

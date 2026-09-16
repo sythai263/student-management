@@ -1,10 +1,12 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { indexStudentFace, deleteFaceVector } from "@lib/rekognition";
 import { registerStudentSchema } from "@schemas";
 import { initializeGradesForClassStudents } from "@lib/grades";
 import type { Student } from "@types";
 import {
+  addStudentsToAllSessions,
   requireTeacher,
   withAction,
   type ActionResult,
@@ -17,9 +19,12 @@ import {
  *   2. If an image is provided: upload to MinIO (dev) / Cloudflare R2 (prod)
  *      -> storage object key (served via the authenticated /api/image route).
  *   3. AWS Rekognition IndexFaces into the class's Collection,
- *      ExternalImageId = studentCode.
- *   4. Upsert student row into Supabase: existing studentCode in the class
- *      gets updated (new image re-indexes the face), otherwise insert.
+ *      ExternalImageId = student id (stable — studentCode is optional
+ *      and can change as the roster is adjusted).
+ *   4. Upsert student row into Supabase: an existing studentCode in the
+ *      class gets updated (new image re-indexes the face), otherwise insert.
+ *   5. When `addToAllSessions` is set and the student is NEW, add VANG
+ *      records for them into every session of the class (closed included).
  */
 export async function registerStudent(
   formData: FormData,
@@ -30,7 +35,7 @@ export async function registerStudent(
 
     // --- 2. Validate fields ---
     const parsed = registerStudentSchema.safeParse({
-      studentCode: formData.get("studentCode"),
+      studentCode: formData.get("studentCode") || undefined,
       lastName: formData.get("lastName"),
       firstName: formData.get("firstName"),
       dateOfBirth: formData.get("dateOfBirth") || undefined,
@@ -40,6 +45,25 @@ export async function registerStudent(
       throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
     }
     const input = parsed.data;
+    const addToAllSessions = formData.get("addToAllSessions") === "on";
+
+    // --- 3. Existing-student lookup only applies when a code is given;
+    //        code-less students are always inserted as new rows. ---
+    const existing = input.studentCode
+      ? await supabase
+        .from("students")
+        .select("id, awsFaceId")
+        .eq("classId", input.classId)
+        .eq("studentCode", input.studentCode)
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (error) throw new Error(error.message);
+          return data;
+        })
+      : null;
+
+    // ExternalImageId = student id — known upfront even for new rows.
+    const studentId = (existing?.id as string | undefined) ?? randomUUID();
 
     // Portrait is optional — AWS calls are skipped entirely when no
     // image is provided. Both keys point at files already uploaded
@@ -53,21 +77,13 @@ export async function registerStudent(
         avatarKey.length > 0
         ? await indexStudentFace(
           input.classId,
-          input.studentCode,
+          studentId,
           imageKey,
           avatarKey,
         )
         : null;
 
     // --- 5. Upsert student into Supabase (RLS: teacher must own the class) ---
-    const { data: existing, error: existingError } = await supabase
-      .from("students")
-      .select("id, awsFaceId")
-      .eq("classId", input.classId)
-      .eq("studentCode", input.studentCode)
-      .maybeSingle();
-    if (existingError) throw new Error(existingError.message);
-
     const baseFields = {
       lastName: input.lastName,
       firstName: input.firstName,
@@ -88,7 +104,8 @@ export async function registerStudent(
       : await supabase
         .from("students")
         .insert({
-          studentCode: input.studentCode,
+          id: studentId,
+          studentCode: input.studentCode ?? null,
           classId: input.classId,
           ...baseFields,
           awsFaceId: face?.awsFaceId ?? null,
@@ -101,6 +118,12 @@ export async function registerStudent(
     // Re-indexed face: drop the old vector so stale faces don't accumulate.
     if (existing?.awsFaceId && face) {
       await deleteFaceVector(input.classId, existing.awsFaceId as string);
+    }
+
+    // Newly added students can optionally be back-filled into every
+    // attendance session of the class (VANG), including closed ones.
+    if (!existing && addToAllSessions) {
+      await addStudentsToAllSessions(input.classId, [student.id as string]);
     }
 
     await initializeGradesForClassStudents(

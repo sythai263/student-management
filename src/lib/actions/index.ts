@@ -41,6 +41,7 @@ export { importStudents } from "./import-students";
 export type { ImportStudentsSummary } from "./import-students";
 export {
   updateAttendanceRecord,
+  addAttendanceRecord,
   closeAttendanceSession,
   createManualSession,
   renameAttendanceSession,
