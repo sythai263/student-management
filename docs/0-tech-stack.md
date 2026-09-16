@@ -14,6 +14,7 @@ You must strictly adhere to the following technologies and versions. Do not sugg
   - Theme: `radix-nova`, RSC[cite: 1].
   - Root layout must use `className="dark"`[cite: 1].
   - All shadcn primitives must live in `src/components/ui/` and be imported via `@components/ui` or `@/components/ui`[cite: 1]. Do NOT hand-roll duplicates[cite: 2].
+- **Toasts/Notifications:** `sonner` (shadcn `sonner` primitive) — `<Toaster theme="dark" richColors position="top-right" />` is mounted once in the root layout.
 
 ## 3. Data Fetching & State Management
 - **Client Data/Mutation:** React Query v5[cite: 1].

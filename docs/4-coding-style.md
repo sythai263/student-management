@@ -37,3 +37,8 @@ You must strictly follow these coding standards and architectural patterns based
 - **Controller boundary:** Wrap every action body in `withAction(async () => {...})` — the single place that catches thrown errors and normalizes them into `ActionResult`.
 - **Redirects:** `redirect()` throws `NEXT_REDIRECT`, so it MUST be called OUTSIDE `withAction` (e.g. `if (result.success) redirect("/")`).
 - **Helpers:** Shared helpers stay in `src/lib/actions/action-utils.ts` and are imported via relative `./action-utils` (allowed same-folder exception).
+
+## 5. Notifications
+- Transient success/error feedback MUST go through `toast` from `sonner` (`toast.success` / `toast.error`) — do NOT keep `useState<string>` error/message state rendered as inline paragraphs.
+- For React Query mutations prefer `onSuccess`/`onError` callbacks over reading `mutation.error` in JSX.
+- Inline text is still correct for: field-level validation (react-hook-form `errors.*`), persistent UI states (load failure branches, empty states), and multi-row detail output (e.g. per-line import errors).

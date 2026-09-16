@@ -2,19 +2,19 @@
 
 ## 1. Env Files
 
-| File | Purpose |
-|---|---|
-| `.env` | Active env — currently points at Supabase Cloud + Cloudflare R2 |
-| `.env.example` | Template for local dev (self-hosted Supabase + MinIO via docker-compose) |
-| `.env.prd` | Production secrets (gitignored — never commit) |
-| `.env.prd.example` | Template for production (Supabase Cloud + R2) |
+| File               | Purpose                                                                  |
+| ------------------ | ------------------------------------------------------------------------ |
+| `.env`             | Active env — currently points at Supabase Cloud + Cloudflare R2          |
+| `.env.example`     | Template for local dev (self-hosted Supabase + MinIO via docker-compose) |
+| `.env.prd`         | Production secrets (gitignored — never commit)                           |
+| `.env.prd.example` | Template for production (Supabase Cloud + R2)                            |
 
 App-runtime vars only: `NEXT_PUBLIC_SUPABASE_*`, `SUPABASE_SERVICE_ROLE_KEY`, `S3_*`, `AWS_*`. Docker-compose init vars (`POSTGRES_PASSWORD`, `JWT_SECRET`, `ANON_KEY`, `SERVICE_ROLE_KEY`, `MINIO_ROOT_*`, `*_PORT`) exist only in `.env`/`.env.example` for the local stack.
 
 ## 2. Docker (local stack)
 
 ```bash
-pnpm docker:up      # start postgres + gotrue + postgrest + kong + minio
+pnpm docker:up      # start postgres + gotrue + postgrest + kong + minio + mailpit (plus one-shot migrate/minio-init/templates services)
 pnpm docker:down    # stop
 pnpm docker:reset   # down -v (wipes volumes) — next `up` re-runs all migrations
 pnpm docker:logs    # follow logs
@@ -64,16 +64,17 @@ Rules:
 The bucket is **fully private** — no public access, no custom domain:
 
 - **Upload:** browser → presigned PUT (`createUploadUrl`) → straight to S3.
-- **Read:** browser → `/api/image?key=<objectKey>` → authenticated proxy streams bytes (`students/` and `attendance/` prefixes only; `tmp/` is never servable).
-- **DB stores keys, not URLs:** `students.avatarKey`, `attendanceSessions.imageKeys`.
+- **Read:** browser → `/api/image?key=<objectKey>` → authenticated proxy streams bytes (`students/`, `attendance/`, `signatures/` prefixes only; `tmp/` is never servable). `signatures/` is additionally scoped to `signatures/<teacherId>/` of the caller.
+- **DB stores keys, not URLs:** `students.avatarKey`, `attendanceSessions.imageKeys`, `teacherSignatures.imageKey`.
 
 Key layout (`create-upload-url.ts`):
 - `tmp/students/`, `tmp/attendance/` — originals, deleted after Rekognition (best-effort)
 - `students/`, `attendance/` — compressed display copies, permanent
+- `signatures/` — teacher signature PNGs, scoped by teacherId (`signature-display` kind)
 
 ### R2 production checklist
 
-1. API token: scoped `Object Read & Write`, restricted to the `students-management` bucket.
+1. API token: scoped `Object Read & Write`, restricted to the `student-management` bucket.
 2. **No custom domain, Public Development URL disabled.**
 3. CORS policy — presigned PUT only:
    ```json
