@@ -6,6 +6,7 @@ export type HostPhase =
   | "lobby"
   | "question"
   | "reveal"
+  | "podium"
   | "ended"
   | "error";
 
@@ -168,6 +169,13 @@ export type RevealPayload = {
   /** How many players picked each option index. */
   counts: number[];
   leaderboard: LeaderboardEntry[];
+  sig?: string;
+};
+
+/** One podium reveal step (3rd -> 2nd -> 1st) driven by the teacher. */
+export type PodiumPayload = {
+  rank: number;
+  entry: LeaderboardEntry;
   sig?: string;
 };
 

@@ -37,6 +37,7 @@ import type {
   HostSessionData,
   LeaderboardEntry,
   PlayerHelloPayload,
+  PodiumPayload,
   QuizPlayerState,
   QuizQuestion,
   RejectPayload,
@@ -53,6 +54,8 @@ export interface HostRoomState {
   answeredCount: number;
   reveal: HostRevealState | null;
   leaderboard: LeaderboardEntry[];
+  /** Podium ceremony progress: 0 = nothing, 1..3 = ranks 3..1 revealed. */
+  podiumStep: number;
   roomSecondsLeft: number;
   totalQuestions: number;
 }
@@ -60,6 +63,10 @@ export interface HostRoomState {
 export interface HostRoomActions {
   showQuestion: (index: number) => Promise<void>;
   revealAnswer: () => Promise<void>;
+  /** Enter the podium ceremony after the last question's reveal. */
+  enterPodium: () => void;
+  /** Reveal the next podium rank (3 -> 2 -> 1) and broadcast it. */
+  revealNextRank: () => Promise<void>;
   finish: (broadcastEnd: boolean) => Promise<void>;
 }
 
@@ -78,6 +85,7 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
   const [answeredCount, setAnsweredCount] = useState(0);
   const [revealState, setRevealState] = useState<HostRevealState | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [podiumStep, setPodiumStep] = useState(0);
   const [roomSecondsLeft, setRoomSecondsLeft] = useState(
     Math.floor(QUIZ_ROOM_TIMEOUT_MS / 1000),
   );
@@ -96,6 +104,7 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
   const finishedRef = useRef(false);
   const roomDeadlineRef = useRef(0);
   const indexRef = useRef(-1);
+  const podiumStepRef = useRef(0);
   const questionsRef = useRef<QuizQuestion[]>([]);
   const dataRef = useRef<HostSessionData | null>(null);
 
@@ -255,6 +264,30 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
       counts: countsRef.current,
       leaderboard: board.slice(0, 10),
     });
+  }, [sendSigned]);
+
+  /** After the last question: switch to the podium ceremony view. */
+  const enterPodium = useCallback(() => {
+    if (phaseRef.current !== "reveal") return;
+    podiumStepRef.current = 0;
+    setPodiumStep(0);
+    setPhase("podium");
+  }, []);
+
+  /** Teacher-driven reveal: hạng 3 -> hạng 2 -> hạng 1. Broadcast each
+   *  step so student screens announce the rank too. */
+  const revealNextRank = useCallback(async () => {
+    if (phaseRef.current !== "podium") return;
+    const step = podiumStepRef.current;
+    if (step >= 3) return;
+    const rank = 3 - step;
+    const entry = buildLeaderboard(playersRef.current)[rank - 1];
+    podiumStepRef.current = step + 1;
+    setPodiumStep(step + 1);
+    if (entry) {
+      const payload: PodiumPayload = { rank, entry };
+      await sendSigned(QUIZ_EVENTS.PODIUM, payload);
+    }
   }, [sendSigned]);
 
   const finish = useCallback(
@@ -417,10 +450,13 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
     answeredCount,
     reveal: revealState,
     leaderboard,
+    podiumStep,
     roomSecondsLeft,
     totalQuestions: questions.length,
     showQuestion,
     revealAnswer,
+    enterPodium,
+    revealNextRank,
     finish,
   };
 }

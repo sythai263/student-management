@@ -86,6 +86,16 @@ export function PlayerScreen({ sessionId }: PlayerScreenProps) {
           myRank={room.myRank}
         />
       )}
+
+      {room.podium && room.phase !== "ended" && (
+        <div className="fixed inset-x-0 top-1/3 z-10 flex justify-center p-6">
+          <div className="w-full max-w-sm rounded-lg border bg-card p-6 text-center shadow-lg">
+            <p className="text-sm text-muted-foreground">Hạng {room.podium.rank}</p>
+            <p className="mt-1 text-2xl font-bold">{room.podium.entry.name}</p>
+            <p className="font-mono text-lg">{room.podium.entry.score}đ</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

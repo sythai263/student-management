@@ -31,8 +31,10 @@ Migration: `supabase/migrations/0013_quiz_realtime.sql`
 
 - **Channel:** `quiz-room-{sessionId}` (public channel — không bật `private`, nên không cần bảng authorization của Realtime).
 - **Presence:** host track `{role:'host'}` với key `host`; mỗi player track `{name}` với key = `playerId`. Dùng để biết ai đang online.
-- **Broadcast:** toàn bộ gameplay (hello/question/answer/reveal/end). Không ghi DB cho từng câu trả lời.
-- **Scoring:** host giữ `Map<playerId, {score, correctCount, publicKey}>` trong memory. Điểm kiểu Kahoot: đúng = `500 + round(500 * remainingMs / timeLimitMs)`. Answer đến sau `endsAt + 2000ms` grace hoặc trùng lần trả lời bị bỏ qua.
+- **Broadcast:** toàn bộ gameplay (hello/question/answer/reveal/podium/end). Không ghi DB cho từng câu trả lời.
+- **Scoring:** host giữ `Map<playerId, {score, correctCount, publicKey}>` trong memory. Điểm giảm dần theo thời gian: đúng = `250 + round(750 * remainingMs / timeLimitMs)` — trả lời ngay được 1000đ, chậm nhất vẫn được 1/4 (250đ). `timeLimit` (n giây) cài đặt theo từng câu. Answer đến sau `endsAt + 2000ms` grace hoặc trùng lần trả lời bị bỏ qua.
+- **Leaderboard animation:** sau mỗi câu (phase `reveal`), host hiện `AnimatedLeaderboard` — điểm count-up và các hàng trượt về vị trí mới (absolute + `translateY` transition, row height cố định `QUIZ_LEADERBOARD_ROW_H`).
+- **Podium:** sau câu cuối, host vào phase `podium` thay vì hiện full bảng — giáo viên bấm công bố lần lượt hạng 3 → 2 → 1 (mỗi lượt broadcast `podium` để màn hình học sinh cũng hiện). Xong hạng 1 → "Kết thúc & lưu kết quả".
 
 ### Local dev
 
@@ -78,7 +80,8 @@ trong payload đầu tiên), ta ký từng message:
 (teacher) createQuizSession  → status='waiting', PIN 6 số
 (teacher) /quizzes/host/[id] → sinh keypair, ghi hostPublicKey, subscribe channel, bắt đầu đếm ngược timeout
 (teacher) Bắt đầu           → advanceQuizQuestion(0) → status='playing', broadcast question
-(teacher) Câu cuối / bấm Kết thúc / hết timeout → finishQuizSession → batch insert results + status='finished' + closedAt + removeChannel
+(teacher) Sau câu cuối      → phase 'podium': công bố hạng 3 → 2 → 1 (broadcast 'podium' mỗi lượt)
+(teacher) Bấm Kết thúc / hết timeout → finishQuizSession → batch insert results + status='finished' + closedAt + removeChannel
 ```
 
 **Auto-close:** `NEXT_PUBLIC_QUIZ_TIMEOUT_MINUTES` (mặc định 60). Host
@@ -116,21 +119,22 @@ Tất cả payload kèm `sig` (string, base64) khi crypto khả dụng.
 | `reject`       | host→player | `{playerId, attemptId, reason}`                                                          |
 | `question`     | host→all    | `{index, text, options[], timeLimit, endsAt, totalQuestions}` — **không** `correctIndex` |
 | `answer`       | player→host | `{playerId, questionIndex, choiceIndex}`                                                 |
+| `podium`       | host→all    | `{rank, entry:{playerId, name, score, correctCount}}` — công bố hạng 3 → 2 → 1           |
 | `reveal`       | host→all    | `{index, correctIndex, counts[], leaderboard(top10)}`                                    |
 | `end`          | host→all    | `{leaderboard}`                                                                          |
 
 ## 6. Files
 
-| Đường dẫn                                    | Vai trò                                                                                                                                                                             |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `supabase/migrations/0013_quiz_realtime.sql` | Schema + RLS + RPCs                                                                                                                                                                 |
-| `src/lib/quiz/crypto.ts`                     | ECDSA sign/verify, canonical JSON                                                                                                                                                   |
-| `src/lib/quiz/channel.ts`                    | `createRoomChannel`, `sendSignedEvent`, `removeRoomChannel`                                                                                                                         |
-| `src/lib/quiz/scoring.ts`                    | `computeAnswerScore`, `buildLeaderboard`, `isSamePublicKey`                                                                                                                         |
-| `src/lib/quiz/player-identity.ts`            | sessionStorage identity                                                                                                                                                             |
-| `src/lib/actions/quiz.ts`                    | Server Actions (CRUD, session lifecycle, join/state RPCs)                                                                                                                           |
-| `src/hooks/quizzes.ts`                       | React Query hooks (list/detail/save/delete quiz)                                                                                                                                    |
-| `src/components/quiz/`                       | `QuizList`, `QuizEditor`, `QuizEditorLoader`, `HostRoom` + `useHostRoom` (engine) + `HostLobby`/`HostQuestionCard`/`HostRevealCard`/`HostEndedCard`/`QuizLeaderboard` (phase views) |
-| `src/components/play/`                       | `JoinQuizForm`, `PlayerScreen` + `usePlayerRoom` (engine) + `PlayerNameForm`/`PlayerQuestionView`/`PlayerRevealView`/`PlayerEndedView` (phase views)                                |
-| `src/app/quizzes/*`, `src/app/play/*`        | Routes (`/play` đã thêm vào `PUBLIC_PATHS`)                                                                                                                                         |
-| `docker-compose.yaml`, `supabase/kong.yml`   | Realtime service + route                                                                                                                                                            |
+| Đường dẫn                                    | Vai trò                                                                                                                                                                                                  |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase/migrations/0013_quiz_realtime.sql` | Schema + RLS + RPCs                                                                                                                                                                                      |
+| `src/lib/quiz/crypto.ts`                     | ECDSA sign/verify, canonical JSON                                                                                                                                                                        |
+| `src/lib/quiz/channel.ts`                    | `createRoomChannel`, `sendSignedEvent`, `removeRoomChannel`                                                                                                                                              |
+| `src/lib/quiz/scoring.ts`                    | `computeAnswerScore`, `buildLeaderboard`, `isSamePublicKey`                                                                                                                                              |
+| `src/lib/quiz/player-identity.ts`            | sessionStorage identity                                                                                                                                                                                  |
+| `src/lib/actions/quiz.ts`                    | Server Actions (CRUD, session lifecycle, join/state RPCs)                                                                                                                                                |
+| `src/hooks/quizzes.ts`                       | React Query hooks (list/detail/save/delete quiz)                                                                                                                                                         |
+| `src/components/quiz/`                       | `QuizList`, `QuizEditor`, `QuizEditorLoader`, `HostRoom` + `useHostRoom` (engine) + `HostLobby`/`HostQuestionCard`/`HostRevealCard`/`HostPodium` (phase views) + `AnimatedLeaderboard`/`QuizLeaderboard` |
+| `src/components/play/`                       | `JoinQuizForm`, `PlayerScreen` + `usePlayerRoom` (engine) + `PlayerNameForm`/`PlayerQuestionView`/`PlayerRevealView`/`PlayerEndedView` (phase views)                                                     |
+| `src/app/quizzes/*`, `src/app/play/*`        | Routes (`/play` đã thêm vào `PUBLIC_PATHS`)                                                                                                                                                              |
+| `docker-compose.yaml`, `supabase/kong.yml`   | Realtime service + route                                                                                                                                                                                 |

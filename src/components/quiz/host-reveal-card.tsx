@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { QuizLeaderboard } from "./quiz-leaderboard";
+import { AnimatedLeaderboard } from "./animated-leaderboard";
 import type { HostRevealState, LeaderboardEntry, QuizQuestion } from "@types";
 
 interface HostRevealCardProps {
@@ -53,9 +53,9 @@ export function HostRevealCard({
             </div>
           ))}
         </div>
-        <QuizLeaderboard entries={leaderboard.slice(0, 10)} />
+        <AnimatedLeaderboard entries={leaderboard.slice(0, 10)} />
         <Button onClick={onNext}>
-          {isLast ? "Kết thúc & lưu kết quả" : "Câu tiếp theo"}
+          {isLast ? "Công bố kết quả" : "Câu tiếp theo"}
         </Button>
       </CardContent>
     </Card>

@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { HostEndedCard } from "./host-ended-card";
 import { HostLobby } from "./host-lobby";
+import { HostPodium } from "./host-podium";
 import { HostQuestionCard } from "./host-question-card";
 import { HostRevealCard } from "./host-reveal-card";
 import { useHostRoom } from "./use-host-room";
@@ -47,7 +47,7 @@ export function HostRoom({ sessionId }: HostRoomProps) {
             {room.players.length} người chơi
           </p>
         </div>
-        {room.phase !== "ended" && (
+        {room.phase !== "ended" && room.phase !== "podium" && (
           <Button variant="destructive" onClick={() => room.finish(true)}>
             Kết thúc
           </Button>
@@ -85,13 +85,27 @@ export function HostRoom({ sessionId }: HostRoomProps) {
           onNext={() =>
             room.currentIndex + 1 < room.totalQuestions
               ? void room.showQuestion(room.currentIndex + 1)
-              : void room.finish(true)
+              : room.enterPodium()
           }
         />
       )}
 
+      {room.phase === "podium" && (
+        <HostPodium
+          leaderboard={room.leaderboard}
+          revealedCount={room.podiumStep}
+          finished={false}
+          onRevealNext={() => void room.revealNextRank()}
+          onFinish={() => void room.finish(true)}
+        />
+      )}
+
       {room.phase === "ended" && (
-        <HostEndedCard leaderboard={room.leaderboard} />
+        <HostPodium
+          leaderboard={room.leaderboard}
+          revealedCount={3}
+          finished
+        />
       )}
     </main>
   );

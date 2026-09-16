@@ -9,6 +9,7 @@ export const QUIZ_EVENTS = {
   QUESTION: "question",
   ANSWER: "answer",
   REVEAL: "reveal",
+  PODIUM: "podium",
   END: "end",
 } as const;
 
@@ -21,9 +22,13 @@ export const QUIZ_PLAYER_STORAGE_PREFIX = "quiz-player-";
 /** Fallback when NEXT_PUBLIC_QUIZ_TIMEOUT_MINUTES is unset/invalid. */
 export const QUIZ_DEFAULT_TIMEOUT_MINUTES = 60;
 
-/** Kahoot-style scoring: 500 base + up to 500 time bonus. */
-export const QUIZ_SCORE_BASE = 500;
-export const QUIZ_SCORE_TIME_BONUS = 500;
+/** Scoring: 1000đ cho câu trả lời đúng, giảm tuyến tính theo thời gian,
+ *  tối thiểu 1/4 số điểm (250đ) khi trả lời đúng vào giây cuối. */
+export const QUIZ_SCORE_MAX = 1000;
+export const QUIZ_SCORE_MIN = 250;
+
+/** Fixed leaderboard row height (px) — required for reorder animation. */
+export const QUIZ_LEADERBOARD_ROW_H = 44;
 
 /** Grace period (ms) after question end during which answers still count. */
 export const QUIZ_ANSWER_GRACE_MS = 2000;

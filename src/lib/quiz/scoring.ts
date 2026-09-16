@@ -1,17 +1,15 @@
-import { QUIZ_SCORE_BASE, QUIZ_SCORE_TIME_BONUS } from "@constants";
+import { QUIZ_SCORE_MAX, QUIZ_SCORE_MIN } from "@constants";
 import type { LeaderboardEntry, QuizPlayerState } from "@types";
 
-/** Kahoot-style score: 500 base + up to 500 time bonus for correct answers. */
+/** Đúng = 1000đ giảm tuyến tính theo thời gian còn lại, sàn 250đ (1/4). */
 export function computeAnswerScore(
   correct: boolean,
   remainingMs: number,
   timeLimitSec: number,
 ): number {
   if (!correct) return 0;
-  return (
-    QUIZ_SCORE_BASE +
-    Math.round((QUIZ_SCORE_TIME_BONUS * Math.max(0, remainingMs)) / (timeLimitSec * 1000))
-  );
+  const ratio = Math.max(0, remainingMs) / (timeLimitSec * 1000);
+  return QUIZ_SCORE_MIN + Math.round((QUIZ_SCORE_MAX - QUIZ_SCORE_MIN) * ratio);
 }
 
 /** Sorted scoreboard (desc) from the host's in-memory player map. */

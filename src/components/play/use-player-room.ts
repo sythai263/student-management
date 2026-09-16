@@ -25,6 +25,7 @@ import type {
   PlayerHelloPayload,
   PlayerIdentity,
   PlayerPhase,
+  PodiumPayload,
   PublicQuestion,
   QuestionPayload,
   QuizSessionInfo,
@@ -41,6 +42,8 @@ export interface PlayerRoomState {
   secondsLeft: number;
   picked: number | null;
   reveal: RevealPayload | null;
+  /** Latest podium announcement (hạng 3 -> 2 -> 1), null until shown. */
+  podium: PodiumPayload | null;
   leaderboard: LeaderboardEntry[];
   myEntry: LeaderboardEntry | undefined;
   myRank: number;
@@ -66,6 +69,7 @@ export function usePlayerRoom(
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [reveal, setReveal] = useState<RevealPayload | null>(null);
+  const [podium, setPodium] = useState<PodiumPayload | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -153,6 +157,7 @@ export function usePlayerRoom(
     });
     setPicked(null);
     setReveal(null);
+    setPodium(null);
     setPhase("question");
   }, []);
 
@@ -170,6 +175,15 @@ export function usePlayerRoom(
       setReveal(payload);
       setLeaderboard(payload.leaderboard ?? []);
       setPhase("reveal");
+    },
+    [verifyHost],
+  );
+
+  /** Teacher-driven podium reveal: hạng 3 -> 2 -> 1 after the last question. */
+  const onPodium = useCallback(
+    async (payload: PodiumPayload) => {
+      if (!(await verifyHost(payload))) return;
+      setPodium(payload);
     },
     [verifyHost],
   );
@@ -279,6 +293,9 @@ export function usePlayerRoom(
         .on("broadcast", { event: QUIZ_EVENTS.REVEAL }, ({ payload }) =>
           void onReveal(payload as RevealPayload),
         )
+        .on("broadcast", { event: QUIZ_EVENTS.PODIUM }, ({ payload }) =>
+          void onPodium(payload as PodiumPayload),
+        )
         .on("broadcast", { event: QUIZ_EVENTS.END }, ({ payload }) =>
           void onEnd(payload as EndPayload),
         )
@@ -383,6 +400,7 @@ export function usePlayerRoom(
     secondsLeft,
     picked,
     reveal,
+    podium,
     leaderboard,
     myEntry,
     myRank,
