@@ -47,4 +47,16 @@ export {
   deleteAttendanceSession,
 } from "./attendance";
 export type { GroupAttendanceSummary } from "@types";
+export {
+  saveQuiz,
+  deleteQuiz,
+  createQuizSession,
+  getHostSessionData,
+  setSessionHostKey,
+  advanceQuizQuestion,
+  finishQuizSession,
+  joinQuizByPin,
+  getQuizSessionState,
+} from "./quiz";
+export type { HostSessionData } from "./quiz";
 export type { ActionResult } from "./action-utils";

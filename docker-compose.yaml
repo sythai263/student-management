@@ -132,6 +132,43 @@ services:
       timeout: 5s
       retries: 10
 
+  # Realtime — websocket server for Broadcast/Presence (quiz feature).
+  # SEED_SELF_HOST seeds a `realtime-dev` tenant on first boot so the
+  # browser client can connect with the anon key immediately.
+  realtime:
+    image: supabase/realtime:v2.102.3
+    container_name: sm-realtime
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_SSL: "false"
+      DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY:-supabaserealtime}
+      REALTIME_DB_ENC_KEY: ${REALTIME_DB_ENC_KEY:-supabaserealtime}
+      API_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+    healthcheck:
+      test: ["CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:4000/api/tenants"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   # API gateway — single entrypoint for the app (NEXT_PUBLIC_SUPABASE_URL).
   kong:
     image: kong:3.9.3

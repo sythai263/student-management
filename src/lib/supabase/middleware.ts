@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { FEATURE_FLAGS } from "@constants";
 
 /** Routes reachable without a session. */
-const PUBLIC_PATHS = ["/login", "/auth"];
+const PUBLIC_PATHS = ["/login", "/auth", "/play"];
 /** Challenge page for aal1 sessions that still owe a TOTP check. */
 const MFA_PATH = "/mfa-verify";
 

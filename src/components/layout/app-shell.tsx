@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "cn";
 import {
   BookOpen,
+  Gamepad2,
   GraduationCap,
   KeyRound,
   LogOut,
@@ -55,7 +56,9 @@ export function AppShell({ children }: AppShellProps) {
     pathname === "/login" ||
     pathname === "/login/" ||
     pathname === "/mfa-verify" ||
-    pathname?.endsWith("/race");
+    pathname?.endsWith("/race") ||
+    pathname?.startsWith("/play") ||
+    /\/quizzes\/host\//.test(pathname ?? "");
 
   if (hideShell) {
     return <>{children}</>;
@@ -64,6 +67,7 @@ export function AppShell({ children }: AppShellProps) {
   const navItems = [
     { href: "/", label: "Môn học", icon: BookOpen },
     { href: "/classes", label: "Lớp học", icon: GraduationCap },
+    { href: "/quizzes", label: "Quiz", icon: Gamepad2 },
   ];
 
   // Navbar lines up with the page container — width varies per route.
@@ -74,7 +78,7 @@ export function AppShell({ children }: AppShellProps) {
       ? "max-w-7xl"
       : pathname?.endsWith("/students/new")
         ? "max-w-2xl"
-        : ["/", "/classes", "/subjects", "/classes/new"].includes(
+        : ["/", "/classes", "/subjects", "/classes/new", "/quizzes", "/quizzes/new"].includes(
           pathname ?? "",
         )
           ? "max-w-4xl"

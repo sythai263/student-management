@@ -48,3 +48,4 @@ export {
   useDeleteSession,
 } from "./attendance";
 export type { AttendanceRecordWithStudent } from "@types";
+export { useQuizzes, useQuiz, useSaveQuiz, useDeleteQuiz } from "./quizzes";

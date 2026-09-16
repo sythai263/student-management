@@ -26,3 +26,5 @@ export {
 export type { CreateClassInput } from "./classes";
 export { createSchoolSchema, renameSchoolSchema } from "./schools";
 export type { CreateSchoolInput, RenameSchoolInput } from "./schools";
+export { saveQuizSchema, joinQuizSchema, saveQuizResultsSchema } from "./quiz";
+export type { SaveQuizInput, QuizQuestionInput } from "./quiz";
