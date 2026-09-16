@@ -127,14 +127,7 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
               <Label htmlFor="school">Trường</Label>
               <Select value={schoolId} onValueChange={(v) => setSchoolId(v ?? NO_SCHOOL)}>
                 <SelectTrigger id="school">
-                  <SelectValue placeholder="Không gắn trường">
-                    {(value: string) =>
-                      value === NO_SCHOOL
-                        ? "Không gắn trường"
-                        : (schools?.find((s) => s.id === value)?.name ??
-                          "Không gắn trường")
-                    }
-                  </SelectValue>
+                  <SelectValue placeholder="Không gắn trường" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NO_SCHOOL}>Không gắn trường</SelectItem>

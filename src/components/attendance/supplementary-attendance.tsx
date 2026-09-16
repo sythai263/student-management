@@ -12,34 +12,37 @@ import {
 } from "@constants";
 import {
   useAddAttendanceRecord,
+  useAttendanceRecords,
   useStudents,
-  type AttendanceRecordWithStudent,
 } from "@hooks";
 
 interface SupplementaryAttendanceProps {
   sessionId: string;
   classId: string;
-  records: AttendanceRecordWithStudent[];
 }
 
 /**
  * Students of the class who have no record in this session — shown on
  * closed sessions so the teacher can back-fill them ("điểm danh bổ sung").
+ * Fetches the unfiltered record list itself: the board's `records` may be
+ * narrowed by the status filter, which would wrongly list students as
+ * missing.
  */
 export function SupplementaryAttendance({
   sessionId,
   classId,
-  records,
 }: SupplementaryAttendanceProps) {
-  const { data: students, isLoading } = useStudents(classId);
+  const { data: students, isLoading: studentsLoading } = useStudents(classId);
+  const { data: records, isLoading: recordsLoading } =
+    useAttendanceRecords(sessionId);
   const addMutation = useAddAttendanceRecord(sessionId);
 
   const missing = useMemo(() => {
-    const present = new Set(records.map((r) => r.studentId));
+    const present = new Set((records ?? []).map((r) => r.studentId));
     return (students ?? []).filter((s) => !present.has(s.id));
   }, [students, records]);
 
-  if (isLoading) return <ListSkeleton rows={3} />;
+  if (studentsLoading || recordsLoading) return <ListSkeleton rows={3} />;
   if (missing.length === 0) return null;
 
   return (

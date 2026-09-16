@@ -122,7 +122,6 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         <SupplementaryAttendance
           sessionId={sessionId}
           classId={session.classId}
-          records={records ?? []}
         />
       )}
 

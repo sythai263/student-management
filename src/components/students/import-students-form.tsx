@@ -35,6 +35,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [matchBy, setMatchBy] = useState<"code" | "name">("code");
+  const [importMode, setImportMode] = useState<"append" | "replace">("append");
   const [isPending, startTransition] = useTransition();
   const { data: classData } = useClass(classId);
 
@@ -51,11 +52,15 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
       fd.set("classId", classId);
       fd.set("file", file);
       fd.set("matchBy", matchBy);
+      fd.set("importMode", importMode);
 
       const result = await importStudents(fd);
       if (result.success) {
+        const { inserted, updated, deleted } = result.data;
         toast.success(
-          `Đã thêm ${result.data.inserted}, cập nhật ${result.data.updated} học sinh`,
+          `Đã thêm ${inserted}, cập nhật ${updated}` +
+          (deleted > 0 ? `, xóa ${deleted}` : "") +
+          " học sinh",
         );
       } else {
         toast.error(result.error);
@@ -130,6 +135,31 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
                   <SelectItem value="name">Họ và tên</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="import-mode">Chế độ nhập</Label>
+              <Select
+                value={importMode}
+                onValueChange={(v) => setImportMode(v as "append" | "replace")}
+              >
+                <SelectTrigger id="import-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="append">
+                    Thêm vào danh sách hiện có
+                  </SelectItem>
+                  <SelectItem value="replace">
+                    Thay thế toàn bộ danh sách
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {importMode === "replace" && (
+                <p className="text-xs text-destructive">
+                  Học sinh không có trong tệp sẽ bị xóa khỏi lớp cùng toàn bộ
+                  điểm danh và điểm số.
+                </p>
+              )}
             </div>
             <Label className="flex items-center gap-2 font-normal">
               <Checkbox name="addToAllSessions" />

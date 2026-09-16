@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { initializeGradesForClassStudents } from "@lib/grades";
+import { deleteFaceVector } from "@lib/rekognition";
+import { deleteObject } from "@lib/storage";
 import { removeDiacritics } from "@lib/string";
 import { createSupabaseServerClient } from "@lib/supabase";
 import {
@@ -18,6 +20,7 @@ dayjs.extend(customParseFormat);
 export interface ImportStudentsSummary {
   inserted: number;
   updated: number;
+  deleted: number;
 }
 
 interface CsvRow {
@@ -85,14 +88,17 @@ function parseCsv(text: string): CsvRow[] {
 /**
  * Server Action: bulk-import students into a class from a CSV file.
  * Duplicate rows are matched by `matchBy` ("code" = studentCode,
- * "name" = diacritic-insensitive Họ đệm + Tên). Owner check is
- * enforced by RLS (teacher must own the class).
+ * "name" = diacritic-insensitive Họ đệm + Tên). `importMode` "replace"
+ * treats the file as the complete new roster and removes every class
+ * student absent from it. Owner check is enforced by RLS (teacher must
+ * own the class).
  */
 export async function importStudents(
   formData: FormData,
 ): Promise<ActionResult<ImportStudentsSummary>> {
   const classId = formData.get("classId");
   const matchBy = formData.get("matchBy") === "name" ? "name" : "code";
+  const replace = formData.get("importMode") === "replace";
   const addToAllSessions = formData.get("addToAllSessions") === "on";
 
   const result = await withAction(async () => {
@@ -147,7 +153,7 @@ export async function importStudents(
         )
         .select();
       if (error) throw new Error(error.message);
-      return finishImport(supabase, classId, upserted ?? [], existingIds, addToAllSessions);
+      return finishImport(supabase, classId, upserted ?? [], existingIds, addToAllSessions, replace);
     }
 
     // matchBy === "name": match on normalized "Họ đệm Tên".
@@ -186,7 +192,7 @@ export async function importStudents(
       .upsert(upsertRows)
       .select();
     if (error) throw new Error(error.message);
-    return finishImport(supabase, classId, upserted ?? [], existingIds, addToAllSessions);
+    return finishImport(supabase, classId, upserted ?? [], existingIds, addToAllSessions, replace);
   });
 
   if (result.success && typeof classId === "string") {
@@ -206,6 +212,7 @@ async function finishImport(
   upserted: Record<string, unknown>[],
   existingIds: Set<string>,
   addToAllSessions: boolean,
+  replace: boolean,
 ): Promise<ImportStudentsSummary> {
   const upsertedIds = upserted.map((s) => s.id as string);
   const newIds = upsertedIds.filter((id) => !existingIds.has(id));
@@ -216,8 +223,56 @@ async function finishImport(
 
   await initializeGradesForClassStudents(supabase, classId, upsertedIds);
 
+  const deleted = replace
+    ? await removeStudentsNotIn(supabase, classId, upsertedIds)
+    : 0;
+
   return {
     inserted: newIds.length,
     updated: upsertedIds.length - newIds.length,
+    deleted,
   };
+}
+
+/**
+ * Replace mode: delete every class student absent from the imported
+ * file. attendanceRecords and grades cascade via FK; Rekognition face
+ * vectors and avatar objects are cleaned up best-effort afterwards.
+ */
+async function removeStudentsNotIn(
+  supabase: SupabaseClient,
+  classId: string,
+  keepIds: string[],
+): Promise<number> {
+  const { data: all, error } = await supabase
+    .from("students")
+    .select("id, awsFaceId, avatarKey")
+    .eq("classId", classId);
+  if (error) throw new Error(error.message);
+
+  const removed = (all ?? []).filter((s) => !keepIds.includes(s.id as string));
+  if (removed.length === 0) return 0;
+
+  const { error: deleteError } = await supabase
+    .from("students")
+    .delete()
+    .eq("classId", classId)
+    .in(
+      "id",
+      removed.map((s) => s.id as string),
+    );
+  if (deleteError) throw new Error(deleteError.message);
+
+  await Promise.all(
+    removed.flatMap((s) => {
+      const jobs: Promise<void>[] = [];
+      if (s.awsFaceId) {
+        jobs.push(deleteFaceVector(classId, s.awsFaceId as string));
+      }
+      if (s.avatarKey) jobs.push(deleteObject(s.avatarKey as string));
+      return jobs;
+    }),
+  );
+
+  return removed.length;
 }
