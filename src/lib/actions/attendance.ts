@@ -58,18 +58,20 @@ export async function closeAttendanceSession(
 export async function createManualSession(
   classId: string,
   sessionDate?: string,
+  clientHour?: number,
 ): Promise<ActionResult<{ sessionId: string }>> {
   const result = await withAction(async () => {
     const { supabase } = await requireTeacher();
     if (!classId) throw new Error("Thiếu thông tin lớp học");
 
     const date = sessionDate ?? new Date().toISOString().slice(0, 10);
+    const hour = clientHour ?? new Date().getHours();
     const { data: session, error: sessionError } = await supabase
       .from("attendanceSessions")
       .insert({
         classId,
         sessionDate: date,
-        name: defaultSessionName(date),
+        name: defaultSessionName(date, hour),
         imageKeys: [],
       })
       .select("id")

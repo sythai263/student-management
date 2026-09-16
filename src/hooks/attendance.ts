@@ -9,6 +9,7 @@ import {
   renameAttendanceSession,
   updateAttendanceRecord,
 } from "@lib/actions";
+import { localToday } from "@lib/attendance-session";
 import { friendlyErrorMessage } from "@lib/utils";
 import type { RenameSessionInput, UpdateAttendanceInput } from "@schemas";
 import type { AttendanceStatus } from "@constants";
@@ -132,7 +133,12 @@ export function useCreateSession(classId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (sessionDate?: string) => {
-      const result = await createManualSession(classId, sessionDate);
+      const now = new Date();
+      const result = await createManualSession(
+        classId,
+        sessionDate ?? localToday(now),
+        now.getHours(),
+      );
       if (!result.success) throw new Error(result.error);
       return result.data;
     },

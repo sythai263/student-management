@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createManualSession } from "@lib/actions";
+import { localToday } from "@lib/attendance-session";
 import { FEATURE_FLAGS } from "@constants";
 import { GroupAttendanceForm } from "./group-attendance-form";
 
@@ -28,21 +29,25 @@ interface AttendanceActionsProps {
   classId: string;
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export function AttendanceActions({ classId }: AttendanceActionsProps) {
   const router = useRouter();
-  const [date, setDate] = useState(today());
+  const [date, setDate] = useState(localToday);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleManual() {
+    setError(null);
     startTransition(async () => {
-      const result = await createManualSession(classId, date);
+      const result = await createManualSession(
+        classId,
+        date,
+        new Date().getHours(),
+      );
       if (result.success) {
         router.push(`/classes/${classId}/attendance/${result.data.sessionId}`);
+      } else {
+        setError(result.error);
       }
     });
   }
@@ -85,6 +90,7 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
             </Button>
           )}
         </div>
+        {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
 
       {FEATURE_FLAGS.PHOTO_ATTENDANCE && (
