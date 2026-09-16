@@ -39,6 +39,7 @@ export function GroupAttendanceForm({
       const fd = new FormData();
       fd.set("classId", classId);
       fd.set("sessionDate", sessionDate);
+      fd.set("clientHour", String(new Date().getHours()));
       // Original + compressed copies are uploaded directly to storage
       // from the browser — a Server Action body must stay well under
       // Vercel's 4.5MB request limit.

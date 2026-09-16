@@ -56,6 +56,16 @@ export async function groupAttendance(
     const sessionDate =
       (formData.get("sessionDate") as string | null) ||
       new Date().toISOString().slice(0, 10);
+    // The shift (Sáng/Chiều) follows the teacher's clock, not the
+    // server's — the client sends its local hour in `clientHour`.
+    const clientHourRaw = formData.get("clientHour");
+    const clientHour =
+      typeof clientHourRaw === "string" && clientHourRaw !== ""
+        ? Number(clientHourRaw)
+        : Number.NaN;
+    const localHour = Number.isFinite(clientHour)
+      ? clientHour
+      : new Date().getHours();
 
     // `photoKeys`: temp originals (best accuracy for Rekognition), deleted
     // after use. `photoDisplayKeys`: compressed copies already uploaded
@@ -80,7 +90,7 @@ export async function groupAttendance(
       .insert({
         classId,
         sessionDate,
-        name: defaultSessionName(sessionDate),
+        name: defaultSessionName(sessionDate, localHour),
         imageKeys,
       })
       .select("id")
