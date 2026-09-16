@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { QUIZ_PIN_LENGTH } from "@constants";
 
 const uuid = z.string().uuid();
+const pinRegex = new RegExp(`^\\d{${QUIZ_PIN_LENGTH}}$`);
 
 export const quizQuestionInputSchema = z
   .object({
@@ -29,11 +31,9 @@ export const saveQuizSchema = z.object({
 });
 
 export const joinQuizSchema = z.object({
-  pin: z.string().regex(/^\d{6}$/, "Mã PIN gồm 6 chữ số"),
-});
-
-export const sessionIdSchema = z.object({
-  sessionId: uuid,
+  pin: z
+    .string()
+    .regex(pinRegex, `Mã PIN gồm ${QUIZ_PIN_LENGTH} chữ số`),
 });
 
 export const saveQuizResultsSchema = z.object({

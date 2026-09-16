@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@lib/supabase";
 import { joinQuizSchema, saveQuizSchema, saveQuizResultsSchema } from "@schemas";
 import type {
+  HostSessionData,
   Quiz,
   QuizQuestion,
   QuizSession,
@@ -128,12 +129,6 @@ export async function createQuizSession(
     }
     throw new Error(lastError ?? "Không tạo được phòng, thử lại sau");
   });
-}
-
-export interface HostSessionData {
-  session: QuizSession;
-  quiz: Quiz;
-  questions: QuizQuestion[];
 }
 
 /** Server Action: everything the host view needs on mount. */

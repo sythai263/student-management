@@ -1,5 +1,55 @@
 export type QuizSessionStatus = "waiting" | "playing" | "finished";
 
+/** UI phases of the teacher's host view. */
+export type HostPhase =
+  | "loading"
+  | "lobby"
+  | "question"
+  | "reveal"
+  | "ended"
+  | "error";
+
+/** UI phases of the student's play view. */
+export type PlayerPhase =
+  | "joining"
+  | "lobby"
+  | "question"
+  | "answered"
+  | "reveal"
+  | "ended"
+  | "closed";
+
+/** Player as tracked in host memory (score lives here until batch insert). */
+export interface QuizPlayerState {
+  playerId: string;
+  name: string;
+  publicKey: CryptoKey | null;
+  publicKeyJwk?: JsonWebKey;
+  score: number;
+  correctCount: number;
+}
+
+/** Host-side view of the current reveal (per-option pick counts). */
+export interface HostRevealState {
+  correctIndex: number;
+  counts: number[];
+}
+
+/** Everything the host view needs on mount. */
+export interface HostSessionData {
+  session: QuizSession;
+  quiz: Quiz;
+  questions: QuizQuestion[];
+}
+
+/** Player identity persisted in sessionStorage for reconnection. */
+export interface PlayerIdentity {
+  playerId: string;
+  name: string;
+  privateKeyJwk?: JsonWebKey;
+  publicKeyJwk?: JsonWebKey;
+}
+
 export interface Quiz {
   id: string;
   teacherId: string;

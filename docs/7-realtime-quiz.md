@@ -9,11 +9,11 @@ kết thúc, nên không tốn quota Realtime/DB của Supabase Free Tier.
 
 Migration: `supabase/migrations/0013_quiz_realtime.sql`
 
-| Bảng | Vai trò |
-|---|---|
-| `quizzes` | Đề quiz (`teacherId`, `title`, `description`) |
-| `quizQuestions` | Câu hỏi (`quizId`, `orderIndex`, `options` jsonb 2–6 đáp án, `correctIndex`, `timeLimit` giây) |
-| `quizSessions` | Phòng chơi (`pinCode` 6 số, `status`, `hostPublicKey`, `currentQuestionIndex`, `questionEndsAt`, `closedAt`) |
+| Bảng                 | Vai trò                                                                                                               |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `quizzes`            | Đề quiz (`teacherId`, `title`, `description`)                                                                         |
+| `quizQuestions`      | Câu hỏi (`quizId`, `orderIndex`, `options` jsonb 2–6 đáp án, `correctIndex`, `timeLimit` giây)                        |
+| `quizSessions`       | Phòng chơi (`pinCode` 6 số, `status`, `hostPublicKey`, `currentQuestionIndex`, `questionEndsAt`, `closedAt`)          |
 | `quizSessionResults` | Bảng điểm cuối (`sessionId`, `playerId`, `playerName`, `totalScore`, `correctCount`) — unique `(sessionId, playerId)` |
 
 **RLS (strict):**
@@ -109,26 +109,28 @@ không mở websocket.
 
 Tất cả payload kèm `sig` (string, base64) khi crypto khả dụng.
 
-| Event | Hướng | Payload |
-|---|---|---|
-| `host-hello` | host→all | `{sessionId}` — host vừa subscribe; player gửi lại `player-hello` |
-| `player-hello` | player→host | `{playerId, name, publicKey(JWK), attemptId}` |
-| `reject` | host→player | `{playerId, attemptId, reason}` |
-| `question` | host→all | `{index, text, options[], timeLimit, endsAt, totalQuestions}` — **không** `correctIndex` |
-| `answer` | player→host | `{playerId, questionIndex, choiceIndex}` |
-| `reveal` | host→all | `{index, correctIndex, counts[], leaderboard(top10)}` |
-| `end` | host→all | `{leaderboard}` |
+| Event          | Hướng       | Payload                                                                                  |
+| -------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `host-hello`   | host→all    | `{sessionId}` — host vừa subscribe; player gửi lại `player-hello`                        |
+| `player-hello` | player→host | `{playerId, name, publicKey(JWK), attemptId}`                                            |
+| `reject`       | host→player | `{playerId, attemptId, reason}`                                                          |
+| `question`     | host→all    | `{index, text, options[], timeLimit, endsAt, totalQuestions}` — **không** `correctIndex` |
+| `answer`       | player→host | `{playerId, questionIndex, choiceIndex}`                                                 |
+| `reveal`       | host→all    | `{index, correctIndex, counts[], leaderboard(top10)}`                                    |
+| `end`          | host→all    | `{leaderboard}`                                                                          |
 
 ## 6. Files
 
-| Đường dẫn | Vai trò |
-|---|---|
-| `supabase/migrations/0013_quiz_realtime.sql` | Schema + RLS + RPCs |
-| `src/lib/quiz/crypto.ts` | ECDSA sign/verify, canonical JSON |
-| `src/lib/quiz/player-identity.ts` | sessionStorage identity |
-| `src/lib/actions/quiz.ts` | Server Actions (CRUD, session lifecycle, join/state RPCs) |
-| `src/hooks/quizzes.ts` | React Query hooks |
-| `src/components/quiz/` | `QuizList`, `QuizEditor`, `HostRoom` |
-| `src/components/play/` | `JoinQuizForm`, `PlayerScreen` |
-| `src/app/quizzes/*`, `src/app/play/*` | Routes (`/play` đã thêm vào `PUBLIC_PATHS`) |
-| `docker-compose.yaml`, `supabase/kong.yml` | Realtime service + route |
+| Đường dẫn                                    | Vai trò                                                                                                                                                                             |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase/migrations/0013_quiz_realtime.sql` | Schema + RLS + RPCs                                                                                                                                                                 |
+| `src/lib/quiz/crypto.ts`                     | ECDSA sign/verify, canonical JSON                                                                                                                                                   |
+| `src/lib/quiz/channel.ts`                    | `createRoomChannel`, `sendSignedEvent`, `removeRoomChannel`                                                                                                                         |
+| `src/lib/quiz/scoring.ts`                    | `computeAnswerScore`, `buildLeaderboard`, `isSamePublicKey`                                                                                                                         |
+| `src/lib/quiz/player-identity.ts`            | sessionStorage identity                                                                                                                                                             |
+| `src/lib/actions/quiz.ts`                    | Server Actions (CRUD, session lifecycle, join/state RPCs)                                                                                                                           |
+| `src/hooks/quizzes.ts`                       | React Query hooks (list/detail/save/delete quiz)                                                                                                                                    |
+| `src/components/quiz/`                       | `QuizList`, `QuizEditor`, `QuizEditorLoader`, `HostRoom` + `useHostRoom` (engine) + `HostLobby`/`HostQuestionCard`/`HostRevealCard`/`HostEndedCard`/`QuizLeaderboard` (phase views) |
+| `src/components/play/`                       | `JoinQuizForm`, `PlayerScreen` + `usePlayerRoom` (engine) + `PlayerNameForm`/`PlayerQuestionView`/`PlayerRevealView`/`PlayerEndedView` (phase views)                                |
+| `src/app/quizzes/*`, `src/app/play/*`        | Routes (`/play` đã thêm vào `PUBLIC_PATHS`)                                                                                                                                         |
+| `docker-compose.yaml`, `supabase/kong.yml`   | Realtime service + route                                                                                                                                                            |

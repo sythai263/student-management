@@ -13,4 +13,13 @@ export {
   savePlayerIdentity,
   regeneratePlayerIdentity,
 } from "./player-identity";
-export type { PlayerIdentity } from "./player-identity";
+export {
+  computeAnswerScore,
+  buildLeaderboard,
+  isSamePublicKey,
+} from "./scoring";
+export {
+  createRoomChannel,
+  sendSignedEvent,
+  removeRoomChannel,
+} from "./channel";

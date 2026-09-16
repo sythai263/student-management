@@ -58,5 +58,5 @@ export {
   joinQuizByPin,
   getQuizSessionState,
 } from "./quiz";
-export type { HostSessionData } from "./quiz";
+export type { HostSessionData } from "@types";
 export type { ActionResult } from "./action-utils";

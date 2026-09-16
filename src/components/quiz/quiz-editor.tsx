@@ -20,34 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useSaveQuiz, useQuiz } from "@hooks";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useSaveQuiz } from "@hooks";
+import { QUIZ_OPTION_LABELS, QUIZ_TIME_LIMITS } from "@constants";
 import type { Quiz, QuizQuestion } from "@types";
 import type { QuizQuestionInput } from "@schemas";
-
-/** Loads an existing quiz then renders the editor — used by /quizzes/[id]. */
-export function QuizEditorLoader({ quizId }: { quizId: string }) {
-  const { data, isLoading, error } = useQuiz(quizId);
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-  if (error || !data) {
-    return (
-      <p className="text-sm text-destructive">
-        {error?.message ?? "Không tìm thấy quiz"}
-      </p>
-    );
-  }
-  return <QuizEditor quiz={data.quiz} questions={data.questions} />;
-}
-
-const TIME_LIMITS = [10, 15, 20, 30, 45, 60, 90, 120];
-const OPTION_LABELS = ["A", "B", "C", "D", "E", "F"];
 
 interface QuizEditorProps {
   quiz?: Quiz;
@@ -161,16 +137,16 @@ export function QuizEditor({ quiz, questions }: QuizEditorProps) {
                     type="button"
                     variant={q.correctIndex === oi ? "default" : "outline"}
                     size="icon-sm"
-                    aria-label={`Chọn ${OPTION_LABELS[oi]} là đáp án đúng`}
+                    aria-label={`Chọn ${QUIZ_OPTION_LABELS[oi]} là đáp án đúng`}
                     title="Đánh dấu đáp án đúng"
                     onClick={() => updateQuestion(qi, { correctIndex: oi })}
                   >
-                    {OPTION_LABELS[oi]}
+                    {QUIZ_OPTION_LABELS[oi]}
                   </Button>
                   <Input
                     value={opt}
                     onChange={(e) => updateOption(qi, oi, e.target.value)}
-                    placeholder={`Đáp án ${OPTION_LABELS[oi]}`}
+                    placeholder={`Đáp án ${QUIZ_OPTION_LABELS[oi]}`}
                     required
                     maxLength={200}
                   />
@@ -179,7 +155,7 @@ export function QuizEditor({ quiz, questions }: QuizEditorProps) {
                       type="button"
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Xóa đáp án ${OPTION_LABELS[oi]}`}
+                      aria-label={`Xóa đáp án ${QUIZ_OPTION_LABELS[oi]}`}
                       onClick={() =>
                         updateQuestion(qi, {
                           options: q.options.filter((_, j) => j !== oi),
@@ -224,7 +200,7 @@ export function QuizEditor({ quiz, questions }: QuizEditorProps) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TIME_LIMITS.map((t) => (
+                    {QUIZ_TIME_LIMITS.map((t) => (
                       <SelectItem key={t} value={String(t)}>
                         {t}s
                       </SelectItem>

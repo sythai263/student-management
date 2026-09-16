@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { joinQuizByPin } from "@lib/actions";
 import { savePlayerIdentity } from "@lib/quiz";
+import { QUIZ_PIN_LENGTH } from "@constants";
 
 /** Public join form: PIN + display name -> /play/[sessionId]. */
 export function JoinQuizForm() {
@@ -58,7 +59,9 @@ export function JoinQuizForm() {
                 id="pin"
                 value={pin}
                 onChange={(e) =>
-                  setPin(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  setPin(
+                    e.target.value.replace(/\D/g, "").slice(0, QUIZ_PIN_LENGTH),
+                  )
                 }
                 inputMode="numeric"
                 placeholder="000000"

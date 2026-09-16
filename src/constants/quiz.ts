@@ -30,3 +30,29 @@ export const QUIZ_ANSWER_GRACE_MS = 2000;
 
 /** Server-side backstop: RPCs reject sessions older than this. */
 export const QUIZ_SESSION_MAX_AGE_HOURS = 24;
+
+/** Room auto-close deadline — NEXT_PUBLIC_QUIZ_TIMEOUT_MINUTES (min 60). */
+export const QUIZ_ROOM_TIMEOUT_MS =
+  (Number(process.env.NEXT_PUBLIC_QUIZ_TIMEOUT_MINUTES) ||
+    QUIZ_DEFAULT_TIMEOUT_MINUTES) *
+  60 *
+  1000;
+
+/** Room PIN length (digits). */
+export const QUIZ_PIN_LENGTH = 6;
+
+/** Answer-option labels shown in the quiz editor (A–F). */
+export const QUIZ_OPTION_LABELS = ["A", "B", "C", "D", "E", "F"] as const;
+
+/** Selectable per-question time limits (seconds) in the editor. */
+export const QUIZ_TIME_LIMITS = [10, 15, 20, 30, 45, 60, 90, 120] as const;
+
+/** Kahoot-style option colors for the player screen. */
+export const QUIZ_OPTION_STYLES = [
+  "bg-red-600 hover:bg-red-500",
+  "bg-blue-600 hover:bg-blue-500",
+  "bg-amber-500 hover:bg-amber-400",
+  "bg-green-600 hover:bg-green-500",
+  "bg-purple-600 hover:bg-purple-500",
+  "bg-pink-600 hover:bg-pink-500",
+] as const;

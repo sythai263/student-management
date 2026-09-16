@@ -1,16 +1,10 @@
 import { QUIZ_PLAYER_STORAGE_PREFIX } from "@constants";
+import type { PlayerIdentity } from "@types";
 
 /**
  * Player identity persisted in sessionStorage so a dropped connection
  * or page refresh rejoins as the same playerId (+ same signing key).
  */
-
-export interface PlayerIdentity {
-  playerId: string;
-  name: string;
-  privateKeyJwk?: JsonWebKey;
-  publicKeyJwk?: JsonWebKey;
-}
 
 function storageKey(sessionId: string): string {
   return `${QUIZ_PLAYER_STORAGE_PREFIX}${sessionId}`;
