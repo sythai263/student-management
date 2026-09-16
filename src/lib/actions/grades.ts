@@ -105,6 +105,54 @@ export async function saveGradesBulk(
   return result;
 }
 
+const saveGradeCommentSchema = z.object({
+  classId: uuid,
+  subjectId: uuid,
+  semester: z.coerce.number().int().min(1).max(2, "Học kỳ chỉ là 1 hoặc 2"),
+  studentId: uuid,
+  comment: z.string().trim().max(500).nullable(),
+});
+
+/** Server Action: persist one student's comment right after the comment dialog saves. */
+export async function saveGradeComment(
+  input: unknown,
+): Promise<ActionResult<null>> {
+  return withAction(async () => {
+    const { supabase } = await requireTeacher();
+
+    const parsed = saveGradeCommentSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
+
+    const { classId, subjectId, semester, studentId, comment } = parsed.data;
+    const value = comment || null;
+
+    const { data, error } = await supabase
+      .from("grades")
+      .update({ comment: value })
+      .eq("classId", classId)
+      .eq("subjectId", subjectId)
+      .eq("semester", semester)
+      .eq("studentId", studentId)
+      .select("studentId");
+    if (error) throw new Error(error.message);
+
+    if (!data?.length) {
+      const { error: insertError } = await supabase.from("grades").insert({
+        classId,
+        subjectId,
+        semester,
+        studentId,
+        comment: value,
+      });
+      if (insertError) throw new Error(insertError.message);
+    }
+
+    return null;
+  });
+}
+
 const importGradesSchema = z.object({
   classId: uuid,
   subjectId: uuid,

@@ -15,11 +15,12 @@ import {
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 import { toast } from "sonner";
-import { useGrades, useSaveGrades, useStudents } from "@hooks";
+import { useGrades, useSaveGradeComment, useSaveGrades, useStudents } from "@hooks";
 import { GRADE_SLOT_FULL_LABEL, GRADE_SLOTS } from "@constants";
 import { calculateAverage } from "@lib/grade-utils";
 import { friendlyErrorMessage } from "@lib/utils";
 import { CommentDialog } from "./comment-dialog";
+import { ExportSmasButton } from "./export-smas-button";
 import { ImportGradesForm } from "./import-grades-form";
 import type { GradeWithStudent } from "@types";
 
@@ -89,6 +90,7 @@ export function GradeEntryGrid({
     semester,
   );
   const save = useSaveGrades(classId, subjectId, semester);
+  const saveComment = useSaveGradeComment(classId, subjectId, semester);
   const [entries, setEntries] = useState<Record<string, ScoreInput>>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
   const [commentStudentId, setCommentStudentId] = useState<string | null>(null);
@@ -149,6 +151,17 @@ export function GradeEntryGrid({
       ...prev,
       [studentId]: { ...prev[studentId], [field]: value },
     }));
+  }
+
+  function onSaveComment(studentId: string, value: string) {
+    updateField(studentId, "comment", value);
+    saveComment.mutate(
+      { studentId, comment: value.trim() || null },
+      {
+        onSuccess: () => toast.success("Đã lưu nhận xét"),
+        onError: (err) => toast.error(friendlyErrorMessage(err)),
+      },
+    );
   }
 
   const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
@@ -242,6 +255,13 @@ export function GradeEntryGrid({
             students={students}
             entries={entries}
             onSuccess={() => setTouched(new Set())}
+          />
+          <ExportSmasButton
+            classId={classId}
+            subjectName={subjectName}
+            semester={semester}
+            students={students}
+            entries={entries}
           />
           <Button type="submit" disabled={isPending || save.isPending}>
             <Save />
@@ -345,7 +365,7 @@ export function GradeEntryGrid({
             return s ? `${s.lastName} ${s.firstName}` : "";
           })()}
           value={entries[commentStudentId]?.comment ?? ""}
-          onSave={(value) => updateField(commentStudentId, "comment", value)}
+          onSave={(value) => onSaveComment(commentStudentId, value)}
         />
       )}
     </form>

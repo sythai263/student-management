@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { importGrades, saveGradesBulk } from "@lib/actions";
+import { importGrades, saveGradeComment, saveGradesBulk } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import { friendlyErrorMessage } from "@lib/utils";
 import type { GradeWithStudent, Student } from "@types";
@@ -65,6 +65,35 @@ export function useSaveGrades(
   return useMutation({
     mutationFn: async (input: SaveGradesInput) => {
       const result = await saveGradesBulk(input);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: gradesKey(classId, subjectId, semester),
+      });
+    },
+  });
+}
+
+/** Mutation: save one student's comment immediately (from the comment dialog). */
+export function useSaveGradeComment(
+  classId: string,
+  subjectId: string,
+  semester: number,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      studentId: string;
+      comment: string | null;
+    }) => {
+      const result = await saveGradeComment({
+        classId,
+        subjectId,
+        semester,
+        ...input,
+      });
       if (!result.success) throw new Error(result.error);
       return result.data;
     },

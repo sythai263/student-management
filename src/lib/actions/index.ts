@@ -21,7 +21,7 @@ export {
   assignSubjectToClass,
   removeSubjectFromClass,
 } from "./class-subjects";
-export { saveGradesBulk, importGrades } from "./grades";
+export { saveGradesBulk, saveGradeComment, importGrades } from "./grades";
 export type { ImportGradesSummary } from "@types";
 export {
   pickReviewStudent,

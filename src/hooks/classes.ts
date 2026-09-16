@@ -22,20 +22,23 @@ export function useClasses() {
   });
 }
 
+/** Fetch a single class by id (usable both as a queryFn and imperatively). */
+export async function fetchClass(classId: string): Promise<Class> {
+  const supabase = createSupabaseBrowserClient();
+  const { data, error } = await supabase
+    .from("classes")
+    .select("*, school:teacherSchools(name)")
+    .eq("id", classId)
+    .single();
+  if (error) throw new Error(friendlyErrorMessage(error));
+  return data as Class;
+}
+
 /** Fetch a single class by id. */
 export function useClass(classId: string) {
   return useQuery({
     queryKey: ["classes", classId],
-    queryFn: async (): Promise<Class> => {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error } = await supabase
-        .from("classes")
-        .select("*, school:teacherSchools(name)")
-        .eq("id", classId)
-        .single();
-      if (error) throw new Error(friendlyErrorMessage(error));
-      return data as Class;
-    },
+    queryFn: () => fetchClass(classId),
   });
 }
 

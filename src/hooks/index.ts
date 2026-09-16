@@ -17,7 +17,12 @@ export {
   useAssignClassSubject,
   useRemoveClassSubject,
 } from "./class-subjects";
-export { useGrades, useSaveGrades, useImportGrades } from "./grades";
+export {
+  useGrades,
+  useSaveGrades,
+  useSaveGradeComment,
+  useImportGrades,
+} from "./grades";
 export type { GradeWithStudent } from "@types";
 export { useDebounce } from "./use-debounce";
 export {
