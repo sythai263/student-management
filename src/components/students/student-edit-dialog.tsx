@@ -37,11 +37,14 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const [prevStudent, setPrevStudent] = useState(student);
+
   // Reset per-student state each time a different student is opened.
-  useEffect(() => {
+  if (prevStudent !== student) {
+    setPrevStudent(student);
     setPreview(null);
     setMessage(null);
-  }, [student]);
+  }
 
   // Release object URLs created for the picked-file preview.
   useEffect(() => {

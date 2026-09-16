@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, type FormEventHandler } from "react";
+import { useState, useTransition, type FormEventHandler } from "react";
 import { MessageSquarePlus, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,38 +96,48 @@ export function GradeEntryGrid({
 
   const isLoading = studentsLoading || gradesLoading;
 
-  useEffect(() => {
-    if (!students || !grades) return;
-    const gradeMap = new Map<string, GradeWithStudent>();
-    for (const g of grades) {
-      gradeMap.set(g.studentId, g);
-    }
-
-    setEntries((prev) => {
-      const next: Record<string, ScoreInput> = {};
-      for (const s of students) {
-        const existing = prev[s.id];
-        if (existing && touched.has(s.id)) {
-          next[s.id] = existing;
-          continue;
-        }
-        const g = gradeMap.get(s.id);
-        next[s.id] = g
-          ? {
-            tx1: formatScore(g.tx1),
-            tx2: formatScore(g.tx2),
-            tx3: formatScore(g.tx3),
-            tx4: formatScore(g.tx4),
-            gk: formatScore(g.gk),
-            ck: formatScore(g.ck),
-            note: g.note ?? "",
-            comment: g.comment ?? "",
-          }
-          : { ...EMPTY_INPUT };
+  // Merge loaded grades into the editable grid, keeping rows the
+  // teacher already touched. Adjusts during render instead of an
+  // effect so the merge stays in sync with its inputs.
+  const [prevRoster, setPrevRoster] = useState({ students, grades, touched });
+  if (
+    prevRoster.students !== students ||
+    prevRoster.grades !== grades ||
+    prevRoster.touched !== touched
+  ) {
+    setPrevRoster({ students, grades, touched });
+    if (students && grades) {
+      const gradeMap = new Map<string, GradeWithStudent>();
+      for (const g of grades) {
+        gradeMap.set(g.studentId, g);
       }
-      return next;
-    });
-  }, [students, grades, touched]);
+
+      setEntries((prev) => {
+        const next: Record<string, ScoreInput> = {};
+        for (const s of students) {
+          const existing = prev[s.id];
+          if (existing && touched.has(s.id)) {
+            next[s.id] = existing;
+            continue;
+          }
+          const g = gradeMap.get(s.id);
+          next[s.id] = g
+            ? {
+              tx1: formatScore(g.tx1),
+              tx2: formatScore(g.tx2),
+              tx3: formatScore(g.tx3),
+              tx4: formatScore(g.tx4),
+              gk: formatScore(g.gk),
+              ck: formatScore(g.ck),
+              note: g.note ?? "",
+              comment: g.comment ?? "",
+            }
+            : { ...EMPTY_INPUT };
+        }
+        return next;
+      });
+    }
+  }
 
   function updateField(
     studentId: string,
@@ -180,9 +190,7 @@ export function GradeEntryGrid({
         (v) => v != null,
       ).length;
       if (regularCount < 2) {
-        setMessage(
-          `Học sinh ${s.studentCode} cần ít nhất 2 điểm thường xuyên`,
-        );
+        setMessage(`Học sinh ${s.studentCode} cần ít nhất 2 điểm thường xuyên`);
         return;
       }
 
@@ -347,9 +355,7 @@ export function GradeEntryGrid({
             return s ? `${s.lastName} ${s.firstName}` : "";
           })()}
           value={entries[commentStudentId]?.comment ?? ""}
-          onSave={(value) =>
-            updateField(commentStudentId, "comment", value)
-          }
+          onSave={(value) => updateField(commentStudentId, "comment", value)}
         />
       )}
     </form>

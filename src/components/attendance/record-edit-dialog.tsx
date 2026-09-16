@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,14 +43,16 @@ export function RecordEditDialog({
   const updateMutation = useUpdateAttendance(sessionId);
   const [status, setStatus] = useState<AttendanceStatus>("VANG");
   const [note, setNote] = useState("");
+  const [prevRecord, setPrevRecord] = useState(record);
 
   // Sync form state whenever a different record is opened.
-  useEffect(() => {
+  if (prevRecord !== record) {
+    setPrevRecord(record);
     if (record) {
       setStatus(record.status);
       setNote(record.note ?? "");
     }
-  }, [record]);
+  }
 
   if (!record) return null;
   const s = record.students;

@@ -147,7 +147,7 @@ export function parseGradeCsv(text: string): ParseGradeCsvResult {
 
   const hasHeader = firstAliases.length > 0;
 
-  let headerMapping: Record<NonNullable<MappedColumn>, number> = {
+  const headerMapping: Record<NonNullable<MappedColumn>, number> = {
     studentCode: 0,
     fullName: -1,
     tx1: 1,

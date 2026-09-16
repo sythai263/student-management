@@ -37,7 +37,8 @@ export function ReportCardTemplateList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Mẫu được chọn "mặc định" sẽ tự động dùng khi vào trang phiếu điểm.
+          Mẫu được chọn &quot;mặc định&quot; sẽ tự động dùng khi vào trang phiếu
+          điểm.
         </p>
         <Link
           href="/report-card-templates/new"

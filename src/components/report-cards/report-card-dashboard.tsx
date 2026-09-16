@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { LayoutTemplate, Printer } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -94,11 +94,9 @@ export function ReportCardDashboard({
 
   // Preselect the teacher's default template once loaded, unless they
   // already picked one themselves.
-  useEffect(() => {
-    if (templateTouched) return;
-    const def = templates?.find((t) => t.isDefault);
-    if (def) setTemplateId(def.id);
-  }, [templates, templateTouched]);
+  const defaultTemplateId = templates?.find((t) => t.isDefault)?.id;
+  const activeTemplateId =
+    !templateTouched && defaultTemplateId ? defaultTemplateId : templateId;
 
   const isLoading =
     classLoading ||
@@ -108,7 +106,7 @@ export function ReportCardDashboard({
     signatureLoading ||
     templatesLoading;
 
-  const selectedTemplate = templates?.find((t) => t.id === templateId);
+  const selectedTemplate = templates?.find((t) => t.id === activeTemplateId);
   const blocks = selectedTemplate?.blocks ?? defaultReportCardBlocks();
 
   const cards = useMemo<ReportCardData[]>(() => {
@@ -157,7 +155,7 @@ export function ReportCardDashboard({
                 <Skeleton className="h-9 w-full" />
               ) : (
                 <Select
-                  value={templateId}
+                  value={activeTemplateId}
                   onValueChange={(v) => {
                     setTemplateTouched(true);
                     setTemplateId(v ?? BUILTIN_TEMPLATE_ID);

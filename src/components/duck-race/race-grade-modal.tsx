@@ -47,30 +47,41 @@ export function RaceGradeModal({
   const [semester, setSemester] = useState(1);
   const [targetSlot, setTargetSlot] = useState<GradeSlot | null>(null);
   const [value, setValue] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, startLoading] = useTransition();
   const [saving, startSaving] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
+  // Reset the form whenever the modal target changes; the grade lookup
+  // itself lives in the effect below.
+  const fetchKey = `${open}|${classId}|${subjectId}|${studentId}|${semester}`;
+  const [prevFetchKey, setPrevFetchKey] = useState(fetchKey);
+  if (prevFetchKey !== fetchKey) {
+    setPrevFetchKey(fetchKey);
     setMessage(null);
     setValue("");
-    if (!open || !subjectId || !studentId) {
-      setTargetSlot(null);
-      return;
-    }
+    if (!open || !subjectId || !studentId) setTargetSlot(null);
+  }
 
-    setLoading(true);
-    getGradeForRace({ classId, subjectId, semester, studentId })
-      .then((res) => {
+  useEffect(() => {
+    if (!open || !subjectId || !studentId) return;
+    startLoading(async () => {
+      try {
+        const res = await getGradeForRace({
+          classId,
+          subjectId,
+          semester,
+          studentId,
+        });
         if (res.success) {
           setTargetSlot(res.data.emptySlots[0] ?? null);
         } else {
           setMessage(res.error);
           setTargetSlot(null);
         }
-      })
-      .catch((e) => setMessage(friendlyErrorMessage(e)))
-      .finally(() => setLoading(false));
+      } catch (e) {
+        setMessage(friendlyErrorMessage(e));
+      }
+    });
   }, [open, classId, subjectId, studentId, semester]);
 
   function handleSave() {

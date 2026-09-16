@@ -40,10 +40,16 @@ export function UpdateProfileDialog({
     resolver: zodResolver(updateProfileSchema),
   });
 
+  // Clear stale errors each time the dialog opens.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
+    if (open) setError(null);
+  }
+
   // Prefill current values each time the dialog opens.
   useEffect(() => {
     if (!open) return;
-    setError(null);
     createSupabaseBrowserClient()
       .auth.getUser()
       .then(({ data }) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Cookies from "js-cookie";
 import confetti from "canvas-confetti";
 import { Pencil, Play, Timer, X } from "lucide-react";
@@ -60,6 +60,10 @@ export function DuckRaceCanvas({
   const confettiFired = useRef(false);
   const duckImagesReady = Object.keys(duckImages).length > 0;
 
+  const [, startTransition] = useTransition();
+
+  // Restore the saved race duration from a cookie — only readable
+  // client-side, applied as a non-urgent update.
   useEffect(() => {
     const saved = Cookies.get(RACE_DURATION_COOKIE);
     if (saved) {
@@ -69,7 +73,7 @@ export function DuckRaceCanvas({
         parsed >= MIN_RACE_DURATION &&
         parsed <= MAX_RACE_DURATION
       ) {
-        setDuration(parsed);
+        startTransition(() => setDuration(parsed));
       }
     }
   }, []);
@@ -162,7 +166,7 @@ export function DuckRaceCanvas({
     stateRef.current = race;
 
     let raf = 0;
-    let startTime = performance.now();
+    const startTime = performance.now();
     let lastTime = startTime;
 
     const drawFrame = (elapsed: number) => {

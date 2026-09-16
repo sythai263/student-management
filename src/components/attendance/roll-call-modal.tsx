@@ -82,11 +82,19 @@ export function RollCallModal({
     [record, pendingExcused, note, updateMutation, advance],
   );
 
+  // Reset the countdown whenever a new student comes up or the modal
+  // reopens — but not while paused on the note step.
+  const timerKey = `${open}|${index}|${pendingExcused}`;
+  const [prevTimerKey, setPrevTimerKey] = useState(timerKey);
+  if (prevTimerKey !== timerKey) {
+    setPrevTimerKey(timerKey);
+    if (open && !pendingExcused) setTimeLeft(ROLL_CALL_SECONDS);
+  }
+
   // Countdown: each student has ROLL_CALL_SECONDS to respond.
   // Timeout -> auto-mark VANG and move on. Paused while entering a note.
   useEffect(() => {
     if (!open || pendingExcused || !record) return;
-    setTimeLeft(ROLL_CALL_SECONDS);
     timerRef.current = setInterval(() => {
       setTimeLeft((t) => {
         if (t <= 1) {
@@ -135,13 +143,15 @@ export function RollCallModal({
   }, [open, mark, pendingExcused, note]);
 
   // Reset cursor each time the modal opens.
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (prevOpen !== open) {
+    setPrevOpen(open);
     if (open) {
       setIndex(0);
       setNote("");
       setPendingExcused(false);
     }
-  }, [open]);
+  }
 
   if (!record) return null;
   const s = record.students;
