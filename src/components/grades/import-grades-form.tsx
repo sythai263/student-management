@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { useImportGrades } from "@hooks";
 import { friendlyErrorMessage } from "@lib/utils";
 import type { ImportGradesSummary } from "@lib/actions";
@@ -55,9 +56,7 @@ export function ImportGradesForm({
 }: ImportGradesFormProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [errors, setErrors] = useState<ImportGradesSummary["errors"]>([]);
-  const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
   const importGrades = useImportGrades(classId, subjectId, semester);
 
@@ -65,8 +64,7 @@ export function ImportGradesForm({
     e.preventDefault();
     const file = fileRef.current?.files?.[0];
     if (!file) {
-      setIsError(true);
-      setMessage("Vui lòng chọn tệp điểm");
+      toast.error("Vui lòng chọn tệp điểm");
       return;
     }
 
@@ -79,21 +77,23 @@ export function ImportGradesForm({
 
       try {
         const result = await importGrades.mutateAsync(fd);
-        setIsError(result.inserted === 0 && result.errors.length > 0);
-        setMessage(
-          "Đã nhập " + result.inserted + " học sinh, bỏ qua " + result.skipped + " dòng",
-        );
+        const summary =
+          "Đã nhập " + result.inserted + " học sinh, bỏ qua " + result.skipped + " dòng";
+        if (result.inserted === 0 && result.errors.length > 0) {
+          toast.error(summary);
+        } else {
+          toast.success(summary);
+        }
         setErrors(result.errors);
         if (result.inserted > 0) {
           if (fileRef.current) fileRef.current.value = "";
           onSuccess?.();
         }
         if (result.errors.length === 0) {
-          setTimeout(() => setOpen(false), 1000);
+          setOpen(false);
         }
       } catch (err) {
-        setIsError(true);
-        setMessage(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
         setErrors([]);
       }
     });
@@ -164,15 +164,6 @@ export function ImportGradesForm({
                 required
               />
             </div>
-            {message && (
-              <p
-                className={
-                  isError ? "text-sm text-destructive" : "text-sm text-green-600"
-                }
-              >
-                {message}
-              </p>
-            )}
             {errors.length > 0 && (
               <div className="max-h-40 overflow-auto rounded border border-destructive/30 bg-destructive/5 p-2 text-xs">
                 <p className="mb-1 font-semibold text-destructive">Các dòng lỗi:</p>

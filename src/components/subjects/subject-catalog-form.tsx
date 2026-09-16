@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ListSkeleton } from "@/components/ui/list-skeleton";
+import { toast } from "sonner";
 import { createSubjectsFromCatalog } from "@lib/actions";
 import { useSubjectCatalog, useSubjects } from "@hooks";
 
@@ -22,7 +23,6 @@ export function SubjectCatalogForm() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
-  const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const existingNames = new Set(subjects?.map((s) => s.name) ?? []);
@@ -36,11 +36,11 @@ export function SubjectCatalogForm() {
       const result = await createSubjectsFromCatalog(selected);
       if (result.success) {
         setSelected([]);
-        setMessage(null);
+        toast.success("Đã thêm môn học");
         await queryClient.invalidateQueries({ queryKey: ["subjects"] });
         setOpen(false);
       } else {
-        setMessage(result.error);
+        toast.error(result.error);
       }
     });
   };
@@ -93,9 +93,6 @@ export function SubjectCatalogForm() {
                   </label>
                 ))}
               </div>
-              {message && (
-                <p className="text-sm text-destructive">{message}</p>
-              )}
               <DialogFooter>
                 <Button
                   type="submit"

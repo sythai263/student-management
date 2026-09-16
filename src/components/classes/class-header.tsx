@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
+import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -23,7 +24,6 @@ export function ClassHeader({ classId }: ClassHeaderProps) {
   const { data: cls, isLoading, error } = useClass(classId);
   const { data: schools } = useSchools();
   const updateClassSchool = useUpdateClassSchool();
-  const [schoolError, setSchoolError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   if (isLoading) {
@@ -39,15 +39,15 @@ export function ClassHeader({ classId }: ClassHeaderProps) {
   }
 
   const onSchoolChange = (value: string | null) => {
-    setSchoolError(null);
     startTransition(async () => {
       try {
         await updateClassSchool.mutateAsync({
           classId,
           schoolId: !value || value === NO_SCHOOL ? null : value,
         });
+        toast.success("Đã cập nhật trường");
       } catch (err) {
-        setSchoolError(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   };
@@ -83,9 +83,6 @@ export function ClassHeader({ classId }: ClassHeaderProps) {
               ))}
             </SelectContent>
           </Select>
-          {schoolError && (
-            <span className="text-sm text-destructive">{schoolError}</span>
-          )}
         </div>
       }
     />

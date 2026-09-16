@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "sonner";
 import { logout } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 
@@ -23,7 +24,6 @@ export function MfaChallengeForm() {
   const router = useRouter();
   const [factorId, setFactorId] = useState<string | null>(null);
   const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -38,18 +38,17 @@ export function MfaChallengeForm() {
 
   function verifyCode(fullCode: string) {
     if (!factorId) {
-      setError("Không tìm thấy thiết bị MFA — hãy đăng nhập lại");
+      toast.error("Không tìm thấy thiết bị MFA — hãy đăng nhập lại");
       return;
     }
     if (busy) return;
-    setError(null);
     setBusy(true);
     const supabase = createSupabaseBrowserClient();
     (async () => {
       const { data: challenge, error: challengeError } =
         await supabase.auth.mfa.challenge({ factorId });
       if (challengeError || !challenge) {
-        setError("Không tạo được yêu cầu xác thực — thử lại");
+        toast.error("Không tạo được yêu cầu xác thực — thử lại");
         return;
       }
       const { error: verifyError } = await supabase.auth.mfa.verify({
@@ -58,7 +57,7 @@ export function MfaChallengeForm() {
         code: fullCode,
       });
       if (verifyError) {
-        setError("Mã không đúng — thử lại");
+        toast.error("Mã không đúng — thử lại");
         return;
       }
       router.replace("/");
@@ -89,7 +88,6 @@ export function MfaChallengeForm() {
             <Label htmlFor="mfa-code">Mã xác nhận</Label>
             <OtpCodeInput value={code} onChange={onOtpChange} autoFocus />
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={busy}>
             {busy ? "Đang xác thực..." : "Xác nhận"}
           </Button>

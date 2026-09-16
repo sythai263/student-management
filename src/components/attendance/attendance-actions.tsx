@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { createManualSession } from "@lib/actions";
 import { localToday } from "@lib/attendance-session";
 import { FEATURE_FLAGS } from "@constants";
@@ -33,11 +34,9 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
   const router = useRouter();
   const [date, setDate] = useState(localToday);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleManual() {
-    setError(null);
     startTransition(async () => {
       const result = await createManualSession(
         classId,
@@ -47,7 +46,7 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
       if (result.success) {
         router.push(`/classes/${classId}/attendance/${result.data.sessionId}`);
       } else {
-        setError(result.error);
+        toast.error(result.error);
       }
     });
   }
@@ -90,7 +89,6 @@ export function AttendanceActions({ classId }: AttendanceActionsProps) {
             </Button>
           )}
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>
 
       {FEATURE_FLAGS.PHOTO_ATTENDANCE && (

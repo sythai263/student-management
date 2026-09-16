@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { useSaveReportCardTemplate } from "@hooks";
 import {
   defaultReportCardBlocks,
@@ -47,7 +48,6 @@ export function TemplateBuilder({ template }: TemplateBuilderProps) {
   const [selectedId, setSelectedId] = useState<string | null>(
     blocks[0]?.id ?? null,
   );
-  const [error, setError] = useState<string | null>(null);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const selectedBlock = blocks.find((b) => b.id === selectedId) ?? null;
@@ -63,12 +63,14 @@ export function TemplateBuilder({ template }: TemplateBuilderProps) {
   }
 
   function onSave() {
-    setError(null);
     save.mutate(
       { id: template?.id, name, blocks },
       {
-        onSuccess: () => router.push("/report-card-templates"),
-        onError: (err) => setError(friendlyErrorMessage(err)),
+        onSuccess: () => {
+          toast.success("Đã lưu mẫu phiếu điểm");
+          router.push("/report-card-templates");
+        },
+        onError: (err) => toast.error(friendlyErrorMessage(err)),
       },
     );
   }
@@ -84,8 +86,6 @@ export function TemplateBuilder({ template }: TemplateBuilderProps) {
           <Save /> {save.isPending ? "Đang lưu..." : "Lưu mẫu"}
         </Button>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
       <div className="grid gap-4 lg:grid-cols-[220px_1fr_280px]">
         <BlockPalette
           onAdd={(block) => {

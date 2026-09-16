@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import { TOTP_ISSUER } from "@constants";
 
@@ -34,7 +35,7 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
   const [qr, setQr] = useState("");
   const [secret, setSecret] = useState("");
   const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   // Enrolling twice with the same friendly name hits a 422
   // (mfa_factor_name_conflict) — StrictMode double-invokes effects in dev,
@@ -50,7 +51,7 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
     if (enrollInFlight.current) return;
     enrollInFlight.current = true;
     setStatus("loading");
-    setError(null);
+    setLoadFailed(false);
     setCode("");
 
     // NOTE: no effect-cleanup/-cancelled flag here — StrictMode runs the
@@ -80,7 +81,8 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
           issuer: TOTP_ISSUER,
         });
       if (enrollError || !enrolled) {
-        setError(enrollError?.message ?? "Không tạo được mã QR");
+        setLoadFailed(true);
+        toast.error(enrollError?.message ?? "Không tạo được mã QR");
         return;
       }
       setFactorId(enrolled.id);
@@ -92,7 +94,6 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
 
   function verifyCode(fullCode: string) {
     if (busy) return;
-    setError(null);
     setBusy(true);
     const supabase = createSupabaseBrowserClient();
     (status === "enroll"
@@ -120,9 +121,10 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
       code: fullCode,
     });
     if (error) {
-      setError("Mã không đúng — thử lại");
+      toast.error("Mã không đúng — thử lại");
       return;
     }
+    toast.success("Đã bật MFA");
     setCode("");
     setStatus("enabled");
   }
@@ -135,7 +137,7 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
     const { data: challenge, error: challengeError } =
       await supabase.auth.mfa.challenge({ factorId });
     if (challengeError || !challenge) {
-      setError(challengeError?.message ?? "Không tạo được yêu cầu xác thực");
+      toast.error(challengeError?.message ?? "Không tạo được yêu cầu xác thực");
       return;
     }
     const { error: verifyError } = await supabase.auth.mfa.verify({
@@ -144,16 +146,17 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
       code: fullCode,
     });
     if (verifyError) {
-      setError("Mã không đúng — thử lại");
+      toast.error("Mã không đúng — thử lại");
       return;
     }
     const { error: unenrollError } = await supabase.auth.mfa.unenroll({
       factorId,
     });
     if (unenrollError) {
-      setError(unenrollError.message);
+      toast.error(unenrollError.message);
       return;
     }
+    toast.success("Đã tắt MFA");
     onOpenChange(false);
   }
 
@@ -169,9 +172,8 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
         </DialogHeader>
 
         {status === "loading" ? (
-          error ? (
+          loadFailed ? (
             <div className="space-y-4">
-              <p className="text-sm text-destructive">{error}</p>
               <DialogFooter>
                 <Button
                   type="button"
@@ -218,8 +220,6 @@ export function MfaManageDialog({ open, onOpenChange }: MfaManageDialogProps) {
               </Label>
               <OtpCodeInput value={code} onChange={onOtpChange} autoFocus />
             </div>
-
-            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <DialogFooter>
               <Button

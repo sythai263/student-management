@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { useSubjects, useDeleteSubject } from "@hooks";
 import type { Subject } from "@types";
 
@@ -95,7 +96,11 @@ export function SubjectList() {
               onClick={() => {
                 if (subjectToDelete) {
                   deleteSubjectMutation.mutate(subjectToDelete.id, {
-                    onSuccess: () => setSubjectToDelete(null),
+                    onSuccess: () => {
+                      toast.success("Đã xóa môn học");
+                      setSubjectToDelete(null);
+                    },
+                    onError: (err) => toast.error(err.message),
                   });
                 }
               }}

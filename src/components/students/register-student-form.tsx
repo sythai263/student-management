@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition, type SubmitEventHandler } from "react";
+import { useRef, useTransition, type SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "sonner";
 import { registerStudent } from "@lib/actions";
 import { compressImage, uploadDirect } from "@lib/image";
 
@@ -22,8 +23,6 @@ interface RegisterStudentFormProps {
 export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
@@ -57,10 +56,11 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
       fd.set("classId", classId);
 
       const result = await registerStudent(fd);
-      setIsError(!result.success);
-      setMessage(
-        result.success ? "Đăng ký học sinh thành công" : result.error,
-      );
+      if (result.success) {
+        toast.success("Đăng ký học sinh thành công");
+      } else {
+        toast.error(result.error);
+      }
       if (result.success) {
         formRef.current?.reset();
         await queryClient.invalidateQueries({
@@ -103,15 +103,6 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
             <Label htmlFor="image">Ảnh chân dung (không bắt buộc)</Label>
             <Input id="image" name="image" type="file" accept="image/*" />
           </div>
-          {message && (
-            <p
-              className={
-                isError ? "text-sm text-destructive" : "text-sm text-green-500"
-              }
-            >
-              {message}
-            </p>
-          )}
           <Button type="submit" disabled={isPending}>
             {isPending ? "Đang xử lý..." : "Đăng ký"}
           </Button>

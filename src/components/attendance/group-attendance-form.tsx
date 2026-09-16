@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { groupAttendance } from "@lib/actions";
 import { compressImage, uploadDirect } from "@lib/image";
 
@@ -22,16 +23,13 @@ export function GroupAttendanceForm({
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [fileCount, setFileCount] = useState(0);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
     e.preventDefault();
     const files = Array.from(fileRef.current?.files ?? []);
     if (files.length === 0) {
-      setIsError(true);
-      setMessage("Chọn ít nhất 1 ảnh nhóm");
+      toast.error("Chọn ít nhất 1 ảnh nhóm");
       return;
     }
 
@@ -61,15 +59,14 @@ export function GroupAttendanceForm({
       );
 
       const result = await groupAttendance(fd);
-      setIsError(!result.success);
       if (result.success) {
-        setMessage(
+        toast.success(
           `Điểm danh xong: ${result.data.presentCount}/${result.data.totalCount} có mặt`,
         );
         await queryClient.invalidateQueries({ queryKey: ["sessions", classId] });
         onSuccess?.(result.data.sessionId);
       } else {
-        setMessage(result.error);
+        toast.error(result.error);
       }
     });
   };
@@ -102,15 +99,6 @@ export function GroupAttendanceForm({
           </span>
         </button>
       </div>
-      {message && (
-        <p
-          className={
-            isError ? "text-sm text-destructive" : "text-sm text-green-500"
-          }
-        >
-          {message}
-        </p>
-      )}
       <Button type="submit" size="lg" className="w-full" disabled={isPending}>
         {isPending ? "Đang nhận diện..." : "Bắt đầu điểm danh"}
       </Button>

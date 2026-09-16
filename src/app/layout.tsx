@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { QueryProvider } from "@components/providers";
 import { AppShell } from "@components/layout";
+import { Toaster } from "@components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <NextTopLoader color="var(--primary)" showSpinner={false} />
         <QueryProvider>
           <AppShell>{children}</AppShell>
+          <Toaster theme="dark" richColors position="top-right" />
         </QueryProvider>
         <Analytics />
         <SpeedInsights />

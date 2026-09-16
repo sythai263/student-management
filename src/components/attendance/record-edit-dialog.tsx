@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,13 @@ export function RecordEditDialog({
         status,
         note: status === ATTENDANCE_STATUS.EXCUSED ? note : undefined,
       },
-      { onSuccess: onClose },
+      {
+        onSuccess: () => {
+          toast.success("Đã cập nhật điểm danh");
+          onClose();
+        },
+        onError: (err) => toast.error(err.message),
+      },
     );
   }
 
@@ -118,12 +125,6 @@ export function RecordEditDialog({
                 placeholder="VD: ốm, có đơn..."
               />
             </div>
-          )}
-
-          {updateMutation.error && (
-            <p className="text-sm text-destructive">
-              {updateMutation.error.message}
-            </p>
           )}
 
           {!readOnly && (

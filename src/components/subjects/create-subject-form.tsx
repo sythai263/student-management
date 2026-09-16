@@ -14,13 +14,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { createSubject } from "@lib/actions";
 
 export function CreateSubjectForm() {
   const queryClient = useQueryClient();
   const formRef = useRef<HTMLFormElement>(null);
   const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
@@ -33,7 +33,11 @@ export function CreateSubjectForm() {
 
     startTransition(async () => {
       const result = await createSubject(input);
-      setError(result.success ? null : result.error);
+      if (result.success) {
+        toast.success("Đã tạo môn học");
+      } else {
+        toast.error(result.error);
+      }
       if (result.success) {
         formRef.current?.reset();
         await queryClient.invalidateQueries({ queryKey: ["subjects"] });
@@ -69,7 +73,6 @@ export function CreateSubjectForm() {
               <Label htmlFor="subject-code">Mã môn</Label>
               <Input id="subject-code" name="code" placeholder="MATH" />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Hủy

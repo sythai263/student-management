@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { changePassword } from "@lib/actions";
 import { changePasswordSchema, type ChangePasswordInput } from "@schemas";
 
@@ -26,7 +27,6 @@ export function ChangePasswordDialog({
   open,
   onOpenChange,
 }: ChangePasswordDialogProps) {
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -39,13 +39,13 @@ export function ChangePasswordDialog({
   });
 
   function onSubmit(values: ChangePasswordInput) {
-    setError(null);
     startTransition(async () => {
       const result = await changePassword(values);
       if (!result.success) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
+      toast.success("Đã đổi mật khẩu");
       reset();
       onOpenChange(false);
     });
@@ -103,7 +103,6 @@ export function ChangePasswordDialog({
               </p>
             )}
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button
               type="button"

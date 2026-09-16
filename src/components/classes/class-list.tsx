@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { useClasses, useDeleteClass } from "@hooks";
 import type { Class } from "@types";
 
@@ -99,7 +100,11 @@ export function ClassList() {
               onClick={() => {
                 if (classToDelete) {
                   deleteClassMutation.mutate(classToDelete.id, {
-                    onSuccess: () => setClassToDelete(null),
+                    onSuccess: () => {
+                      toast.success("Đã xóa lớp");
+                      setClassToDelete(null);
+                    },
+                    onError: (err) => toast.error(err.message),
                   });
                 }
               }}

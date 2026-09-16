@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "sonner";
 import { login, sendLoginOtp, verifyLoginOtp } from "@lib/actions";
 import { FEATURE_FLAGS } from "@constants";
 
@@ -26,31 +27,32 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function verifyCode(token: string) {
-    setError(null);
     startTransition(async () => {
       const result = await verifyLoginOtp({ email, token });
-      if (!result.success) setError(result.error);
+      if (!result.success) toast.error(result.error);
     });
   }
 
   function onSubmit(e: SubmitEvent) {
     e.preventDefault();
-    setError(null);
     startTransition(async () => {
       if (mode === "password") {
         const result = await login({ email, password });
-        if (!result.success) setError(result.error ?? "Đăng nhập thất bại");
+        if (!result.success) toast.error(result.error ?? "Đăng nhập thất bại");
       } else if (!otpSent) {
         const result = await sendLoginOtp({ email });
-        if (!result.success) setError(result.error);
-        else setOtpSent(true);
+        if (!result.success) {
+          toast.error(result.error);
+        } else {
+          setOtpSent(true);
+          toast.success("Đã gửi mã 6 số tới email");
+        }
       } else {
         const result = await verifyLoginOtp({ email, token: code });
-        if (!result.success) setError(result.error);
+        if (!result.success) toast.error(result.error);
       }
     });
   }
@@ -63,7 +65,6 @@ export function LoginForm() {
   function switchMode() {
     setMode(mode === "password" ? "otp" : "password");
     setOtpSent(false);
-    setError(null);
   }
 
   return (
@@ -115,8 +116,6 @@ export function LoginForm() {
             )
           )}
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
-
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending
               ? "Đang xử lý..."
@@ -135,7 +134,6 @@ export function LoginForm() {
                 onClick={() => {
                   setOtpSent(false);
                   setCode("");
-                  setError(null);
                 }}
               >
                 Đổi email
@@ -146,9 +144,12 @@ export function LoginForm() {
                 disabled={isPending}
                 onClick={() =>
                   startTransition(async () => {
-                    setError(null);
                     const result = await sendLoginOtp({ email });
-                    if (!result.success) setError(result.error);
+                    if (!result.success) {
+                      toast.error(result.error);
+                    } else {
+                      toast.success("Đã gửi lại mã tới email");
+                    }
                   })
                 }
               >

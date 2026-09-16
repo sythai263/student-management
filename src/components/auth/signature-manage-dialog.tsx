@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import {
   useSaveSignature,
   useTeacherSignature,
 } from "@hooks";
+import { toast } from "sonner";
 import { uploadSignatureDirect } from "@lib/image";
 import { friendlyErrorMessage } from "@lib/utils";
 import { SignaturePad, type SignaturePadHandle } from "./signature-pad";
@@ -40,7 +41,6 @@ export function SignatureManageDialog({
   const { data: signature, isLoading } = useTeacherSignature();
   const saveSignature = useSaveSignature();
   const deleteSignature = useDeleteSignature();
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
   const padRef = useRef<SignaturePadHandle>(null);
@@ -50,37 +50,37 @@ export function SignatureManageDialog({
     e.target.value = "";
     if (!file) return;
 
-    setError(null);
     startTransition(async () => {
       try {
         const imageKey = await uploadSignatureDirect(file);
         await saveSignature.mutateAsync(imageKey);
+        toast.success("Đã lưu chữ ký");
       } catch (err) {
-        setError(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   }
 
   function onPadSave(file: File) {
-    setError(null);
     startTransition(async () => {
       try {
         const imageKey = await uploadSignatureDirect(file);
         await saveSignature.mutateAsync(imageKey);
+        toast.success("Đã lưu chữ ký");
         padRef.current?.clear();
       } catch (err) {
-        setError(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   }
 
   function onDelete() {
-    setError(null);
     startTransition(async () => {
       try {
         await deleteSignature.mutateAsync();
+        toast.success("Đã xóa chữ ký");
       } catch (err) {
-        setError(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   }
@@ -129,7 +129,7 @@ export function SignatureManageDialog({
               ref={padRef}
               disabled={isPending}
               onSave={onPadSave}
-              onError={setError}
+              onError={toast.error}
             />
           </div>
 
@@ -146,8 +146,6 @@ export function SignatureManageDialog({
               onChange={onFileChange}
             />
           </div>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
 
         <DialogFooter>

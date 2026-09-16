@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { updateStudent } from "@lib/actions";
 import { compressImage, uploadDirect } from "@lib/image";
 import type { Student } from "@types";
@@ -34,7 +35,6 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const [prevStudent, setPrevStudent] = useState(student);
@@ -43,7 +43,6 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
   if (prevStudent !== student) {
     setPrevStudent(student);
     setPreview(null);
-    setMessage(null);
   }
 
   // Release object URLs created for the picked-file preview.
@@ -85,9 +84,10 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
         await queryClient.invalidateQueries({
           queryKey: ["students", student.classId],
         });
+        toast.success("Đã cập nhật học sinh");
         onClose();
       } else {
-        setMessage(result.error);
+        toast.error(result.error);
       }
     });
   };
@@ -178,8 +178,6 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
               />
             </div>
           </div>
-
-          {message && <p className="text-sm text-destructive">{message}</p>}
 
           <Button type="submit" className="w-full" disabled={isPending}>
             {isPending ? "Đang lưu..." : "Lưu"}

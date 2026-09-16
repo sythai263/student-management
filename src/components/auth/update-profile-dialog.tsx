@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { updateProfile } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import { updateProfileSchema, type UpdateProfileInput } from "@schemas";
@@ -27,7 +28,6 @@ export function UpdateProfileDialog({
   open,
   onOpenChange,
 }: UpdateProfileDialogProps) {
-  const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -39,13 +39,6 @@ export function UpdateProfileDialog({
   } = useForm<UpdateProfileInput>({
     resolver: zodResolver(updateProfileSchema),
   });
-
-  // Clear stale errors each time the dialog opens.
-  const [prevOpen, setPrevOpen] = useState(open);
-  if (prevOpen !== open) {
-    setPrevOpen(open);
-    if (open) setError(null);
-  }
 
   // Prefill current values each time the dialog opens.
   useEffect(() => {
@@ -61,13 +54,13 @@ export function UpdateProfileDialog({
   }, [open, reset]);
 
   function onSubmit(values: UpdateProfileInput) {
-    setError(null);
     startTransition(async () => {
       const result = await updateProfile(values);
       if (!result.success) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
+      toast.success("Đã cập nhật họ tên");
       onOpenChange(false);
     });
   }
@@ -102,7 +95,6 @@ export function UpdateProfileDialog({
               Email đăng nhập không thể thay đổi.
             </p>
           </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
             <Button
               type="button"

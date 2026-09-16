@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { importStudents } from "@lib/actions";
 import { useClass } from "@hooks";
 
@@ -25,8 +26,6 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [isError, setIsError] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { data: classData } = useClass(classId);
 
@@ -34,8 +33,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
     e.preventDefault();
     const file = fileRef.current?.files?.[0];
     if (!file) {
-      setIsError(true);
-      setMessage("Vui lòng chọn tệp danh sách học sinh");
+      toast.error("Vui lòng chọn tệp danh sách học sinh");
       return;
     }
 
@@ -45,12 +43,13 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
       fd.set("file", file);
 
       const result = await importStudents(fd);
-      setIsError(!result.success);
-      setMessage(
-        result.success
-          ? `Đã thêm ${result.data.inserted}, cập nhật ${result.data.updated} học sinh`
-          : result.error,
-      );
+      if (result.success) {
+        toast.success(
+          `Đã thêm ${result.data.inserted}, cập nhật ${result.data.updated} học sinh`,
+        );
+      } else {
+        toast.error(result.error);
+      }
       if (result.success) {
         if (fileRef.current) fileRef.current.value = "";
         await queryClient.invalidateQueries({
@@ -103,15 +102,6 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
               <Label htmlFor="csv">Tệp danh sách học sinh (.csv)</Label>
               <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
             </div>
-            {message && (
-              <p
-                className={
-                  isError ? "text-sm text-destructive" : "text-sm text-green-500"
-                }
-              >
-                {message}
-              </p>
-            )}
             <DialogFooter>
               <Button
                 type="button"

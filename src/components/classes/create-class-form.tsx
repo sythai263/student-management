@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 import { useSchools } from "@hooks";
 import { assignSubjectToClass, createClass } from "@lib/actions";
 
@@ -37,7 +38,6 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
   const { data: schools } = useSchools();
   const [open, setOpen] = useState(false);
   const [schoolId, setSchoolId] = useState(NO_SCHOOL);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const onSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
@@ -55,7 +55,7 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
     startTransition(async () => {
       const result = await createClass(input);
       if (!result.success) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
 
@@ -67,7 +67,7 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
           subjectId,
         });
         if (!assign.success) {
-          setError(assign.error);
+          toast.error(assign.error);
           return;
         }
         await queryClient.invalidateQueries({
@@ -78,6 +78,7 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
 
       formRef.current?.reset();
       setSchoolId(NO_SCHOOL);
+      toast.success("Đã tạo lớp mới");
       await queryClient.invalidateQueries({ queryKey: ["classes"] });
       setOpen(false);
       router.push(redirectPath);
@@ -151,7 +152,6 @@ export function CreateClassForm({ subjectId }: CreateClassFormProps) {
                 </p>
               )}
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Hủy

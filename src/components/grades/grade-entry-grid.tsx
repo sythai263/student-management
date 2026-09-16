@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { toast } from "sonner";
 import { useGrades, useSaveGrades, useStudents } from "@hooks";
 import { GRADE_SLOT_FULL_LABEL, GRADE_SLOTS } from "@constants";
 import { calculateAverage } from "@lib/grade-utils";
@@ -90,7 +91,6 @@ export function GradeEntryGrid({
   const save = useSaveGrades(classId, subjectId, semester);
   const [entries, setEntries] = useState<Record<string, ScoreInput>>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
-  const [message, setMessage] = useState<string | null>(null);
   const [commentStudentId, setCommentStudentId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -190,7 +190,9 @@ export function GradeEntryGrid({
         (v) => v != null,
       ).length;
       if (regularCount < 2) {
-        setMessage(`Học sinh ${s.studentCode} cần ít nhất 2 điểm thường xuyên`);
+        toast.error(
+          `Học sinh ${s.studentCode} cần ít nhất 2 điểm thường xuyên`,
+        );
         return;
       }
 
@@ -206,9 +208,9 @@ export function GradeEntryGrid({
           grades: payload,
         });
         setTouched(new Set());
-        setMessage("Đã lưu điểm");
+        toast.success("Đã lưu điểm");
       } catch (err) {
-        setMessage(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   };
@@ -247,18 +249,6 @@ export function GradeEntryGrid({
           </Button>
         </div>
       </div>
-
-      {message && (
-        <p
-          className={
-            message === "Đã lưu điểm"
-              ? "text-sm text-green-500"
-              : "text-sm text-destructive"
-          }
-        >
-          {message}
-        </p>
-      )}
 
       <div className="overflow-x-auto rounded-md border">
         <Table>

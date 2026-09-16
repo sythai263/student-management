@@ -2,7 +2,6 @@
 
 import { useState, type SubmitEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,9 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   useAttendanceSessions,
-  useCreateSession,
   useDeleteSession,
   useRenameSession,
 } from "@hooks";
@@ -31,22 +30,13 @@ interface SessionListProps {
 }
 
 export function SessionList({ classId }: SessionListProps) {
-  const router = useRouter();
   const { data: sessions, isLoading, error } = useAttendanceSessions(classId);
-  const createSession = useCreateSession(classId);
   const renameSession = useRenameSession(classId);
   const deleteSession = useDeleteSession(classId);
 
   const [renaming, setRenaming] = useState<AttendanceSession | null>(null);
   const [deleting, setDeleting] = useState<AttendanceSession | null>(null);
   const [name, setName] = useState("");
-
-  function onManualAttendance() {
-    createSession.mutate(undefined, {
-      onSuccess: (data) =>
-        router.push(`/classes/${classId}/attendance/${data.sessionId}`),
-    });
-  }
 
   function openRename(session: AttendanceSession) {
     setName(sessionDisplayName(session));
@@ -58,13 +48,25 @@ export function SessionList({ classId }: SessionListProps) {
     if (!renaming) return;
     renameSession.mutate(
       { sessionId: renaming.id, name },
-      { onSuccess: () => setRenaming(null) },
+      {
+        onSuccess: () => {
+          toast.success("Đã đổi tên buổi điểm danh");
+          setRenaming(null);
+        },
+        onError: (err) => toast.error(err.message),
+      },
     );
   }
 
   function onDeleteConfirm() {
     if (!deleting) return;
-    deleteSession.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
+    deleteSession.mutate(deleting.id, {
+      onSuccess: () => {
+        toast.success("Đã xóa buổi điểm danh");
+        setDeleting(null);
+      },
+      onError: (err) => toast.error(err.message),
+    });
   }
 
   return (
@@ -73,9 +75,6 @@ export function SessionList({ classId }: SessionListProps) {
         <h2 className="text-lg font-medium">Buổi điểm danh</h2>
       </div>
 
-      {createSession.error && (
-        <p className="text-sm text-destructive">{createSession.error.message}</p>
-      )}
       {isLoading && <ListSkeleton rows={4} />}
       {error && <p className="text-sm text-destructive">{error.message}</p>}
 
@@ -149,11 +148,6 @@ export function SessionList({ classId }: SessionListProps) {
                 autoFocus
               />
             </div>
-            {renameSession.error && (
-              <p className="text-sm text-destructive">
-                {renameSession.error.message}
-              </p>
-            )}
             <DialogFooter>
               <Button
                 type="button"
@@ -184,11 +178,6 @@ export function SessionList({ classId }: SessionListProps) {
               không thể hoàn tác.
             </DialogDescription>
           </DialogHeader>
-          {deleteSession.error && (
-            <p className="text-sm text-destructive">
-              {deleteSession.error.message}
-            </p>
-          )}
           <DialogFooter>
             <Button
               type="button"

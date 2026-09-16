@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   useCreateSchool,
   useDeleteSchool,
@@ -41,42 +42,41 @@ export function SchoolsManageDialog({
   const [name, setName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function onAdd() {
     if (!name.trim()) return;
-    setError(null);
     startTransition(async () => {
       try {
         await createSchool.mutateAsync(name.trim());
+        toast.success("Đã thêm trường");
         setName("");
       } catch (err) {
-        setError(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   }
 
   function onSaveRename(id: string) {
     if (!editingName.trim()) return;
-    setError(null);
     startTransition(async () => {
       try {
         await renameSchool.mutateAsync({ id, name: editingName.trim() });
+        toast.success("Đã đổi tên trường");
         setEditingId(null);
       } catch (err) {
-        setError(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   }
 
   function onDelete(id: string) {
-    setError(null);
     startTransition(async () => {
       try {
         await deleteSchool.mutateAsync(id);
+        toast.success("Đã xóa trường");
       } catch (err) {
-        setError(friendlyErrorMessage(err));
+        toast.error(friendlyErrorMessage(err));
       }
     });
   }
@@ -202,8 +202,6 @@ export function SchoolsManageDialog({
             Xóa trường sẽ tự gỡ trường khỏi các lớp đang gắn (lớp không bị
             xóa).
           </p>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
       </DialogContent>
     </Dialog>

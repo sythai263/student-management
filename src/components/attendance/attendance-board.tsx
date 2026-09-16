@@ -7,6 +7,7 @@ import {
   useAttendanceSession,
   useCloseSession,
 } from "@hooks";
+import { toast } from "sonner";
 import { sessionDisplayName } from "@lib/attendance-session";
 import { AttendanceBoardSkeleton } from "./attendance-board-skeleton";
 import { AttendanceToolbar } from "./attendance-toolbar";
@@ -78,15 +79,14 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         total={records?.length ?? 0}
         closed={closed}
         closing={closeSessionMutation.isPending}
-        onClose={() => closeSessionMutation.mutate()}
+        onClose={() =>
+          closeSessionMutation.mutate(undefined, {
+            onSuccess: () => toast.success("Đã đóng buổi điểm danh"),
+            onError: (err) => toast.error(err.message),
+          })
+        }
         onStartRollCall={() => setRollCallOpen(true)}
       />
-
-      {closeSessionMutation.error && (
-        <p className="text-sm text-destructive">
-          {closeSessionMutation.error.message}
-        </p>
-      )}
 
       <AttendanceGrid
         sessionId={sessionId}

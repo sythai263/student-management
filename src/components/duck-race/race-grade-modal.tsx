@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import { GRADE_SLOT_LABEL } from "@constants";
 import { getGradeForRace, saveRaceGrades } from "@lib/actions";
 import { parseScoreInput } from "@lib/grade-utils";
@@ -49,7 +50,7 @@ export function RaceGradeModal({
   const [value, setValue] = useState("");
   const [loading, startLoading] = useTransition();
   const [saving, startSaving] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   // Reset the form whenever the modal target changes; the grade lookup
   // itself lives in the effect below.
@@ -57,7 +58,7 @@ export function RaceGradeModal({
   const [prevFetchKey, setPrevFetchKey] = useState(fetchKey);
   if (prevFetchKey !== fetchKey) {
     setPrevFetchKey(fetchKey);
-    setMessage(null);
+    setLoadFailed(false);
     setValue("");
     if (!open || !subjectId || !studentId) setTargetSlot(null);
   }
@@ -75,34 +76,36 @@ export function RaceGradeModal({
         if (res.success) {
           setTargetSlot(res.data.emptySlots[0] ?? null);
         } else {
-          setMessage(res.error);
+          setLoadFailed(true);
           setTargetSlot(null);
+          toast.error(res.error);
         }
       } catch (e) {
-        setMessage(friendlyErrorMessage(e));
+        setLoadFailed(true);
+        toast.error(friendlyErrorMessage(e));
       }
     });
   }, [open, classId, subjectId, studentId, semester]);
 
   function handleSave() {
     if (!subjectId || !studentId) {
-      setMessage("Thiếu thông tin môn học hoặc học sinh");
+      toast.error("Thiếu thông tin môn học hoặc học sinh");
       return;
     }
     if (!targetSlot) {
-      setMessage("Học sinh đã có đủ 4 điểm thường xuyên");
+      toast.error("Học sinh đã có đủ 4 điểm thường xuyên");
       return;
     }
 
     const trimmed = value.trim();
     if (trimmed === "") {
-      setMessage("Chưa nhập điểm");
+      toast.error("Chưa nhập điểm");
       return;
     }
 
     const { value: parsed, invalid } = parseScoreInput(trimmed);
     if (invalid || parsed == null) {
-      setMessage(`Điểm "${trimmed}" không hợp lệ (0 - 10)`);
+      toast.error(`Điểm "${trimmed}" không hợp lệ (0 - 10)`);
       return;
     }
 
@@ -115,14 +118,11 @@ export function RaceGradeModal({
         scores: [parsed],
       });
       if (result.success) {
-        setMessage("Đã lưu điểm");
-        setTimeout(() => {
-          onOpenChange(false);
-          setMessage(null);
-          setValue("");
-        }, 800);
+        toast.success("Đã lưu điểm");
+        onOpenChange(false);
+        setValue("");
       } else {
-        setMessage(result.error);
+        toast.error(result.error);
       }
     });
   }
@@ -144,7 +144,6 @@ export function RaceGradeModal({
               value={String(semester)}
               onValueChange={(v) => {
                 setSemester(Number(v));
-                setMessage(null);
                 setValue("");
               }}
               disabled={loading || saving}
@@ -167,7 +166,7 @@ export function RaceGradeModal({
             </p>
           ) : loading ? (
             <Skeleton className="h-9 w-full" />
-          ) : !targetSlot ? (
+          ) : loadFailed ? null : !targetSlot ? (
             <p className="text-sm text-muted-foreground">
               Học sinh đã có đủ 4 điểm thường xuyên cho môn này.
             </p>
@@ -181,27 +180,12 @@ export function RaceGradeModal({
                 type="text"
                 inputMode="decimal"
                 value={value}
-                onChange={(e) => {
-                  setValue(e.target.value);
-                  setMessage(null);
-                }}
+                onChange={(e) => setValue(e.target.value)}
                 disabled={saving}
                 className="text-center"
                 autoFocus
               />
             </div>
-          )}
-
-          {message && (
-            <p
-              className={
-                message === "Đã lưu điểm"
-                  ? "text-sm text-green-600"
-                  : "text-sm text-destructive"
-              }
-            >
-              {message}
-            </p>
           )}
         </div>
 

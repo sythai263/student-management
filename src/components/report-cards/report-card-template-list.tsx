@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import {
   useDeleteReportCardTemplate,
   useReportCardTemplates,
@@ -83,7 +84,13 @@ export function ReportCardTemplateList() {
                     variant="outline"
                     size="sm"
                     disabled={setDefault.isPending}
-                    onClick={() => setDefault.mutate(t.id)}
+                    onClick={() =>
+                      setDefault.mutate(t.id, {
+                        onSuccess: () =>
+                          toast.success("Đã đặt làm mẫu mặc định"),
+                        onError: (err) => toast.error(err.message),
+                      })
+                    }
                   >
                     <Star /> Đặt làm mặc định
                   </Button>
@@ -123,7 +130,11 @@ export function ReportCardTemplateList() {
               onClick={() => {
                 if (toDelete) {
                   deleteTemplate.mutate(toDelete.id, {
-                    onSuccess: () => setToDelete(null),
+                    onSuccess: () => {
+                      toast.success("Đã xóa mẫu phiếu điểm");
+                      setToDelete(null);
+                    },
+                    onError: (err) => toast.error(err.message),
                   });
                 }
               }}
