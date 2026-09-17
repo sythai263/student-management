@@ -41,6 +41,7 @@ export {
   useAttendanceSession,
   useAttendanceSessions,
   useAttendanceRecords,
+  useMissingAttendanceCounts,
   useUpdateAttendance,
   useAddAttendanceRecord,
   useCloseSession,

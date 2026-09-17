@@ -9,7 +9,6 @@ import { deleteObject } from "@lib/storage";
 import { removeDiacritics } from "@lib/string";
 import { createSupabaseServerClient } from "@lib/supabase";
 import {
-  addStudentsToAllSessions,
   requireTeacher,
   withAction,
   type ActionResult,
@@ -28,6 +27,14 @@ interface CsvRow {
   lastName: string;
   firstName: string;
   dateOfBirth: string | null;
+}
+
+interface StudentWriteRow {
+  classId: string;
+  lastName: string;
+  firstName: string;
+  dateOfBirth: string | null;
+  studentCode: string | null;
 }
 
 /** Diacritic-insensitive "Họ đệm Tên" key for name-based dedupe. */
@@ -99,7 +106,6 @@ export async function importStudents(
   const classId = formData.get("classId");
   const matchBy = formData.get("matchBy") === "name" ? "name" : "code";
   const replace = formData.get("importMode") === "replace";
-  const addToAllSessions = formData.get("addToAllSessions") === "on";
 
   const result = await withAction(async () => {
     const { supabase } = await requireTeacher();
@@ -135,64 +141,131 @@ export async function importStudents(
       const codes = dedupedRows
         .map((r) => r.studentCode)
         .filter((c): c is string => !!c);
+      const dobByCode = new Map<string, string | null>();
       if (codes.length > 0) {
         const { data: existing, error: existingError } = await supabase
           .from("students")
-          .select("id, studentCode")
+          .select("id, studentCode, dateOfBirth")
           .eq("classId", classId)
           .in("studentCode", codes);
         if (existingError) throw new Error(existingError.message);
-        for (const s of existing ?? []) existingIds.add(s.id as string);
+        for (const s of existing ?? []) {
+          existingIds.add(s.id as string);
+          dobByCode.set(
+            s.studentCode as string,
+            (s.dateOfBirth as string | null) ?? null,
+          );
+        }
       }
 
       const { data: upserted, error } = await supabase
         .from("students")
         .upsert(
-          dedupedRows.map((r) => ({ ...r, classId })),
+          dedupedRows.map((r) => ({
+            ...r,
+            classId,
+            // On update, a blank cell must not wipe an existing date.
+            dateOfBirth:
+              r.dateOfBirth ??
+              (r.studentCode ? dobByCode.get(r.studentCode) : null) ??
+              null,
+          })),
           { onConflict: '"studentCode","classId"' },
         )
         .select();
       if (error) throw new Error(error.message);
-      return finishImport(supabase, classId, upserted ?? [], existingIds, addToAllSessions, replace);
+      return finishImport(supabase, classId, upserted ?? [], existingIds, replace);
     }
 
     // matchBy === "name": match on normalized "Họ đệm Tên".
     const { data: all, error: allError } = await supabase
       .from("students")
-      .select("id, lastName, firstName")
+      .select("id, lastName, firstName, studentCode, dateOfBirth")
       .eq("classId", classId);
     if (allError) throw new Error(allError.message);
 
-    const idByName = new Map<string, string>();
+    interface ExistingStudent {
+      id: string;
+      studentCode: string | null;
+      dateOfBirth: string | null;
+    }
+    const byName = new Map<string, ExistingStudent>();
+    const ownerByCode = new Map<string, string>();
     for (const s of all ?? []) {
-      idByName.set(
-        nameKey(s.lastName as string, s.firstName as string),
-        s.id as string,
-      );
+      byName.set(nameKey(s.lastName as string, s.firstName as string), {
+        id: s.id as string,
+        studentCode: (s.studentCode as string | null) ?? null,
+        dateOfBirth: (s.dateOfBirth as string | null) ?? null,
+      });
+      if (s.studentCode) {
+        ownerByCode.set(s.studentCode as string, s.id as string);
+      }
     }
 
-    const upsertRows = dedupedRows.map((r) => {
-      const id = idByName.get(nameKey(r.lastName, r.firstName));
-      if (id) existingIds.add(id);
+    // Split matched vs new rows into separate homogeneous batches.
+    // PostgREST rejects an upsert whose objects don't share the same
+    // key set (PGRST102 "All object keys must match"), and a new row
+    // must not carry `id` at all — an explicit NULL skips
+    // gen_random_uuid() and violates the PK not-null constraint.
+    const updateRows: (StudentWriteRow & { id: string })[] = [];
+    const insertRows: StudentWriteRow[] = [];
+    const fileCodes = new Set<string>();
+    for (const r of dedupedRows) {
+      const existing = byName.get(nameKey(r.lastName, r.firstName));
+      if (r.studentCode) {
+        const owner = ownerByCode.get(r.studentCode);
+        if (
+          (owner && owner !== existing?.id) ||
+          fileCodes.has(r.studentCode)
+        ) {
+          throw new Error(
+            `Mã học sinh "${r.studentCode}" bị trùng trong lớp`,
+          );
+        }
+        fileCodes.add(r.studentCode);
+      }
       const base = {
         classId,
         lastName: r.lastName,
         firstName: r.firstName,
-        dateOfBirth: r.dateOfBirth,
       };
-      // On update, studentCode is only written when the file provides
-      // one — a blank cell must not wipe an existing code.
-      return id
-        ? { id, ...base, ...(r.studentCode ? { studentCode: r.studentCode } : {}) }
-        : { ...base, studentCode: r.studentCode };
-    });
+      if (existing) {
+        existingIds.add(existing.id);
+        // On update, blank cells keep the old values — they must not
+        // wipe the existing studentCode / dateOfBirth.
+        updateRows.push({
+          id: existing.id,
+          ...base,
+          dateOfBirth: r.dateOfBirth ?? existing.dateOfBirth,
+          studentCode: r.studentCode ?? existing.studentCode,
+        });
+      } else {
+        insertRows.push({
+          ...base,
+          dateOfBirth: r.dateOfBirth,
+          studentCode: r.studentCode,
+        });
+      }
+    }
 
-    const { data: upserted, error } = await supabase
-      .from("students")
-      .upsert(upsertRows)
-      .select();
-    if (error) throw new Error(error.message);
-    return finishImport(supabase, classId, upserted ?? [], existingIds, addToAllSessions, replace);
+    const upserted: Record<string, unknown>[] = [];
+    if (updateRows.length > 0) {
+      const { data, error } = await supabase
+        .from("students")
+        .upsert(updateRows)
+        .select();
+      if (error) throw new Error(error.message);
+      upserted.push(...(data ?? []));
+    }
+    if (insertRows.length > 0) {
+      const { data, error } = await supabase
+        .from("students")
+        .insert(insertRows)
+        .select();
+      if (error) throw new Error(error.message);
+      upserted.push(...(data ?? []));
+    }
+    return finishImport(supabase, classId, upserted, existingIds, replace);
   });
 
   if (result.success && typeof classId === "string") {
@@ -205,21 +278,16 @@ type SupabaseClient = Awaited<
   ReturnType<typeof createSupabaseServerClient>
 >;
 
-/** Shared tail of both match modes: grade init, optional session back-fill, counts. */
+/** Shared tail of both match modes: grade init, replace-mode cleanup, counts. */
 async function finishImport(
   supabase: SupabaseClient,
   classId: string,
   upserted: Record<string, unknown>[],
   existingIds: Set<string>,
-  addToAllSessions: boolean,
   replace: boolean,
 ): Promise<ImportStudentsSummary> {
   const upsertedIds = upserted.map((s) => s.id as string);
   const newIds = upsertedIds.filter((id) => !existingIds.has(id));
-
-  if (addToAllSessions && newIds.length > 0) {
-    await addStudentsToAllSessions(classId, newIds);
-  }
 
   await initializeGradesForClassStudents(supabase, classId, upsertedIds);
 

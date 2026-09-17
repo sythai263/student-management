@@ -6,7 +6,6 @@ import { registerStudentSchema } from "@schemas";
 import { initializeGradesForClassStudents } from "@lib/grades";
 import type { Student } from "@types";
 import {
-  addStudentsToAllSessions,
   requireTeacher,
   withAction,
   type ActionResult,
@@ -23,8 +22,9 @@ import {
  *      and can change as the roster is adjusted).
  *   4. Upsert student row into Supabase: an existing studentCode in the
  *      class gets updated (new image re-indexes the face), otherwise insert.
- *   5. When `addToAllSessions` is set and the student is NEW, add VANG
- *      records for them into every session of the class (closed included).
+ *      Past sessions are untouched — a new student simply has no record
+ *      there and shows up in "điểm danh bổ sung" if the teacher wants
+ *      to mark them.
  */
 export async function registerStudent(
   formData: FormData,
@@ -45,7 +45,6 @@ export async function registerStudent(
       throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
     }
     const input = parsed.data;
-    const addToAllSessions = formData.get("addToAllSessions") === "on";
 
     // --- 3. Existing-student lookup only applies when a code is given;
     //        code-less students are always inserted as new rows. ---
@@ -118,12 +117,6 @@ export async function registerStudent(
     // Re-indexed face: drop the old vector so stale faces don't accumulate.
     if (existing?.awsFaceId && face) {
       await deleteFaceVector(input.classId, existing.awsFaceId as string);
-    }
-
-    // Newly added students can optionally be back-filled into every
-    // attendance session of the class (VANG), including closed ones.
-    if (!existing && addToAllSessions) {
-      await addStudentsToAllSessions(input.classId, [student.id as string]);
     }
 
     await initializeGradesForClassStudents(

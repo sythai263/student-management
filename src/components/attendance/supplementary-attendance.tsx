@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { cn } from "cn";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/ui/list-skeleton";
 import {
@@ -22,8 +23,9 @@ interface SupplementaryAttendanceProps {
 }
 
 /**
- * Students of the class who have no record in this session — shown on
- * closed sessions so the teacher can back-fill them ("điểm danh bổ sung").
+ * Students of the class who have no record in this session — e.g. newly
+ * added after the session was taken — so the teacher can back-fill them
+ * ("điểm danh bổ sung"). Shown on both open and closed sessions.
  * Fetches the unfiltered record list itself: the board's `records` may be
  * narrowed by the status filter, which would wrongly list students as
  * missing.
@@ -46,7 +48,7 @@ export function SupplementaryAttendance({
   if (missing.length === 0) return null;
 
   return (
-    <section className="space-y-2 rounded-md border border-dashed p-3">
+    <section className="space-y-3 rounded-md border border-dashed p-4">
       <div>
         <h3 className="text-base font-medium">
           Điểm danh bổ sung ({missing.length})
@@ -55,28 +57,36 @@ export function SupplementaryAttendance({
           Học sinh chưa có trong buổi này — chọn trạng thái để thêm.
         </p>
       </div>
-      <ul className="divide-y">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {missing.map((s) => (
-          <li
+          <div
             key={s.id}
-            className="flex items-center justify-between gap-2 py-2"
+            className="flex flex-col gap-2.5 rounded-md border border-dashed p-3"
           >
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">
-                {s.lastName} {s.firstName}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {s.studentCode ?? "—"}
-              </p>
+            <div className="flex items-start justify-between gap-1.5">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium leading-tight">
+                  {s.lastName} {s.firstName}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {s.studentCode ?? "—"}
+                </p>
+              </div>
+              <Badge
+                variant="outline"
+                className="shrink-0 border-amber-500/30 bg-amber-500/15 px-1.5 py-0 text-[10px] text-amber-400"
+              >
+                Mới
+              </Badge>
             </div>
-            <div className="grid shrink-0 grid-cols-5 gap-1">
+            <div className="grid grid-cols-5 gap-1">
               {ATTENDANCE_STATUS_LIST.map((status) => (
                 <Button
                   key={status}
                   size="sm"
                   variant="outline"
                   className={cn(
-                    "h-8 min-w-0 px-0 text-xs",
+                    "h-9 min-w-0 px-0 text-sm",
                     ATTENDANCE_STATUS_HOVER[status],
                   )}
                   disabled={addMutation.isPending}
@@ -97,9 +107,9 @@ export function SupplementaryAttendance({
                 </Button>
               ))}
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </section>
   );
 }

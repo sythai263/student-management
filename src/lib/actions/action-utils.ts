@@ -1,6 +1,4 @@
-import { ATTENDANCE_STATUS } from "@constants";
 import { createSupabaseServerClient } from "@lib/supabase";
-import { createSupabaseAdminClient } from "@lib/supabase/admin";
 import { friendlyErrorMessage } from "@lib/utils";
 
 /**
@@ -44,37 +42,3 @@ export async function withAction<T>(
   }
 }
 
-/**
- * Insert VANG records for the given students into EVERY attendance
- * session of the class — including closed ones, so this goes through
- * the admin client (RLS blocks writes to closed sessions). Callers
- * must already have verified the teacher owns the class.
- */
-export async function addStudentsToAllSessions(
-  classId: string,
-  studentIds: string[],
-): Promise<void> {
-  if (studentIds.length === 0) return;
-  const admin = createSupabaseAdminClient();
-
-  const { data: sessions, error: sessionsError } = await admin
-    .from("attendanceSessions")
-    .select("id")
-    .eq("classId", classId);
-  if (sessionsError) throw new Error(sessionsError.message);
-
-  const rows = (sessions ?? []).flatMap((s) =>
-    studentIds.map((studentId) => ({
-      sessionId: s.id as string,
-      studentId,
-      status: ATTENDANCE_STATUS.ABSENT,
-    })),
-  );
-  if (rows.length === 0) return;
-
-  const { error } = await admin.from("attendanceRecords").upsert(rows, {
-    onConflict: '"sessionId","studentId"',
-    ignoreDuplicates: true,
-  });
-  if (error) throw new Error(error.message);
-}

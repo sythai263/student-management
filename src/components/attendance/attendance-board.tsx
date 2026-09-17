@@ -111,19 +111,19 @@ export function AttendanceBoard({ sessionId }: AttendanceBoardProps) {
         onStartRollCall={() => setRollCallOpen(true)}
       />
 
+      {session && (
+        <SupplementaryAttendance
+          sessionId={sessionId}
+          classId={session.classId}
+        />
+      )}
+
       <AttendanceGrid
         sessionId={sessionId}
         records={visible}
         disabled={closed}
         onSelect={setEditing}
       />
-
-      {closed && session && (
-        <SupplementaryAttendance
-          sessionId={sessionId}
-          classId={session.classId}
-        />
-      )}
 
       <RecordEditDialog
         sessionId={sessionId}

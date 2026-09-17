@@ -84,6 +84,49 @@ export function useAttendanceRecords(
 // Partial key matches every status-filtered variant of the records query.
 const attendanceKey = (sessionId: string) => ["attendance", sessionId];
 
+/** Missing-counts query key — prefix-invalidate on any roster/record change. */
+const missingKey = (classId: string) => ["attendance-missing", classId];
+
+export interface MissingAttendanceCounts {
+  /** Students currently on the class roster. */
+  total: number;
+  /** sessionId -> how many records exist in that session. */
+  recorded: Record<string, number>;
+}
+
+/**
+ * Per-session count of roster students WITHOUT an attendance record —
+ * the "cần điểm danh bổ sung" number shown on the session list.
+ * missing(sessionId) = total - recorded[sessionId].
+ */
+export function useMissingAttendanceCounts(classId: string) {
+  return useQuery({
+    queryKey: missingKey(classId),
+    queryFn: async (): Promise<MissingAttendanceCounts> => {
+      const supabase = createSupabaseBrowserClient();
+      const [studentsRes, recordsRes] = await Promise.all([
+        supabase
+          .from("students")
+          .select("id", { count: "exact", head: true })
+          .eq("classId", classId),
+        supabase
+          .from("attendanceRecords")
+          .select("sessionId, attendanceSessions!inner(classId)")
+          .eq("attendanceSessions.classId", classId),
+      ]);
+      if (studentsRes.error) throw new Error(friendlyErrorMessage(studentsRes.error));
+      if (recordsRes.error) throw new Error(friendlyErrorMessage(recordsRes.error));
+
+      const recorded: Record<string, number> = {};
+      for (const r of recordsRes.data ?? []) {
+        const sid = r.sessionId as string;
+        recorded[sid] = (recorded[sid] ?? 0) + 1;
+      }
+      return { total: studentsRes.count ?? 0, recorded };
+    },
+  });
+}
+
 /** Mutation: update a single record — optimistic cache update, no refetch. */
 export function useUpdateAttendance(sessionId: string) {
   const queryClient = useQueryClient();
@@ -129,8 +172,10 @@ export function useAddAttendanceRecord(sessionId: string) {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: attendanceKey(sessionId) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: attendanceKey(sessionId) });
+      queryClient.invalidateQueries({ queryKey: ["attendance-missing"] });
+    },
   });
 }
 
@@ -162,8 +207,10 @@ export function useCreateSession(classId: string) {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["sessions", classId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions", classId] });
+      queryClient.invalidateQueries({ queryKey: missingKey(classId) });
+    },
   });
 }
 
@@ -194,6 +241,7 @@ export function useDeleteSession(classId: string) {
       queryClient.removeQueries({ queryKey: ["session", sessionId] });
       queryClient.removeQueries({ queryKey: ["attendance", sessionId] });
       queryClient.invalidateQueries({ queryKey: ["sessions", classId] });
+      queryClient.invalidateQueries({ queryKey: missingKey(classId) });
     },
   });
 }

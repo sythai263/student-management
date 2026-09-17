@@ -4,7 +4,6 @@ import { useRef, useState, useTransition, type SubmitEventHandler } from "react"
 import { useQueryClient } from "@tanstack/react-query";
 import { FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -69,6 +68,9 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
         if (fileRef.current) fileRef.current.value = "";
         await queryClient.invalidateQueries({
           queryKey: ["students", classId],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["attendance-missing", classId],
         });
         setOpen(false);
       }
@@ -161,10 +163,6 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
                 </p>
               )}
             </div>
-            <Label className="flex items-center gap-2 font-normal">
-              <Checkbox name="addToAllSessions" />
-              Thêm học sinh mới vào tất cả buổi điểm danh
-            </Label>
             <DialogFooter>
               <Button
                 type="button"

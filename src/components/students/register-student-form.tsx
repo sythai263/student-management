@@ -3,7 +3,6 @@
 import { useRef, useTransition, type SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -68,6 +67,9 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
         await queryClient.invalidateQueries({
           queryKey: ["students", classId],
         });
+        await queryClient.invalidateQueries({
+          queryKey: ["attendance-missing", classId],
+        });
       }
     });
   };
@@ -105,10 +107,6 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
             <Label htmlFor="image">Ảnh chân dung (không bắt buộc)</Label>
             <Input id="image" name="image" type="file" accept="image/*" />
           </div>
-          <Label className="flex items-center gap-2 font-normal">
-            <Checkbox name="addToAllSessions" />
-            Thêm vào tất cả buổi điểm danh của lớp
-          </Label>
           <Button type="submit" disabled={isPending}>
             {isPending ? "Đang xử lý..." : "Đăng ký"}
           </Button>
