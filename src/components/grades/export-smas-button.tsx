@@ -8,6 +8,7 @@ import { fetchClass } from "@hooks/classes";
 import { GRADE_SLOTS, type GradeSlot } from "@constants";
 import { calculateAverage, parseScoreInput } from "@lib/grade-utils";
 import { friendlyErrorMessage } from "@lib/utils";
+import { studentFullName } from "@lib/string";
 import type { Student } from "@types";
 
 interface ScoreInput {
@@ -67,8 +68,8 @@ export function ExportSmasButton({
             ]),
           ) as Record<GradeSlot, number | null>;
           return {
-            studentCode: s.studentCode,
-            fullName: `${s.lastName} ${s.firstName}`,
+            studentCode: s.studentCode ?? "",
+            fullName: studentFullName(s),
             scores,
             average: calculateAverage(scores),
             comment: input?.comment.trim() ?? "",

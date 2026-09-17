@@ -15,6 +15,7 @@ import {
   useUpdateAttendance,
   type AttendanceRecordWithStudent,
 } from "@hooks";
+import { studentFullName } from "@lib/string";
 
 interface AttendanceGridProps {
   sessionId: string;
@@ -46,10 +47,10 @@ const AttendanceCard = memo(function AttendanceCard({
       <div className="flex items-start justify-between gap-1.5">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium leading-tight">
-            {r.students?.lastName} {r.students?.firstName}
+            {r.students ? studentFullName(r.students) : ""}
           </p>
           <p className="text-xs text-muted-foreground">
-            {r.students?.studentCode}
+            {r.students?.studentCode ?? "—"}
           </p>
         </div>
         <Badge

@@ -6,4 +6,5 @@ export { AttendanceToolbar } from "./attendance-toolbar";
 export { AttendanceGrid } from "./attendance-grid";
 export { RecordEditDialog } from "./record-edit-dialog";
 export { RollCallModal } from "./roll-call-modal";
+export { SupplementaryAttendance } from "./supplementary-attendance";
 export { SessionList } from "./session-list";

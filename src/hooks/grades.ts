@@ -25,7 +25,7 @@ export function useGrades(
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("grades")
-        .select("*, students(studentCode, lastName, firstName)")
+        .select("*, students(studentCode, lastName, firstName, nameSuffix)")
         .eq("classId", classId)
         .eq("subjectId", subjectId)
         .eq("semester", semester)

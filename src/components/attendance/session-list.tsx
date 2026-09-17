@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import {
   useAttendanceSessions,
   useDeleteSession,
+  useMissingAttendanceCounts,
   useRenameSession,
 } from "@hooks";
 import { sessionDisplayName } from "@lib/attendance-session";
@@ -31,6 +32,7 @@ interface SessionListProps {
 
 export function SessionList({ classId }: SessionListProps) {
   const { data: sessions, isLoading, error } = useAttendanceSessions(classId);
+  const { data: missingCounts } = useMissingAttendanceCounts(classId);
   const renameSession = useRenameSession(classId);
   const deleteSession = useDeleteSession(classId);
 
@@ -79,46 +81,60 @@ export function SessionList({ classId }: SessionListProps) {
       {error && <p className="text-sm text-destructive">{error.message}</p>}
 
       <ul className="space-y-2">
-        {sessions?.map((s) => (
-          <li
-            key={s.id}
-            className="flex items-center gap-1 rounded-md border p-3 transition-colors hover:border-primary"
-          >
-            <Link
-              href={`/classes/${classId}/attendance/${s.id}`}
-              className="flex min-w-0 flex-1 items-center gap-3"
+        {sessions?.map((s) => {
+          // Students on the roster with no record in this session.
+          const missing = missingCounts
+            ? missingCounts.total - (missingCounts.recorded[s.id] ?? 0)
+            : 0;
+          return (
+            <li
+              key={s.id}
+              className="flex items-center gap-1 rounded-md border p-3 transition-colors hover:border-primary"
             >
-              <span className="truncate font-medium">
-                {sessionDisplayName(s)}
-              </span>
-              <Badge variant={s.imageKeys.length > 0 ? "default" : "secondary"}>
-                {s.imageKeys.length > 0
-                  ? `${s.imageKeys.length} ảnh`
-                  : "Thủ công"}
-              </Badge>
-              {s.closed && <Badge variant="outline">Đã đóng</Badge>}
-            </Link>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label="Đổi tên buổi điểm danh"
-              onClick={() => openRename(s)}
-            >
-              <Pencil />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive"
-              aria-label="Xóa buổi điểm danh"
-              onClick={() => setDeleting(s)}
-            >
-              <Trash2 />
-            </Button>
-          </li>
-        ))}
+              <Link
+                href={`/classes/${classId}/attendance/${s.id}`}
+                className="flex min-w-0 flex-1 items-center gap-3"
+              >
+                <span className="truncate font-medium">
+                  {sessionDisplayName(s)}
+                </span>
+                <Badge variant={s.imageKeys.length > 0 ? "default" : "secondary"}>
+                  {s.imageKeys.length > 0
+                    ? `${s.imageKeys.length} ảnh`
+                    : "Thủ công"}
+                </Badge>
+                {s.closed && <Badge variant="outline">Đã đóng</Badge>}
+                {missing > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-500/30 bg-amber-500/15 text-amber-400"
+                  >
+                    {missing} bổ sung
+                  </Badge>
+                )}
+              </Link>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Đổi tên buổi điểm danh"
+                onClick={() => openRename(s)}
+              >
+                <Pencil />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive"
+                aria-label="Xóa buổi điểm danh"
+                onClick={() => setDeleting(s)}
+              >
+                <Trash2 />
+              </Button>
+            </li>
+          );
+        })}
         {sessions?.length === 0 && (
           <p className="text-muted-foreground">Chưa có buổi điểm danh nào.</p>
         )}

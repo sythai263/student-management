@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { ATTENDANCE_STATUS } from "@constants";
-import { renameSessionSchema, updateRecordSchema } from "@schemas";
+import { renameSessionSchema, updateRecordSchema, addRecordSchema } from "@schemas";
 import { deleteObject } from "@lib/storage";
+import { createSupabaseAdminClient } from "@lib/supabase/admin";
 import { defaultSessionName } from "@lib/attendance-session";
 import type { AttendanceRecord } from "@types";
 import {
@@ -31,6 +32,52 @@ export async function updateAttendanceRecord(
       .select()
       .single();
     if (error) throw new Error(error.message);
+    return data as AttendanceRecord;
+  });
+}
+
+/**
+ * Server Action: supplementary attendance — add a record for a student
+ * who is missing from the session (e.g. joined the class after the
+ * session was taken). Works on closed sessions too: RLS blocks writes
+ * there, so the insert goes through the admin client — the user-scoped
+ * session fetch above still proves ownership (RLS hides others' rows).
+ */
+export async function addAttendanceRecord(
+  input: unknown,
+): Promise<ActionResult<AttendanceRecord>> {
+  return withAction(async () => {
+    const { supabase } = await requireTeacher();
+
+    const parsed = addRecordSchema.safeParse(input);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
+    }
+
+    const { error: sessionError } = await supabase
+      .from("attendanceSessions")
+      .select("id")
+      .eq("id", parsed.data.sessionId)
+      .single();
+    if (sessionError) throw new Error("Không tìm thấy buổi điểm danh");
+
+    const admin = createSupabaseAdminClient();
+    const { data, error } = await admin
+      .from("attendanceRecords")
+      .insert({
+        sessionId: parsed.data.sessionId,
+        studentId: parsed.data.studentId,
+        status: parsed.data.status,
+        note: parsed.data.note ?? null,
+      })
+      .select()
+      .single();
+    if (error) {
+      if (error.code === "23505") {
+        throw new Error("Học sinh đã có trong buổi điểm danh này");
+      }
+      throw new Error(error.message);
+    }
     return data as AttendanceRecord;
   });
 }

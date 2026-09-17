@@ -38,7 +38,10 @@ export interface StudentGradeSummary {
 }
 
 export interface GradeWithStudent extends Grade {
-  students: Pick<Student, "studentCode" | "lastName" | "firstName"> | null;
+  students: Pick<
+    Student,
+    "studentCode" | "lastName" | "firstName" | "nameSuffix"
+  > | null;
 }
 
 export interface ImportGradesError {

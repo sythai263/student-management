@@ -1,8 +1,10 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { indexStudentFace, deleteFaceVector } from "@lib/rekognition";
 import { registerStudentSchema } from "@schemas";
 import { initializeGradesForClassStudents } from "@lib/grades";
+import { nextStudentCode } from "@lib/student-code";
 import type { Student } from "@types";
 import {
   requireTeacher,
@@ -17,9 +19,13 @@ import {
  *   2. If an image is provided: upload to MinIO (dev) / Cloudflare R2 (prod)
  *      -> storage object key (served via the authenticated /api/image route).
  *   3. AWS Rekognition IndexFaces into the class's Collection,
- *      ExternalImageId = studentCode.
- *   4. Upsert student row into Supabase: existing studentCode in the class
- *      gets updated (new image re-indexes the face), otherwise insert.
+ *      ExternalImageId = student id (stable — studentCode is optional
+ *      and can change as the roster is adjusted).
+ *   4. Upsert student row into Supabase: an existing studentCode in the
+ *      class gets updated (new image re-indexes the face), otherwise insert.
+ *      Past sessions are untouched — a new student simply has no record
+ *      there and shows up in "điểm danh bổ sung" if the teacher wants
+ *      to mark them.
  */
 export async function registerStudent(
   formData: FormData,
@@ -30,9 +36,10 @@ export async function registerStudent(
 
     // --- 2. Validate fields ---
     const parsed = registerStudentSchema.safeParse({
-      studentCode: formData.get("studentCode"),
+      studentCode: formData.get("studentCode") || undefined,
       lastName: formData.get("lastName"),
       firstName: formData.get("firstName"),
+      nameSuffix: formData.get("nameSuffix") || undefined,
       dateOfBirth: formData.get("dateOfBirth") || undefined,
       classId: formData.get("classId"),
     });
@@ -40,6 +47,24 @@ export async function registerStudent(
       throw new Error(parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ");
     }
     const input = parsed.data;
+
+    // --- 3. Existing-student lookup only applies when a code is given;
+    //        code-less students are always inserted as new rows. ---
+    const existing = input.studentCode
+      ? await supabase
+        .from("students")
+        .select("id, awsFaceId")
+        .eq("classId", input.classId)
+        .eq("studentCode", input.studentCode)
+        .maybeSingle()
+        .then(({ data, error }) => {
+          if (error) throw new Error(error.message);
+          return data;
+        })
+      : null;
+
+    // ExternalImageId = student id — known upfront even for new rows.
+    const studentId = (existing?.id as string | undefined) ?? randomUUID();
 
     // Portrait is optional — AWS calls are skipped entirely when no
     // image is provided. Both keys point at files already uploaded
@@ -53,24 +78,41 @@ export async function registerStudent(
         avatarKey.length > 0
         ? await indexStudentFace(
           input.classId,
-          input.studentCode,
+          studentId,
           imageKey,
           avatarKey,
         )
         : null;
 
-    // --- 5. Upsert student into Supabase (RLS: teacher must own the class) ---
-    const { data: existing, error: existingError } = await supabase
-      .from("students")
-      .select("id, awsFaceId")
-      .eq("classId", input.classId)
-      .eq("studentCode", input.studentCode)
-      .maybeSingle();
-    if (existingError) throw new Error(existingError.message);
+    // No code given -> "<classCode>-NNNN" continuing the highest
+    // code already in use in the class.
+    let studentCode = input.studentCode ?? null;
+    if (!studentCode) {
+      const [clsRes, codesRes] = await Promise.all([
+        supabase
+          .from("classes")
+          .select("classCode")
+          .eq("id", input.classId)
+          .single(),
+        supabase
+          .from("students")
+          .select("studentCode")
+          .eq("classId", input.classId),
+      ]);
+      if (clsRes.error) throw new Error("Không tìm thấy lớp học");
+      if (codesRes.error) throw new Error(codesRes.error.message);
+      studentCode = nextStudentCode(
+        (codesRes.data ?? []).map((c) => c.studentCode as string | null),
+        new Set(),
+        clsRes.data.classCode as string,
+      );
+    }
 
+    // --- 5. Upsert student into Supabase (RLS: teacher must own the class) ---
     const baseFields = {
       lastName: input.lastName,
       firstName: input.firstName,
+      nameSuffix: input.nameSuffix ?? null,
       dateOfBirth: input.dateOfBirth ?? null,
     };
     // Keep the old face data when no new image was provided.
@@ -88,7 +130,8 @@ export async function registerStudent(
       : await supabase
         .from("students")
         .insert({
-          studentCode: input.studentCode,
+          id: studentId,
+          studentCode,
           classId: input.classId,
           ...baseFields,
           awsFaceId: face?.awsFaceId ?? null,

@@ -24,6 +24,7 @@ import {
   useTeacherSignature,
 } from "@hooks";
 import { calculateAverage } from "@lib/grade-utils";
+import { studentFullName } from "@lib/string";
 import { defaultReportCardBlocks, type ReportCardData } from "@lib/report-card";
 import { GRADE_SLOTS } from "@constants";
 import {
@@ -65,16 +66,25 @@ export function ReportCardDashboard({
   const [signDateIso, setSignDateIso] = useState(todayIso());
   const [cardsPerPage, setCardsPerPage] = useState<CardsPerPage>(6);
 
-  const subjectOptions = (classSubjects ?? []).map((cs) => ({
-    id: cs.subjectId,
-    name: cs.subjects?.name ?? "",
-    code: cs.subjects?.code,
-  }));
+  const subjectOptions = useMemo(
+    () =>
+      (classSubjects ?? []).map((cs) => ({
+        id: cs.subjectId,
+        name: cs.subjects?.name ?? "",
+        code: cs.subjects?.code,
+      })),
+    [classSubjects],
+  );
 
   const isLocked = !!subjectIdProp;
-  const selectedSubject = isLocked
-    ? { id: subjectIdProp, name: subjectNameProp ?? "" }
-    : (subjectOptions.find((s) => s.id === subjectId) ?? subjectOptions[0]);
+  const selectedSubject = useMemo(
+    () =>
+      isLocked
+        ? { id: subjectIdProp, name: subjectNameProp ?? "" }
+        : (subjectOptions.find((s) => s.id === subjectId) ??
+          subjectOptions[0]),
+    [isLocked, subjectIdProp, subjectNameProp, subjectOptions, subjectId],
+  );
 
   const activeSubjectId = selectedSubject?.id ?? "";
   const activeSubjectName = selectedSubject?.name ?? "";
@@ -121,8 +131,8 @@ export function ReportCardDashboard({
       ) as ReportCardData["scores"];
 
       return {
-        studentCode: s.studentCode,
-        studentName: `${s.lastName} ${s.firstName}`,
+        studentCode: s.studentCode ?? "",
+        studentName: studentFullName(s),
         classCode: classInfo.classCode,
         className: classInfo.name,
         schoolName: classInfo.school?.name ?? "",
@@ -162,15 +172,7 @@ export function ReportCardDashboard({
                   }}
                 >
                   <SelectTrigger id="template">
-                    <SelectValue placeholder="Chọn mẫu">
-                      {(value: string) => {
-                        if (value === BUILTIN_TEMPLATE_ID) return "Mẫu mặc định";
-                        const t = templates?.find((tpl) => tpl.id === value);
-                        return t
-                          ? `${t.name}${t.isDefault ? " (mặc định)" : ""}`
-                          : "Chọn mẫu";
-                      }}
-                    </SelectValue>
+                    <SelectValue placeholder="Chọn mẫu" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={BUILTIN_TEMPLATE_ID}>Mẫu mặc định</SelectItem>
@@ -202,14 +204,7 @@ export function ReportCardDashboard({
                   onValueChange={(v) => setSubjectId(v ?? "")}
                 >
                   <SelectTrigger id="subject">
-                    <SelectValue placeholder="Chọn môn học">
-                      {(value: string) => {
-                        const s = subjectOptions.find((o) => o.id === value);
-                        return s
-                          ? `${s.name}${s.code ? ` (${s.code})` : ""}`
-                          : "Chọn môn học";
-                      }}
-                    </SelectValue>
+                    <SelectValue placeholder="Chọn môn học" />
                   </SelectTrigger>
                   <SelectContent>
                     {subjectOptions.map((s) => (
@@ -230,9 +225,7 @@ export function ReportCardDashboard({
                 onValueChange={(v) => setSemester(Number(v ?? 1))}
               >
                 <SelectTrigger id="semester">
-                  <SelectValue placeholder="Học kỳ">
-                    {(value: string) => `Học kỳ ${value}`}
-                  </SelectValue>
+                  <SelectValue placeholder="Học kỳ" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">Học kỳ 1</SelectItem>
@@ -260,9 +253,7 @@ export function ReportCardDashboard({
                 }
               >
                 <SelectTrigger id="cardsPerPage">
-                  <SelectValue>
-                    {(value: string) => `${value} phiếu / trang`}
-                  </SelectValue>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {CARDS_PER_PAGE_OPTIONS.map((n) => (

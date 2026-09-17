@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { REPORT_CARD_FIELD_LABEL, REPORT_CARD_FIELDS } from "@lib/report-card";
+import { REPORT_CARD_FIELDS } from "@lib/report-card";
 import type {
   LetterheadRatio,
   ReportCardBlock,
@@ -55,9 +55,7 @@ function FieldSelect({
   return (
     <Select value={value} onValueChange={(v) => v && onChange(v as ReportCardFieldKey)}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Chọn field">
-          {(v: ReportCardFieldKey) => REPORT_CARD_FIELD_LABEL[v] ?? "Chọn field"}
-        </SelectValue>
+        <SelectValue placeholder="Chọn field" />
       </SelectTrigger>
       <SelectContent>
         {GROUPS.map((group) => (
@@ -89,7 +87,7 @@ export function BlockInspector({ block, onChange }: BlockInspectorProps) {
             }
           >
             <SelectTrigger>
-              <SelectValue>{(v: string) => `${v} cột`}</SelectValue>
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {[1, 2, 3, 4].map((n) => (
@@ -110,9 +108,7 @@ export function BlockInspector({ block, onChange }: BlockInspectorProps) {
             }
           >
             <SelectTrigger>
-              <SelectValue>
-                {(v: string) => (v === "center" ? "Giữa" : "Trái")}
-              </SelectValue>
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="left">Trái</SelectItem>
@@ -233,9 +229,7 @@ export function BlockInspector({ block, onChange }: BlockInspectorProps) {
             }
           >
             <SelectTrigger>
-              <SelectValue>
-                {(v: string) => (v === "yes" ? "Có" : "Không")}
-              </SelectValue>
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="yes">Có</SelectItem>
@@ -263,9 +257,7 @@ export function BlockInspector({ block, onChange }: BlockInspectorProps) {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue>
-                    {(v: string) => SIGNATURE_RATIO_LABEL[v as LetterheadRatio]}
-                  </SelectValue>
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {(Object.keys(SIGNATURE_RATIO_LABEL) as LetterheadRatio[]).map(
@@ -315,9 +307,7 @@ export function BlockInspector({ block, onChange }: BlockInspectorProps) {
             }
           >
             <SelectTrigger>
-              <SelectValue>
-                {(v: string) => LETTERHEAD_RATIO_LABEL[v as LetterheadRatio]}
-              </SelectValue>
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {(Object.keys(LETTERHEAD_RATIO_LABEL) as LetterheadRatio[]).map(

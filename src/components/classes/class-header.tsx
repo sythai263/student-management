@@ -65,14 +65,7 @@ export function ClassHeader({ classId }: ClassHeaderProps) {
             disabled={isPending}
           >
             <SelectTrigger className="h-8 w-auto gap-1 text-sm">
-              <SelectValue>
-                {(value: string) =>
-                  value === NO_SCHOOL
-                    ? "Chưa gắn trường"
-                    : (schools?.find((s) => s.id === value)?.name ??
-                      "Chưa gắn trường")
-                }
-              </SelectValue>
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NO_SCHOOL}>Chưa gắn trường</SelectItem>

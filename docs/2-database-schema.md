@@ -15,9 +15,10 @@
 ## 2. Table: students
 Class rosters are fixed per school year: 1 student belongs to exactly 1 class.
 - `id` (UUID, Primary Key)
-- `studentCode` (Text, Unique within a class — `unique ("studentCode", "classId")`)
+- `studentCode` (Text, nullable — optional label; unique within a class when set — `unique ("studentCode", "classId")`, NULLs never conflict)
 - `lastName` (Text, họ + tên đệm)
 - `firstName` (Text, tên)
+- `nameSuffix` (Text, nullable — ký hiệu phân biệt học sinh trùng tên, hiển thị dạng "Vĩnh (A)"; name matching treats (lastName, firstName, nameSuffix) as the identity)
 - `dateOfBirth` (Date, nullable)
 - `classId` (UUID, Foreign Key to classes.id)
 - `awsFaceId` (Text, nullable — retrieved from AWS Rekognition)
@@ -132,6 +133,9 @@ Query example (per-class grade sheet for one subject/semester):
 select * from "studentGradeSummaries"
 where "classId" = $1 and "subjectId" = $2 and "semester" = $3;
 ```
+
+## 12a. View: sessionRecordCounts (migration 0014)
+`security_invoker = true`. One row per session: `sessionId`, `classId`, `recordCount` — powers the "cần điểm danh bổ sung" badge on the session list (`roster size - recordCount`) without fetching every record row.
 
 ## 13. Helper functions (migration 0008)
 - `remove_diacritics(text)` — lower-case + strip Vietnamese diacritics (unaccent in `extensions` schema, pinned `search_path`)

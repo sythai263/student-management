@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useDebounce, usePaginatedStudents } from "@hooks";
+import { studentFullName } from "@lib/string";
 import type { Student } from "@types";
 import { StudentEditDialog } from "./student-edit-dialog";
 import {
@@ -130,10 +131,10 @@ export function StudentTable({ classId }: StudentTableProps) {
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">
-                      {s.lastName} {s.firstName}
+                      {studentFullName(s)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {s.studentCode}
+                      {s.studentCode ?? "—"}
                       {s.dateOfBirth ? ` · ${s.dateOfBirth}` : ""}
                     </p>
                   </div>
@@ -170,9 +171,12 @@ export function StudentTable({ classId }: StudentTableProps) {
                     onClick={() => setEditing(s)}
                   >
                     <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
-                    <TableCell>{s.studentCode}</TableCell>
+                    <TableCell>{s.studentCode ?? "—"}</TableCell>
                     <TableCell>{s.lastName}</TableCell>
-                    <TableCell>{s.firstName}</TableCell>
+                    <TableCell>
+                      {s.firstName}
+                      {s.nameSuffix ? ` (${s.nameSuffix})` : ""}
+                    </TableCell>
                     <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
                     <TableCell>
                       {s.awsFaceId ? (

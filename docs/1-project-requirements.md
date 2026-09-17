@@ -14,7 +14,7 @@ SaaS Application for Facial Recognition Attendance. Teachers can log in, create 
 ## 3. Register New Student (Index Face)
 - Files never flow through a Server Action body (Vercel 4.5MB cap): the client calls `createUploadUrl` to mint a presigned PUT, then uploads **directly to MinIO/R2** — the original to `tmp/students/` (Rekognition-only) and a compressed copy to `students/`.
 - The Server Action (`registerStudent`) receives only the object keys (`imageKey`, `avatarKey`).
-- Server Action calls AWS Rekognition `IndexFacesCommand` on the original to save the face to the class's Collection, attaching `studentCode` as the `ExternalImageId`; the `tmp/` original is deleted afterwards (best-effort).
+- Server Action calls AWS Rekognition `IndexFacesCommand` on the original to save the face to the class's Collection, attaching the student `id` as the `ExternalImageId` (stable — `studentCode` is optional and mutable); the `tmp/` original is deleted afterwards (best-effort).
 - Save student info + `awsFaceId` + `avatarKey` to Supabase, then initialize empty `grades` rows for every `classSubjects` link (both semesters).
 
 ## 4. Group Attendance (Search Faces)

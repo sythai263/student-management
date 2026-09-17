@@ -72,14 +72,7 @@ export function GradeDashboard({
                 onValueChange={(v) => setSubjectId(v ?? "")}
               >
                 <SelectTrigger id="subject">
-                  <SelectValue placeholder="Chọn môn học">
-                    {(value: string) => {
-                      const s = subjectOptions.find((o) => o.id === value);
-                      return s
-                        ? `${s.name}${s.code ? ` (${s.code})` : ""}`
-                        : "Chọn môn học";
-                    }}
-                  </SelectValue>
+                  <SelectValue placeholder="Chọn môn học" />
                 </SelectTrigger>
                 <SelectContent>
                   {subjectOptions.map((s) => (
@@ -98,9 +91,7 @@ export function GradeDashboard({
               onValueChange={(v) => setSemester(Number(v))}
             >
               <SelectTrigger id="semester">
-                <SelectValue>
-                  {(value: string) => `Học kỳ ${value}`}
-                </SelectValue>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="1">Học kỳ 1</SelectItem>

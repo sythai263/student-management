@@ -26,6 +26,7 @@ import {
   useUpdateAttendance,
   type AttendanceRecordWithStudent,
 } from "@hooks";
+import { studentFullName } from "@lib/string";
 
 interface RecordEditDialogProps {
   sessionId: string;
@@ -82,10 +83,10 @@ export function RecordEditDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            {s?.lastName} {s?.firstName}
+            {s ? studentFullName(s) : ""}
           </DialogTitle>
           <DialogDescription className="flex items-center gap-2">
-            <span>{s?.studentCode}</span>
+            <span>{s?.studentCode ?? "—"}</span>
             {record.confidence != null && (
               <Badge variant={record.confidence >= 90 ? "default" : "secondary"}>
                 Nhận diện {record.confidence.toFixed(0)}%

@@ -21,6 +21,22 @@ export const updateRecordSchema = z
 
 export type UpdateAttendanceInput = z.infer<typeof updateRecordSchema>;
 
+/** Validation for the "Add Supplementary Attendance Record" server action input. */
+export const addRecordSchema = z.object({
+  sessionId: z.uuid("Buổi điểm danh không hợp lệ"),
+  studentId: z.uuid("Học sinh không hợp lệ"),
+  status: z.enum([
+    ATTENDANCE_STATUS.PRESENT,
+    ATTENDANCE_STATUS.ABSENT,
+    ATTENDANCE_STATUS.EXCUSED,
+    ATTENDANCE_STATUS.SKIPPED,
+    ATTENDANCE_STATUS.LATE,
+  ]),
+  note: z.string().trim().optional(),
+});
+
+export type AddAttendanceInput = z.infer<typeof addRecordSchema>;
+
 /** Validation for the "Rename Attendance Session" server action input. */
 export const renameSessionSchema = z.object({
   sessionId: z.uuid("Buổi điểm danh không hợp lệ"),
