@@ -7,6 +7,7 @@ import { initializeGradesForClassStudents } from "@lib/grades";
 import { deleteFaceVector } from "@lib/rekognition";
 import { deleteObject } from "@lib/storage";
 import { removeDiacritics } from "@lib/string";
+import { nextStudentCode } from "@lib/student-code";
 import { createSupabaseServerClient } from "@lib/supabase";
 import {
   requireTeacher,
@@ -46,19 +47,34 @@ function nameKey(lastName: string, firstName: string): string {
 
 function parseDate(value: string | undefined): string | null {
   if (!value) return null;
+  // DD/MM is tried before MM/DD: unambiguous dates (day > 12) fall
+  // through correctly either way, and ambiguous ones resolve to the
+  // Vietnamese convention.
   const parsed = dayjs(value.trim(), [
     "YYYY-MM-DD",
     "YYYY-M-D",
+    "DD/MM/YYYY",
+    "D/M/YYYY",
     "MM/DD/YYYY",
     "M/D/YYYY",
   ]);
   return parsed.isValid() ? parsed.format("YYYY-MM-DD") : null;
 }
 
+/** School rosters number rows "1,2,3…" — that STT is not a studentCode. */
+function codeCell(value: string): string | null {
+  if (!value || /^\d+$/.test(value)) return null;
+  return value;
+}
+
 /**
- * Parse CSV text: studentCode,lastName,firstName,dateOfBirth(optional).
- * studentCode may be left empty — the column position stays the same.
- * Accepted date formats: YYYY-MM-DD, YYYY-M-D, MM/DD/YYYY, M/D/YYYY.
+ * Parse CSV text. Two layouts are accepted:
+ *  - STT|studentCode,lastName,firstName,dateOfBirth(optional) — a numeric
+ *    first cell is STT, not a code.
+ *  - STT,"Họ và tên" — the school-issued roster: the full name is split
+ *    on the last space (Tên = last token, Họ đệm = the rest).
+ * Accepted date formats: YYYY-MM-DD, DD/MM/YYYY, MM/DD/YYYY (short
+ * variants too); ambiguous slash dates resolve as DD/MM.
  * Skips a header row if the first cell looks like a code label.
  */
 function parseCsv(text: string): CsvRow[] {
@@ -80,10 +96,22 @@ function parseCsv(text: string): CsvRow[] {
       ) {
         return [];
       }
+      if (cells.length === 2 && cells[1]) {
+        const cut = cells[1].lastIndexOf(" ");
+        if (cut < 0) return [];
+        return [
+          {
+            studentCode: codeCell(cells[0]),
+            lastName: cells[1].slice(0, cut),
+            firstName: cells[1].slice(cut + 1),
+            dateOfBirth: null,
+          },
+        ];
+      }
       if (cells.length < 3 || !cells[1] || !cells[2]) return [];
       return [
         {
-          studentCode: cells[0] || null,
+          studentCode: codeCell(cells[0]),
           lastName: cells[1],
           firstName: cells[2],
           dateOfBirth: parseDate(cells[3]),
@@ -123,6 +151,16 @@ export async function importStudents(
       throw new Error("Tệp danh sách không có dữ liệu hợp lệ");
     }
 
+    // classCode prefixes every auto-generated studentCode; fetching it
+    // also proves ownership early (RLS hides other teachers' classes).
+    const { data: cls, error: clsError } = await supabase
+      .from("classes")
+      .select("classCode")
+      .eq("id", classId)
+      .single();
+    if (clsError) throw new Error("Không tìm thấy lớp học");
+    const classCode = cls.classCode as string;
+
     // Dedupe inside the file itself — last row per match key wins, so
     // a repeated key can't hit "ON CONFLICT cannot affect row twice".
     const deduped = new Map<string, CsvRow>();
@@ -134,6 +172,22 @@ export async function importStudents(
       deduped.set(key, r);
     });
     const dedupedRows = [...deduped.values()];
+
+    // Name matching is ambiguous when the file itself repeats a name —
+    // "last wins" would silently drop a student, so refuse instead.
+    if (matchBy === "name") {
+      const seenNames = new Map<string, string>();
+      for (const r of rows) {
+        const key = nameKey(r.lastName, r.firstName);
+        const seen = seenNames.get(key);
+        if (seen) {
+          throw new Error(
+            `Tệp có nhiều dòng trùng tên "${seen}" — không thể cập nhật theo họ tên`,
+          );
+        }
+        seenNames.set(key, `${r.lastName} ${r.firstName}`);
+      }
+    }
 
     // --- Resolve which rows update an existing student vs insert ---
     const existingIds = new Set<string>();
@@ -155,6 +209,28 @@ export async function importStudents(
             s.studentCode as string,
             (s.dateOfBirth as string | null) ?? null,
           );
+        }
+      }
+
+      // Auto-number codeless new students: "<classCode>-NNNN"
+      // continuing the highest code already in use.
+      const codeless = dedupedRows.filter((r) => !r.studentCode);
+      if (codeless.length > 0) {
+        const { data: codeRows, error: codeError } = await supabase
+          .from("students")
+          .select("studentCode")
+          .eq("classId", classId);
+        if (codeError) throw new Error(codeError.message);
+        const taken = new Set(
+          dedupedRows
+            .map((r) => r.studentCode)
+            .filter((c): c is string => !!c),
+        );
+        const existingCodes = (codeRows ?? []).map(
+          (c) => c.studentCode as string | null,
+        );
+        for (const r of codeless) {
+          r.studentCode = nextStudentCode(existingCodes, taken, classCode);
         }
       }
 
@@ -192,13 +268,39 @@ export async function importStudents(
     const byName = new Map<string, ExistingStudent>();
     const ownerByCode = new Map<string, string>();
     for (const s of all ?? []) {
-      byName.set(nameKey(s.lastName as string, s.firstName as string), {
+      const key = nameKey(s.lastName as string, s.firstName as string);
+      // Two roster students sharing a name can't be told apart by the
+      // name key — matching would silently pick one and re-insert the
+      // other on every import, so refuse the whole file.
+      if (byName.has(key)) {
+        throw new Error(
+          `Lớp có nhiều học sinh trùng tên "${s.lastName as string} ${s.firstName as string}" — không thể cập nhật theo họ tên`,
+        );
+      }
+      byName.set(key, {
         id: s.id as string,
         studentCode: (s.studentCode as string | null) ?? null,
         dateOfBirth: (s.dateOfBirth as string | null) ?? null,
       });
       if (s.studentCode) {
         ownerByCode.set(s.studentCode as string, s.id as string);
+      }
+    }
+
+    // Resolve matches first: a file may renumber students, so a code
+    // moving between two students in the SAME file is a legal swap —
+    // only a code owned by a student NOT being updated is a conflict.
+    const resolved = dedupedRows.map((r) => ({
+      r,
+      existing: byName.get(nameKey(r.lastName, r.firstName)),
+    }));
+    const newCodeById = new Map<string, string | null>();
+    for (const { r, existing } of resolved) {
+      if (existing) {
+        newCodeById.set(
+          existing.id,
+          r.studentCode ?? existing.studentCode,
+        );
       }
     }
 
@@ -210,16 +312,22 @@ export async function importStudents(
     const updateRows: (StudentWriteRow & { id: string })[] = [];
     const insertRows: StudentWriteRow[] = [];
     const fileCodes = new Set<string>();
-    for (const r of dedupedRows) {
-      const existing = byName.get(nameKey(r.lastName, r.firstName));
+    const freedIds: string[] = [];
+    for (const { r, existing } of resolved) {
       if (r.studentCode) {
         const owner = ownerByCode.get(r.studentCode);
+        // The owner relinquishes the code when they are matched in this
+        // file and get a different new code.
+        const codeFreed =
+          !!owner &&
+          newCodeById.has(owner) &&
+          newCodeById.get(owner) !== r.studentCode;
         if (
-          (owner && owner !== existing?.id) ||
-          fileCodes.has(r.studentCode)
+          fileCodes.has(r.studentCode) ||
+          (owner && owner !== existing?.id && !codeFreed)
         ) {
           throw new Error(
-            `Mã học sinh "${r.studentCode}" bị trùng trong lớp`,
+            `Mã học sinh "${r.studentCode}" đã thuộc về học sinh khác trong lớp`,
           );
         }
         fileCodes.add(r.studentCode);
@@ -233,11 +341,15 @@ export async function importStudents(
         existingIds.add(existing.id);
         // On update, blank cells keep the old values — they must not
         // wipe the existing studentCode / dateOfBirth.
+        const studentCode = r.studentCode ?? existing.studentCode;
+        if (studentCode !== existing.studentCode) {
+          freedIds.push(existing.id);
+        }
         updateRows.push({
           id: existing.id,
           ...base,
           dateOfBirth: r.dateOfBirth ?? existing.dateOfBirth,
-          studentCode: r.studentCode ?? existing.studentCode,
+          studentCode,
         });
       } else {
         insertRows.push({
@@ -246,6 +358,30 @@ export async function importStudents(
           studentCode: r.studentCode,
         });
       }
+    }
+
+    // Auto-number codeless new students — same rule as code mode.
+    const codelessInserts = insertRows.filter((r) => !r.studentCode);
+    if (codelessInserts.length > 0) {
+      for (const row of codelessInserts) {
+        row.studentCode = nextStudentCode(
+          [...ownerByCode.keys()],
+          fileCodes,
+          classCode,
+        );
+      }
+    }
+
+    // Free renamed codes before writing: Postgres checks the
+    // (studentCode, classId) unique constraint per row, so a swap
+    // (A takes B's old code) fails mid-batch unless the old codes
+    // are vacated first. NULLs never conflict.
+    if (freedIds.length > 0) {
+      const { error: freeError } = await supabase
+        .from("students")
+        .update({ studentCode: null })
+        .in("id", freedIds);
+      if (freeError) throw new Error(freeError.message);
     }
 
     const upserted: Record<string, unknown>[] = [];

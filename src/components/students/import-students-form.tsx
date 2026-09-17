@@ -33,7 +33,6 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
-  const [matchBy, setMatchBy] = useState<"code" | "name">("code");
   const [importMode, setImportMode] = useState<"append" | "replace">("append");
   const [isPending, startTransition] = useTransition();
   const { data: classData } = useClass(classId);
@@ -50,7 +49,7 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
       const fd = new FormData(e.currentTarget);
       fd.set("classId", classId);
       fd.set("file", file);
-      fd.set("matchBy", matchBy);
+      fd.set("matchBy", "name");
       fd.set("importMode", importMode);
 
       const result = await importStudents(fd);
@@ -79,11 +78,11 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
 
   function downloadTemplate() {
     const rows = [
-      "Mã HS,Họ đệm,Tên,Ngày sinh",
-      "HS001,Nguyễn Văn,An,2010-03-15",
-      "HS002,Trần Thị,Bình,03/15/2010",
-      "HS003,Lê Hoàng,Cường,",
-      ",Phạm Minh,Đức,2010-01-20",
+      "STT,Họ đệm,Tên,Ngày sinh",
+      "1,Nguyễn Văn,An,2010-03-15",
+      "2,Trần Thị,Bình,15/03/2010",
+      "3,Lê Hoàng,Cường,",
+      "4,Phạm Minh,Đức,2010-01-20",
     ];
     const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -120,23 +119,9 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
               <Label htmlFor="csv">Tệp danh sách học sinh (.csv)</Label>
               <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
               <p className="text-xs text-muted-foreground">
-                Cột Mã HS có thể để trống.
+                Tệp 4 cột: STT, Họ đệm, Tên, Ngày sinh — mã HS tự cấp theo
+                mã lớp. Chấp nhận cả tệp 2 cột: STT, Họ và tên.
               </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="match-by">Kiểm tra trùng theo</Label>
-              <Select
-                value={matchBy}
-                onValueChange={(v) => setMatchBy(v as "code" | "name")}
-              >
-                <SelectTrigger id="match-by">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="code">Mã học sinh</SelectItem>
-                  <SelectItem value="name">Họ và tên</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="import-mode">Chế độ nhập</Label>

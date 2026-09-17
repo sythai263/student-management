@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { indexStudentFace, deleteFaceVector } from "@lib/rekognition";
 import { registerStudentSchema } from "@schemas";
 import { initializeGradesForClassStudents } from "@lib/grades";
+import { nextStudentCode } from "@lib/student-code";
 import type { Student } from "@types";
 import {
   requireTeacher,
@@ -82,6 +83,30 @@ export async function registerStudent(
         )
         : null;
 
+    // No code given -> "<classCode>-NNNN" continuing the highest
+    // code already in use in the class.
+    let studentCode = input.studentCode ?? null;
+    if (!studentCode) {
+      const [clsRes, codesRes] = await Promise.all([
+        supabase
+          .from("classes")
+          .select("classCode")
+          .eq("id", input.classId)
+          .single(),
+        supabase
+          .from("students")
+          .select("studentCode")
+          .eq("classId", input.classId),
+      ]);
+      if (clsRes.error) throw new Error("Không tìm thấy lớp học");
+      if (codesRes.error) throw new Error(codesRes.error.message);
+      studentCode = nextStudentCode(
+        (codesRes.data ?? []).map((c) => c.studentCode as string | null),
+        new Set(),
+        clsRes.data.classCode as string,
+      );
+    }
+
     // --- 5. Upsert student into Supabase (RLS: teacher must own the class) ---
     const baseFields = {
       lastName: input.lastName,
@@ -104,7 +129,7 @@ export async function registerStudent(
         .from("students")
         .insert({
           id: studentId,
-          studentCode: input.studentCode ?? null,
+          studentCode,
           classId: input.classId,
           ...baseFields,
           awsFaceId: face?.awsFaceId ?? null,

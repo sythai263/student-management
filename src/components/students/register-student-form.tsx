@@ -30,8 +30,11 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
     const form = e.currentTarget;
     const fileInput = form.elements.namedItem("image") as HTMLInputElement;
     const file = fileInput.files?.[0];
-    const studentCode = (
-      form.elements.namedItem("studentCode") as HTMLInputElement
+    const lastName = (
+      form.elements.namedItem("lastName") as HTMLInputElement
+    ).value;
+    const firstName = (
+      form.elements.namedItem("firstName") as HTMLInputElement
     ).value;
 
     startTransition(async () => {
@@ -41,7 +44,7 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
       // from the browser — a Server Action body must stay well under
       // Vercel's 4.5MB request limit.
       if (file) {
-        const label = studentCode || "hoc-sinh";
+        const label = `${lastName} ${firstName}`.trim() || "hoc-sinh";
         const [imageKey, avatarKey] = await Promise.all([
           uploadDirect("student-original", classId, label, file),
           uploadDirect(
@@ -87,20 +90,16 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
         <form ref={formRef} onSubmit={onSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="studentCode">Mã HS (không bắt buộc)</Label>
-              <Input id="studentCode" name="studentCode" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dateOfBirth">Ngày sinh</Label>
-              <Input id="dateOfBirth" name="dateOfBirth" type="date" />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="lastName">Họ & tên đệm</Label>
               <Input id="lastName" name="lastName" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="firstName">Tên</Label>
               <Input id="firstName" name="firstName" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">Ngày sinh</Label>
+              <Input id="dateOfBirth" name="dateOfBirth" type="date" />
             </div>
           </div>
           <div className="space-y-2">
