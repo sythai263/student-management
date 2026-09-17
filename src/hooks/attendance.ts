@@ -98,29 +98,30 @@ export interface MissingAttendanceCounts {
  * Per-session count of roster students WITHOUT an attendance record —
  * the "cần điểm danh bổ sung" number shown on the session list.
  * missing(sessionId) = total - recorded[sessionId].
+ * Counts come pre-aggregated from the `sessionRecordCounts` view, so
+ * the payload is one row per session — not one row per record.
  */
 export function useMissingAttendanceCounts(classId: string) {
   return useQuery({
     queryKey: missingKey(classId),
     queryFn: async (): Promise<MissingAttendanceCounts> => {
       const supabase = createSupabaseBrowserClient();
-      const [studentsRes, recordsRes] = await Promise.all([
+      const [studentsRes, countsRes] = await Promise.all([
         supabase
           .from("students")
           .select("id", { count: "exact", head: true })
           .eq("classId", classId),
         supabase
-          .from("attendanceRecords")
-          .select("sessionId, attendanceSessions!inner(classId)")
-          .eq("attendanceSessions.classId", classId),
+          .from("sessionRecordCounts")
+          .select("sessionId, recordCount")
+          .eq("classId", classId),
       ]);
       if (studentsRes.error) throw new Error(friendlyErrorMessage(studentsRes.error));
-      if (recordsRes.error) throw new Error(friendlyErrorMessage(recordsRes.error));
+      if (countsRes.error) throw new Error(friendlyErrorMessage(countsRes.error));
 
       const recorded: Record<string, number> = {};
-      for (const r of recordsRes.data ?? []) {
-        const sid = r.sessionId as string;
-        recorded[sid] = (recorded[sid] ?? 0) + 1;
+      for (const r of countsRes.data ?? []) {
+        recorded[r.sessionId as string] = r.recordCount as number;
       }
       return { total: studentsRes.count ?? 0, recorded };
     },

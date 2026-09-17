@@ -133,6 +133,9 @@ select * from "studentGradeSummaries"
 where "classId" = $1 and "subjectId" = $2 and "semester" = $3;
 ```
 
+## 12a. View: sessionRecordCounts (migration 0014)
+`security_invoker = true`. One row per session: `sessionId`, `classId`, `recordCount` — powers the "cần điểm danh bổ sung" badge on the session list (`roster size - recordCount`) without fetching every record row.
+
 ## 13. Helper functions (migration 0008)
 - `remove_diacritics(text)` — lower-case + strip Vietnamese diacritics (unaccent in `extensions` schema, pinned `search_path`)
 - `search_students(classId, search, page, pageSize)` — diacritic-insensitive student search + pagination over `studentCode`/`lastName`/`firstName`, returns `{ students, total }`; granted to `authenticated`
