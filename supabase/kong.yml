@@ -33,9 +33,11 @@ services:
       - name: cors
 
   # Realtime websocket — supabase-js connects to
-  # {SUPABASE_URL}/realtime/v1/websocket -> realtime:4000/socket/websocket
+  # {SUPABASE_URL}/realtime/v1/websocket -> realtime:4000/socket/websocket.
+  # The `realtime-dev` upstream hostname makes Realtime resolve the
+  # seeded tenant (external_id = first label of the Host header).
   - name: realtime-v1
-    url: http://realtime:4000/socket
+    url: http://realtime-dev:4000/socket
     routes:
       - name: realtime-v1-all
         strip_path: true
@@ -43,3 +45,22 @@ services:
           - /realtime/v1/
     plugins:
       - name: cors
+      # Cookies are port-agnostic: auth tokens from localhost:3000 get sent
+      # here too and exceed Cowboy's 4KB header-value limit -> 431.
+      - name: request-transformer
+        config:
+          remove:
+            headers:
+              - cookie
+      # realtime (Phoenix/Cowboy) doesn't negotiate subprotocols, but
+      # supabase-js may send "phoenix, base64url.bearer.phx.<token>". Chrome
+      # kills the connection when the server doesn't echo; it ALSO fails when
+      # the server echoes a protocol the client never requested (client sends
+      # no subprotocols until setAuth resolves) — so echo only on request.
+      - name: post-function
+        config:
+          header_filter:
+            - |
+              if kong.request.get_header("sec-websocket-protocol") then
+                kong.response.set_header("Sec-WebSocket-Protocol", "phoenix")
+              end

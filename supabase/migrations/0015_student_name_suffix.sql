@@ -2,4 +2,4 @@
 -- Kept in its own column so the real name stays untouched; name
 -- matching treats (lastName, firstName, nameSuffix) as the identity.
 alter table public.students
-  add column "nameSuffix" text;
+  add column if not exists "nameSuffix" text;
