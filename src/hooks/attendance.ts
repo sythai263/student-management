@@ -71,7 +71,7 @@ export function useAttendanceRecords(
       const supabase = createSupabaseBrowserClient();
       let query = supabase
         .from("attendanceRecords")
-        .select("*, students(studentCode, lastName, firstName)")
+        .select("*, students(studentCode, lastName, firstName, nameSuffix)")
         .eq("sessionId", sessionId);
       if (status !== "ALL") query = query.eq("status", status);
       const { data, error } = await query;

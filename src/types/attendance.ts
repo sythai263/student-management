@@ -22,7 +22,10 @@ export interface AttendanceRecord {
 }
 
 export interface AttendanceRecordWithStudent extends AttendanceRecord {
-  students: Pick<Student, "studentCode" | "lastName" | "firstName"> | null;
+  students: Pick<
+    Student,
+    "studentCode" | "lastName" | "firstName" | "nameSuffix"
+  > | null;
 }
 
 export interface GroupAttendanceSummary {

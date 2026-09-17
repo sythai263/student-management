@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useImportGrades } from "@hooks";
 import { friendlyErrorMessage } from "@lib/utils";
 import type { ImportGradesSummary } from "@lib/actions";
+import { studentFullName } from "@lib/string";
 import type { Student } from "@types";
 
 interface ScoreInput {
@@ -102,7 +103,7 @@ export function ImportGradesForm({
   function downloadTemplate() {
     const header = "Mã HS,Họ tên,TX1,TX2,TX3,TX4,GK,CK,Ghi chú,Nhận xét";
     const rows = students.map((s) => {
-      const fullName = `${s.lastName} ${s.firstName}`;
+      const fullName = studentFullName(s);
       const input = entries[s.id] ?? {
         tx1: "",
         tx2: "",

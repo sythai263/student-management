@@ -101,6 +101,10 @@ export function RegisterStudentForm({ classId }: RegisterStudentFormProps) {
               <Label htmlFor="dateOfBirth">Ngày sinh</Label>
               <Input id="dateOfBirth" name="dateOfBirth" type="date" />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="nameSuffix">Ký hiệu (nếu trùng tên)</Label>
+              <Input id="nameSuffix" name="nameSuffix" placeholder="A" />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="image">Ảnh chân dung (không bắt buộc)</Label>

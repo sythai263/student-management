@@ -1,4 +1,5 @@
 import type { RaceState, Student } from "@types";
+import { studentFullName } from "./string";
 
 type Scenario = 0 | 1 | 2;
 
@@ -83,6 +84,6 @@ export function buildRace(
     speeds,
     positions,
     trackLength,
-    winnerName: `${winner.lastName} ${winner.firstName}`,
+    winnerName: studentFullName(winner),
   };
 }

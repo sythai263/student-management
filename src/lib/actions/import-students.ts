@@ -17,16 +17,36 @@ import {
 
 dayjs.extend(customParseFormat);
 
+export interface SkippedStudentRow {
+  lastName: string;
+  firstName: string;
+  nameSuffix: string | null;
+  dateOfBirth: string | null;
+}
+
+export interface SkippedStudentGroup {
+  /** File rows sharing one name — displayed as A, B, C… to tell apart. */
+  fileRows: SkippedStudentRow[];
+  /** Roster students already bearing that name (may be empty). */
+  existing: (SkippedStudentRow & {
+    id: string;
+    studentCode: string | null;
+  })[];
+}
+
 export interface ImportStudentsSummary {
   inserted: number;
   updated: number;
   deleted: number;
+  /** Ambiguous-name groups skipped — teacher registers them by hand. */
+  skipped: SkippedStudentGroup[];
 }
 
 interface CsvRow {
   studentCode: string | null;
   lastName: string;
   firstName: string;
+  nameSuffix: string | null;
   dateOfBirth: string | null;
 }
 
@@ -34,15 +54,34 @@ interface StudentWriteRow {
   classId: string;
   lastName: string;
   firstName: string;
+  nameSuffix: string | null;
   dateOfBirth: string | null;
   studentCode: string | null;
 }
 
-/** Diacritic-insensitive "Họ đệm Tên" key for name-based dedupe. */
-function nameKey(lastName: string, firstName: string): string {
-  return removeDiacritics(`${lastName} ${firstName}`)
+/**
+ * Diacritic-insensitive identity key for name-based dedupe. The
+ * nameSuffix is part of the identity: "Vĩnh (A)" and "Vĩnh (B)" are
+ * different students, while two plain "Vĩnh" rows still collide.
+ */
+function nameKey(
+  lastName: string,
+  firstName: string,
+  nameSuffix?: string | null,
+): string {
+  return removeDiacritics(
+    `${lastName} ${firstName}` + (nameSuffix ? ` ${nameSuffix}` : ""),
+  )
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Trailing "(X)" on a name cell carries the nameSuffix — "Vĩnh (A)". */
+function splitSuffix(name: string): { name: string; suffix: string | null } {
+  const m = name.match(/^(.*?)\s*\(([A-Za-z0-9]{1,10})\)\s*$/);
+  return m
+    ? { name: m[1].trim(), suffix: m[2].toUpperCase() }
+    : { name, suffix: null };
 }
 
 function parseDate(value: string | undefined): string | null {
@@ -97,23 +136,27 @@ function parseCsv(text: string): CsvRow[] {
         return [];
       }
       if (cells.length === 2 && cells[1]) {
-        const cut = cells[1].lastIndexOf(" ");
+        const { name, suffix } = splitSuffix(cells[1]);
+        const cut = name.lastIndexOf(" ");
         if (cut < 0) return [];
         return [
           {
             studentCode: codeCell(cells[0]),
-            lastName: cells[1].slice(0, cut),
-            firstName: cells[1].slice(cut + 1),
+            lastName: name.slice(0, cut),
+            firstName: name.slice(cut + 1),
+            nameSuffix: suffix,
             dateOfBirth: null,
           },
         ];
       }
       if (cells.length < 3 || !cells[1] || !cells[2]) return [];
+      const { name: firstName, suffix } = splitSuffix(cells[2]);
       return [
         {
           studentCode: codeCell(cells[0]),
           lastName: cells[1],
-          firstName: cells[2],
+          firstName,
+          nameSuffix: suffix,
           dateOfBirth: parseDate(cells[3]),
         },
       ];
@@ -161,33 +204,43 @@ export async function importStudents(
     if (clsError) throw new Error("Không tìm thấy lớp học");
     const classCode = cls.classCode as string;
 
+    // Rows sharing a name can't be told apart — don't guess: skip them
+    // and report the group back so the teacher registers each one via
+    // the form.
+    const skippedFileRows = new Map<string, CsvRow[]>();
+    const skipRow = (key: string, r: CsvRow) => {
+      const list = skippedFileRows.get(key);
+      if (list) list.push(r);
+      else skippedFileRows.set(key, [r]);
+    };
+    let processRows = rows;
+    if (matchBy === "name") {
+      const fileNameCount = new Map<string, number>();
+      for (const r of rows) {
+        const key = nameKey(r.lastName, r.firstName, r.nameSuffix);
+        fileNameCount.set(key, (fileNameCount.get(key) ?? 0) + 1);
+      }
+      processRows = rows.filter((r) => {
+        const key = nameKey(r.lastName, r.firstName, r.nameSuffix);
+        if ((fileNameCount.get(key) ?? 0) > 1) {
+          skipRow(key, r);
+          return false;
+        }
+        return true;
+      });
+    }
+
     // Dedupe inside the file itself — last row per match key wins, so
     // a repeated key can't hit "ON CONFLICT cannot affect row twice".
     const deduped = new Map<string, CsvRow>();
-    rows.forEach((r, i) => {
+    processRows.forEach((r, i) => {
       const key =
         matchBy === "name"
-          ? nameKey(r.lastName, r.firstName)
+          ? nameKey(r.lastName, r.firstName, r.nameSuffix)
           : (r.studentCode ?? `__row_${i}`);
       deduped.set(key, r);
     });
     const dedupedRows = [...deduped.values()];
-
-    // Name matching is ambiguous when the file itself repeats a name —
-    // "last wins" would silently drop a student, so refuse instead.
-    if (matchBy === "name") {
-      const seenNames = new Map<string, string>();
-      for (const r of rows) {
-        const key = nameKey(r.lastName, r.firstName);
-        const seen = seenNames.get(key);
-        if (seen) {
-          throw new Error(
-            `Tệp có nhiều dòng trùng tên "${seen}" — không thể cập nhật theo họ tên`,
-          );
-        }
-        seenNames.set(key, `${r.lastName} ${r.firstName}`);
-      }
-    }
 
     // --- Resolve which rows update an existing student vs insert ---
     const existingIds = new Set<string>();
@@ -250,36 +303,52 @@ export async function importStudents(
         )
         .select();
       if (error) throw new Error(error.message);
-      return finishImport(supabase, classId, upserted ?? [], existingIds, replace);
+      return finishImport(
+        supabase,
+        classId,
+        upserted ?? [],
+        existingIds,
+        replace,
+        [],
+        new Set(),
+      );
     }
 
     // matchBy === "name": match on normalized "Họ đệm Tên".
     const { data: all, error: allError } = await supabase
       .from("students")
-      .select("id, lastName, firstName, studentCode, dateOfBirth")
+      .select("id, lastName, firstName, nameSuffix, studentCode, dateOfBirth")
       .eq("classId", classId);
     if (allError) throw new Error(allError.message);
 
     interface ExistingStudent {
       id: string;
       studentCode: string | null;
+      nameSuffix: string | null;
       dateOfBirth: string | null;
     }
     const byName = new Map<string, ExistingStudent>();
+    const idsByName = new Map<string, string[]>();
+    const ambiguousNames = new Set<string>();
     const ownerByCode = new Map<string, string>();
     for (const s of all ?? []) {
-      const key = nameKey(s.lastName as string, s.firstName as string);
-      // Two roster students sharing a name can't be told apart by the
-      // name key — matching would silently pick one and re-insert the
-      // other on every import, so refuse the whole file.
-      if (byName.has(key)) {
-        throw new Error(
-          `Lớp có nhiều học sinh trùng tên "${s.lastName as string} ${s.firstName as string}" — không thể cập nhật theo họ tên`,
-        );
+      const key = nameKey(
+        s.lastName as string,
+        s.firstName as string,
+        s.nameSuffix as string | null,
+      );
+      const list = idsByName.get(key);
+      if (list) {
+        list.push(s.id as string);
+        ambiguousNames.add(key);
+      } else {
+        idsByName.set(key, [s.id as string]);
       }
+      if (byName.has(key)) continue;
       byName.set(key, {
         id: s.id as string,
         studentCode: (s.studentCode as string | null) ?? null,
+        nameSuffix: (s.nameSuffix as string | null) ?? null,
         dateOfBirth: (s.dateOfBirth as string | null) ?? null,
       });
       if (s.studentCode) {
@@ -287,12 +356,54 @@ export async function importStudents(
       }
     }
 
-    // Resolve matches first: a file may renumber students, so a code
-    // moving between two students in the SAME file is a legal swap —
-    // only a code owned by a student NOT being updated is a conflict.
-    const resolved = dedupedRows.map((r) => ({
-      r,
-      existing: byName.get(nameKey(r.lastName, r.firstName)),
+    // A file row matching an ambiguous roster name can't be resolved
+    // either — skip it like an in-file duplicate. In replace mode the
+    // untouched same-named students are kept (preserveIds), never
+    // deleted just because the file row was skipped.
+    const preserveIds = new Set<string>();
+    for (const key of skippedFileRows.keys()) {
+      for (const id of idsByName.get(key) ?? []) preserveIds.add(id);
+    }
+    const resolved: { r: CsvRow; existing: ExistingStudent | undefined }[] =
+      [];
+    for (const r of dedupedRows) {
+      const key = nameKey(r.lastName, r.firstName, r.nameSuffix);
+      if (ambiguousNames.has(key)) {
+        skipRow(key, r);
+        for (const id of idsByName.get(key) ?? []) preserveIds.add(id);
+        continue;
+      }
+      resolved.push({ r, existing: byName.get(key) });
+    }
+
+    const skipped: SkippedStudentGroup[] = [
+      ...skippedFileRows.entries(),
+    ].map(([, fileRows]) => ({
+      fileRows: fileRows.map(
+        ({ lastName, firstName, nameSuffix, dateOfBirth }) => ({
+          lastName,
+          firstName,
+          nameSuffix,
+          dateOfBirth,
+        }),
+      ),
+      // Offer every roster student sharing the BASE name (suffix
+      // ignored) — a "Vĩnh" file row may legitimately map to the
+      // existing "Vĩnh (A)".
+      existing: (all ?? [])
+        .filter(
+          (s) =>
+            nameKey(s.lastName as string, s.firstName as string) ===
+            nameKey(fileRows[0]?.lastName ?? "", fileRows[0]?.firstName ?? ""),
+        )
+        .map((s) => ({
+          id: s.id as string,
+          lastName: s.lastName as string,
+          firstName: s.firstName as string,
+          nameSuffix: (s.nameSuffix as string | null) ?? null,
+          dateOfBirth: (s.dateOfBirth as string | null) ?? null,
+          studentCode: (s.studentCode as string | null) ?? null,
+        })),
     }));
     const newCodeById = new Map<string, string | null>();
     for (const { r, existing } of resolved) {
@@ -340,7 +451,7 @@ export async function importStudents(
       if (existing) {
         existingIds.add(existing.id);
         // On update, blank cells keep the old values — they must not
-        // wipe the existing studentCode / dateOfBirth.
+        // wipe the existing studentCode / nameSuffix / dateOfBirth.
         const studentCode = r.studentCode ?? existing.studentCode;
         if (studentCode !== existing.studentCode) {
           freedIds.push(existing.id);
@@ -348,12 +459,14 @@ export async function importStudents(
         updateRows.push({
           id: existing.id,
           ...base,
+          nameSuffix: r.nameSuffix ?? existing.nameSuffix,
           dateOfBirth: r.dateOfBirth ?? existing.dateOfBirth,
           studentCode,
         });
       } else {
         insertRows.push({
           ...base,
+          nameSuffix: r.nameSuffix,
           dateOfBirth: r.dateOfBirth,
           studentCode: r.studentCode,
         });
@@ -401,11 +514,160 @@ export async function importStudents(
       if (error) throw new Error(error.message);
       upserted.push(...(data ?? []));
     }
-    return finishImport(supabase, classId, upserted, existingIds, replace);
+    return finishImport(
+      supabase,
+      classId,
+      upserted,
+      existingIds,
+      replace,
+      skipped,
+      preserveIds,
+    );
   });
 
   if (result.success && typeof classId === "string") {
     revalidatePath(`/classes/${classId}`);
+  }
+  return result;
+}
+
+export interface ResolveSkippedRow {
+  lastName: string;
+  firstName: string;
+  /** Suffix parsed from the file row ("Vĩnh (A)"), if any. */
+  nameSuffix: string | null;
+  dateOfBirth: string | null;
+  /** Roster student this file row updates; null = create a new one. */
+  existingStudentId: string | null;
+  /** Letter the dialog assigned to this row ("A", "B") for new students. */
+  assignedSuffix: string;
+}
+
+export interface ResolveSkippedInput {
+  classId: string;
+  rows: ResolveSkippedRow[];
+}
+
+/**
+ * Server Action: resolve ambiguous-name rows the import skipped. Each
+ * row either updates the roster student the teacher mapped it to, or
+ * inserts a new student whose nameSuffix column carries the
+ * distinguishing mark ("Vĩnh (A)") so the identity stays unique.
+ */
+export async function resolveSkippedStudents(
+  input: ResolveSkippedInput,
+): Promise<ActionResult<ImportStudentsSummary>> {
+  const result = await withAction(async () => {
+    const { supabase } = await requireTeacher();
+    const { classId, rows } = input;
+    if (typeof classId !== "string" || classId.length === 0) {
+      throw new Error("Thiếu thông tin lớp học");
+    }
+    if (!Array.isArray(rows) || rows.length === 0) {
+      throw new Error("Không có học sinh cần xử lý");
+    }
+
+    const { data: cls, error: clsError } = await supabase
+      .from("classes")
+      .select("classCode")
+      .eq("id", classId)
+      .single();
+    if (clsError) throw new Error("Không tìm thấy lớp học");
+    const classCode = cls.classCode as string;
+
+    const { data: all, error: allError } = await supabase
+      .from("students")
+      .select("id, studentCode, nameSuffix, dateOfBirth")
+      .eq("classId", classId);
+    if (allError) throw new Error(allError.message);
+    const roster = new Map(
+      (all ?? []).map((s) => [
+        s.id as string,
+        {
+          studentCode: (s.studentCode as string | null) ?? null,
+          nameSuffix: (s.nameSuffix as string | null) ?? null,
+          dateOfBirth: (s.dateOfBirth as string | null) ?? null,
+        },
+      ]),
+    );
+
+    // A mapped id must belong to THIS class and absorb only one row.
+    const claimed = new Set<string>();
+    for (const r of rows) {
+      if (!r.existingStudentId) continue;
+      if (!roster.has(r.existingStudentId)) {
+        throw new Error("Học sinh được chọn không thuộc lớp này");
+      }
+      if (claimed.has(r.existingStudentId)) {
+        throw new Error("Một học sinh trong lớp chỉ được ghép với một dòng");
+      }
+      claimed.add(r.existingStudentId);
+    }
+
+    const existingIds = new Set<string>();
+    const updateRows: (StudentWriteRow & { id: string })[] = [];
+    const insertRows: StudentWriteRow[] = [];
+    const existingCodes = (all ?? []).map(
+      (s) => s.studentCode as string | null,
+    );
+    const taken = new Set<string>();
+    for (const r of rows) {
+      const existing = r.existingStudentId
+        ? roster.get(r.existingStudentId)
+        : undefined;
+      if (existing && r.existingStudentId) {
+        existingIds.add(r.existingStudentId);
+        updateRows.push({
+          id: r.existingStudentId,
+          classId,
+          lastName: r.lastName,
+          firstName: r.firstName,
+          nameSuffix: r.nameSuffix ?? existing.nameSuffix,
+          dateOfBirth: r.dateOfBirth ?? existing.dateOfBirth,
+          studentCode: existing.studentCode,
+        });
+      } else {
+        insertRows.push({
+          classId,
+          lastName: r.lastName,
+          firstName: r.firstName,
+          nameSuffix: r.nameSuffix ?? r.assignedSuffix,
+          dateOfBirth: r.dateOfBirth,
+          studentCode: nextStudentCode(existingCodes, taken, classCode),
+        });
+      }
+    }
+
+    const upserted: Record<string, unknown>[] = [];
+    if (updateRows.length > 0) {
+      const { data, error } = await supabase
+        .from("students")
+        .upsert(updateRows)
+        .select();
+      if (error) throw new Error(error.message);
+      upserted.push(...(data ?? []));
+    }
+    if (insertRows.length > 0) {
+      const { data, error } = await supabase
+        .from("students")
+        .insert(insertRows)
+        .select();
+      if (error) throw new Error(error.message);
+      upserted.push(...(data ?? []));
+    }
+    return finishImport(
+      supabase,
+      classId,
+      upserted,
+      existingIds,
+      false,
+      [],
+      new Set(),
+    );
+  });
+
+  if (result.success && typeof input.classId === "string") {
+    revalidatePath(`/classes/${input.classId}`);
   }
   return result;
 }
@@ -421,20 +683,24 @@ async function finishImport(
   upserted: Record<string, unknown>[],
   existingIds: Set<string>,
   replace: boolean,
+  skipped: SkippedStudentGroup[],
+  preserveIds: Set<string>,
 ): Promise<ImportStudentsSummary> {
   const upsertedIds = upserted.map((s) => s.id as string);
   const newIds = upsertedIds.filter((id) => !existingIds.has(id));
 
   await initializeGradesForClassStudents(supabase, classId, upsertedIds);
 
+  const keepIds = [...new Set([...upsertedIds, ...preserveIds])];
   const deleted = replace
-    ? await removeStudentsNotIn(supabase, classId, upsertedIds)
+    ? await removeStudentsNotIn(supabase, classId, keepIds)
     : 0;
 
   return {
     inserted: newIds.length,
     updated: upsertedIds.length - newIds.length,
     deleted,
+    skipped,
   };
 }
 

@@ -39,6 +39,7 @@ export async function registerStudent(
       studentCode: formData.get("studentCode") || undefined,
       lastName: formData.get("lastName"),
       firstName: formData.get("firstName"),
+      nameSuffix: formData.get("nameSuffix") || undefined,
       dateOfBirth: formData.get("dateOfBirth") || undefined,
       classId: formData.get("classId"),
     });
@@ -111,6 +112,7 @@ export async function registerStudent(
     const baseFields = {
       lastName: input.lastName,
       firstName: input.firstName,
+      nameSuffix: input.nameSuffix ?? null,
       dateOfBirth: input.dateOfBirth ?? null,
     };
     // Keep the old face data when no new image was provided.

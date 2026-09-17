@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { RaceState, Student } from "@types";
+import { studentFullName } from "@lib/string";
 import { PageHeader } from "@components/layout";
 import {
   RACE_DURATION_COOKIE,
@@ -253,7 +254,7 @@ export function DuckRaceCanvas({
         const wobble = Math.sin(elapsed * 11 + d.i * 2.4);
         const y = baseY + wobble * laneHeight * 0.06;
         const tilt = wobble * 0.12;
-        const name = `${d.lastName} ${d.firstName}`;
+        const name = studentFullName(d);
         const image = duckImages[colors[d.i]];
         if (image) {
           drawDuck(ctx, x, y, name, duckScale, image, tilt);

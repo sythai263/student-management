@@ -37,8 +37,12 @@ export {
   setDefaultReportCardTemplate,
 } from "./report-card-templates";
 export type { SaveReportCardTemplateInput } from "./report-card-templates";
-export { importStudents } from "./import-students";
-export type { ImportStudentsSummary } from "./import-students";
+export { importStudents, resolveSkippedStudents } from "./import-students";
+export type {
+  ImportStudentsSummary,
+  SkippedStudentGroup,
+  ResolveSkippedInput,
+} from "./import-students";
 export {
   updateAttendanceRecord,
   addAttendanceRecord,

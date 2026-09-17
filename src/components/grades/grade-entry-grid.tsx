@@ -23,6 +23,7 @@ import { CommentDialog } from "./comment-dialog";
 import { ExportSmasButton } from "./export-smas-button";
 import { ImportGradesForm } from "./import-grades-form";
 import type { GradeWithStudent } from "@types";
+import { studentFullName } from "@lib/string";
 
 interface GradeEntryGridProps {
   classId: string;
@@ -204,7 +205,7 @@ export function GradeEntryGrid({
       ).length;
       if (regularCount < 2) {
         toast.error(
-          `Học sinh ${s.lastName} ${s.firstName} cần ít nhất 2 điểm thường xuyên`,
+          `Học sinh ${studentFullName(s)} cần ít nhất 2 điểm thường xuyên`,
         );
         return;
       }
@@ -300,11 +301,14 @@ export function GradeEntryGrid({
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{s.studentCode ?? "—"}</TableCell>
                   <TableCell>{s.lastName}</TableCell>
-                  <TableCell>{s.firstName}</TableCell>
+                  <TableCell>
+                    {s.firstName}
+                    {s.nameSuffix ? ` (${s.nameSuffix})` : ""}
+                  </TableCell>
                   {GRADE_SLOTS.map((slot) => (
                     <TableCell key={slot} className="p-1">
                       <Label htmlFor={`${slot}-${s.id}`} className="sr-only">
-                        {GRADE_SLOT_FULL_LABEL[slot]} {s.lastName} {s.firstName}
+                        {GRADE_SLOT_FULL_LABEL[slot]} {studentFullName(s)}
                       </Label>
                       <Input
                         id={`${slot}-${s.id}`}
@@ -362,7 +366,7 @@ export function GradeEntryGrid({
           onOpenChange={(open) => !open && setCommentStudentId(null)}
           studentName={(() => {
             const s = students.find((st) => st.id === commentStudentId);
-            return s ? `${s.lastName} ${s.firstName}` : "";
+            return s ? studentFullName(s) : "";
           })()}
           value={entries[commentStudentId]?.comment ?? ""}
           onSave={(value) => onSaveComment(commentStudentId, value)}

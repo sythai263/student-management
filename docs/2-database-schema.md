@@ -18,6 +18,7 @@ Class rosters are fixed per school year: 1 student belongs to exactly 1 class.
 - `studentCode` (Text, nullable — optional label; unique within a class when set — `unique ("studentCode", "classId")`, NULLs never conflict)
 - `lastName` (Text, họ + tên đệm)
 - `firstName` (Text, tên)
+- `nameSuffix` (Text, nullable — ký hiệu phân biệt học sinh trùng tên, hiển thị dạng "Vĩnh (A)"; name matching treats (lastName, firstName, nameSuffix) as the identity)
 - `dateOfBirth` (Date, nullable)
 - `classId` (UUID, Foreign Key to classes.id)
 - `awsFaceId` (Text, nullable — retrieved from AWS Rekognition)

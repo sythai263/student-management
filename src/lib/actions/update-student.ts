@@ -25,6 +25,7 @@ export async function updateStudent(
       studentId: formData.get("studentId"),
       lastName: formData.get("lastName"),
       firstName: formData.get("firstName"),
+      nameSuffix: formData.get("nameSuffix") || undefined,
       dateOfBirth: formData.get("dateOfBirth") || undefined,
     });
     if (!parsed.success) {
@@ -64,6 +65,7 @@ export async function updateStudent(
       .update({
         lastName: input.lastName,
         firstName: input.firstName,
+        nameSuffix: input.nameSuffix ?? null,
         dateOfBirth: input.dateOfBirth ?? null,
         ...(face
           ? { awsFaceId: face.awsFaceId, avatarKey: face.avatarKey }

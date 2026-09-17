@@ -26,6 +26,7 @@ import {
   useUpdateAttendance,
   type AttendanceRecordWithStudent,
 } from "@hooks";
+import { studentFullName } from "@lib/string";
 
 interface RollCallModalProps {
   sessionId: string;
@@ -173,7 +174,7 @@ export function RollCallModal({
             {s?.studentCode ?? "—"}
           </DialogDescription>
           <DialogTitle className="text-4xl font-bold leading-tight sm:text-7xl">
-            {s?.lastName} {s?.firstName}
+            {s ? studentFullName(s) : ""}
           </DialogTitle>
           <div className="flex items-center gap-2 text-base text-muted-foreground sm:gap-4 sm:text-3xl">
             <Badge variant="secondary" className="text-sm sm:text-xl">

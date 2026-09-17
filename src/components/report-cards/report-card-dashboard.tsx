@@ -24,6 +24,7 @@ import {
   useTeacherSignature,
 } from "@hooks";
 import { calculateAverage } from "@lib/grade-utils";
+import { studentFullName } from "@lib/string";
 import { defaultReportCardBlocks, type ReportCardData } from "@lib/report-card";
 import { GRADE_SLOTS } from "@constants";
 import {
@@ -131,7 +132,7 @@ export function ReportCardDashboard({
 
       return {
         studentCode: s.studentCode ?? "",
-        studentName: `${s.lastName} ${s.firstName}`,
+        studentName: studentFullName(s),
         classCode: classInfo.classCode,
         className: classInfo.name,
         schoolName: classInfo.school?.name ?? "",

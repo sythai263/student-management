@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { updateStudent } from "@lib/actions";
 import { compressImage, uploadDirect } from "@lib/image";
 import type { Student } from "@types";
+import { studentFullName } from "@lib/string";
 
 interface StudentEditDialogProps {
   student: Student | null;
@@ -123,7 +124,7 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={avatarSrc}
-                alt={`${student.lastName} ${student.firstName}`}
+                alt={studentFullName(student)}
                 className="size-24 rounded-md object-cover"
               />
             ) : (
@@ -169,13 +170,22 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
                 defaultValue={student.firstName}
               />
             </div>
-            <div className="col-span-2 space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="edit-dateOfBirth">Ngày sinh</Label>
               <Input
                 id="edit-dateOfBirth"
                 name="dateOfBirth"
                 type="date"
                 defaultValue={student.dateOfBirth ?? ""}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-nameSuffix">Ký hiệu (nếu trùng tên)</Label>
+              <Input
+                id="edit-nameSuffix"
+                name="nameSuffix"
+                placeholder="A"
+                defaultValue={student.nameSuffix ?? ""}
               />
             </div>
           </div>

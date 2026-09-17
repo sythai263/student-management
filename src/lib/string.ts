@@ -24,15 +24,32 @@ export function normalizeSchoolName(
 }
 
 /**
+ * "Họ đệm Tên" display name — a distinguishing nameSuffix is shown in
+ * parentheses ("Nguyễn Văn Vĩnh (A)") so same-name students stay
+ * visually distinct without polluting the stored name.
+ */
+export function studentFullName(s: {
+  lastName: string;
+  firstName: string;
+  nameSuffix?: string | null;
+}): string {
+  return (
+    `${s.lastName} ${s.firstName}` +
+    (s.nameSuffix ? ` (${s.nameSuffix})` : "")
+  );
+}
+
+/**
  * Vietnamese roster order: Tên (firstName) first, then Họ đệm
  * (lastName), using the "vi" collation so diacritics sort properly.
  */
 export function compareStudentNames(
-  a: { firstName: string; lastName: string },
-  b: { firstName: string; lastName: string },
+  a: { firstName: string; lastName: string; nameSuffix?: string | null },
+  b: { firstName: string; lastName: string; nameSuffix?: string | null },
 ): number {
   return (
     a.firstName.localeCompare(b.firstName, "vi") ||
-    a.lastName.localeCompare(b.lastName, "vi")
+    a.lastName.localeCompare(b.lastName, "vi") ||
+    (a.nameSuffix ?? "").localeCompare(b.nameSuffix ?? "", "vi")
   );
 }

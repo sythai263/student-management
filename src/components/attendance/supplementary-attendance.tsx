@@ -16,6 +16,7 @@ import {
   useAttendanceRecords,
   useStudents,
 } from "@hooks";
+import { studentFullName } from "@lib/string";
 
 interface SupplementaryAttendanceProps {
   sessionId: string;
@@ -66,7 +67,7 @@ export function SupplementaryAttendance({
             <div className="flex items-start justify-between gap-1.5">
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium leading-tight">
-                  {s.lastName} {s.firstName}
+                  {studentFullName(s)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {s.studentCode ?? "—"}
@@ -96,7 +97,7 @@ export function SupplementaryAttendance({
                       {
                         onSuccess: () =>
                           toast.success(
-                            `Đã thêm ${s.lastName} ${s.firstName} vào buổi điểm danh`,
+                            `Đã thêm ${studentFullName(s)} vào buổi điểm danh`,
                           ),
                         onError: (err) => toast.error(err.message),
                       },
