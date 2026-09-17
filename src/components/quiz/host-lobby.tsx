@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -35,23 +34,26 @@ export function HostLobby({
           {pinCode}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap justify-center gap-2">
+      <CardContent className="space-y-6">
+        <div className="flex justify-center">
+          <Button size="lg" onClick={onStart}>
+            Bắt đầu ({totalQuestions} câu hỏi)
+          </Button>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
           {players.map((p) => (
-            <Badge key={p.playerId} variant="secondary">
+            <span
+              key={p.playerId}
+              className="rounded-full bg-secondary px-5 py-2 text-lg font-medium text-secondary-foreground"
+            >
               {p.name}
-            </Badge>
+            </span>
           ))}
           {players.length === 0 && (
             <p className="text-sm text-muted-foreground">
               Đang chờ học sinh tham gia...
             </p>
           )}
-        </div>
-        <div className="flex justify-center">
-          <Button size="lg" onClick={onStart}>
-            Bắt đầu ({totalQuestions} câu hỏi)
-          </Button>
         </div>
       </CardContent>
     </Card>

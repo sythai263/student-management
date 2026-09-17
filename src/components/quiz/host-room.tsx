@@ -69,8 +69,6 @@ export function HostRoom({ sessionId }: HostRoomProps) {
           currentIndex={room.currentIndex}
           totalQuestions={room.totalQuestions}
           secondsLeft={room.secondsLeft}
-          answeredCount={room.answeredCount}
-          playerCount={room.players.length}
           onReveal={() => void room.revealAnswer()}
         />
       )}
@@ -82,6 +80,7 @@ export function HostRoom({ sessionId }: HostRoomProps) {
           totalQuestions={room.totalQuestions}
           reveal={room.reveal}
           leaderboard={room.leaderboard}
+          prevLeaderboard={room.prevLeaderboard}
           onNext={() =>
             room.currentIndex + 1 < room.totalQuestions
               ? void room.showQuestion(room.currentIndex + 1)

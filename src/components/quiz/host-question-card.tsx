@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -16,19 +15,15 @@ interface HostQuestionCardProps {
   currentIndex: number;
   totalQuestions: number;
   secondsLeft: number;
-  answeredCount: number;
-  playerCount: number;
   onReveal: () => void;
 }
 
-/** Question phase: shows the prompt/options plus live answer progress. */
+/** Question phase: shows the prompt/options plus a big countdown. */
 export function HostQuestionCard({
   question,
   currentIndex,
   totalQuestions,
   secondsLeft,
-  answeredCount,
-  playerCount,
   onReveal,
 }: HostQuestionCardProps) {
   return (
@@ -36,12 +31,11 @@ export function HostQuestionCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardDescription>
-            Câu {currentIndex + 1}/{totalQuestions} • đã trả lời{" "}
-            {answeredCount}/{playerCount}
+            Câu {currentIndex + 1}/{totalQuestions}
           </CardDescription>
-          <Badge variant="outline" className="text-lg">
-            {secondsLeft}s
-          </Badge>
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-primary font-mono text-4xl font-bold tabular-nums">
+            {secondsLeft}
+          </div>
         </div>
         <CardTitle className="text-2xl">{question.text}</CardTitle>
       </CardHeader>

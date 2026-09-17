@@ -51,9 +51,11 @@ export interface HostRoomState {
   currentIndex: number;
   currentQuestion: QuizQuestion | null;
   secondsLeft: number;
-  answeredCount: number;
   reveal: HostRevealState | null;
   leaderboard: LeaderboardEntry[];
+  /** Leaderboard snapshot from the previous reveal — drives the
+   *  rank-change animation on the host screen. */
+  prevLeaderboard: LeaderboardEntry[];
   /** Podium ceremony progress: 0 = nothing, 1..3 = ranks 3..1 revealed. */
   podiumStep: number;
   roomSecondsLeft: number;
@@ -82,9 +84,11 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
   const [players, setPlayers] = useState<QuizPlayerState[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [answeredCount, setAnsweredCount] = useState(0);
   const [revealState, setRevealState] = useState<HostRevealState | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [prevLeaderboard, setPrevLeaderboard] = useState<LeaderboardEntry[]>(
+    [],
+  );
   const [podiumStep, setPodiumStep] = useState(0);
   const [roomSecondsLeft, setRoomSecondsLeft] = useState(
     Math.floor(QUIZ_ROOM_TIMEOUT_MS / 1000),
@@ -107,6 +111,7 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
   const podiumStepRef = useRef(0);
   const questionsRef = useRef<QuizQuestion[]>([]);
   const dataRef = useRef<HostSessionData | null>(null);
+  const leaderboardRef = useRef<LeaderboardEntry[]>([]);
 
   const questions = data?.questions ?? [];
   const currentQuestion =
@@ -219,7 +224,6 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
     );
     player.score += gained;
     if (gained > 0) player.correctCount += 1;
-    setAnsweredCount(answeredRef.current.size);
   }, []);
 
   // ----------------------------------------------------------------
@@ -235,7 +239,6 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
       answeredRef.current = new Set();
       countsRef.current = new Array(q.options.length).fill(0);
       setCurrentIndex(index);
-      setAnsweredCount(0);
       setRevealState(null);
       setPhase("question");
       await sendSigned(QUIZ_EVENTS.QUESTION, {
@@ -255,6 +258,7 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
     const q = questionsRef.current[indexRef.current];
     if (!q) return;
     const board = buildLeaderboard(playersRef.current);
+    setPrevLeaderboard(leaderboardRef.current);
     setRevealState({ correctIndex: q.correctIndex, counts: countsRef.current });
     setLeaderboard(board);
     setPhase("reveal");
@@ -327,6 +331,7 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
     indexRef.current = currentIndex;
     questionsRef.current = questions;
     dataRef.current = data;
+    leaderboardRef.current = leaderboard;
     finishRef.current = finish;
     revealRef.current = revealAnswer;
   });
@@ -447,9 +452,9 @@ export function useHostRoom(sessionId: string): HostRoomState & HostRoomActions 
     currentIndex,
     currentQuestion,
     secondsLeft,
-    answeredCount,
     reveal: revealState,
     leaderboard,
+    prevLeaderboard,
     podiumStep,
     roomSecondsLeft,
     totalQuestions: questions.length,

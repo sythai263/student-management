@@ -17,16 +17,21 @@ interface HostRevealCardProps {
   totalQuestions: number;
   reveal: HostRevealState;
   leaderboard: LeaderboardEntry[];
+  /** Board from the previous reveal — drives rank-change animation. */
+  prevLeaderboard: LeaderboardEntry[];
   onNext: () => void;
 }
 
-/** Reveal phase: correct option, per-option pick counts, top-10 board. */
+/** Reveal phase: correct option, per-option pick counts, top-10 board.
+ *  On the last question the board is hidden — next goes straight to
+ *  the podium ceremony (hạng 3 -> 2 -> 1). */
 export function HostRevealCard({
   question,
   currentIndex,
   totalQuestions,
   reveal,
   leaderboard,
+  prevLeaderboard,
   onNext,
 }: HostRevealCardProps) {
   const isLast = currentIndex + 1 >= totalQuestions;
@@ -53,7 +58,16 @@ export function HostRevealCard({
             </div>
           ))}
         </div>
-        <AnimatedLeaderboard entries={leaderboard.slice(0, 10)} />
+        {isLast ? (
+          <p className="text-center text-muted-foreground">
+            Câu cuối cùng — sẵn sàng công bố kết quả!
+          </p>
+        ) : (
+          <AnimatedLeaderboard
+            entries={leaderboard.slice(0, 10)}
+            prevEntries={prevLeaderboard}
+          />
+        )}
         <Button onClick={onNext}>
           {isLast ? "Công bố kết quả" : "Câu tiếp theo"}
         </Button>
