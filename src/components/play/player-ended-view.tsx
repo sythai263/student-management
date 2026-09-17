@@ -1,3 +1,5 @@
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { QuizLeaderboard } from "@components/quiz";
 import type { LeaderboardEntry } from "@types";
 
@@ -8,13 +10,14 @@ interface PlayerEndedViewProps {
   myRank: number;
 }
 
-/** Final phase: rank + full top-10 scoreboard. */
+/** Final phase: rank + full top-10 scoreboard + exit back to /play. */
 export function PlayerEndedView({
   leaderboard,
   playerId,
   myEntry,
   myRank,
 }: PlayerEndedViewProps) {
+  const router = useRouter();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4">
       <h2 className="text-2xl font-semibold">Kết thúc!</h2>
@@ -28,6 +31,7 @@ export function PlayerEndedView({
         entries={leaderboard.slice(0, 10)}
         highlightPlayerId={playerId}
       />
+      <Button onClick={() => router.push("/play")}>Thoát phòng</Button>
     </div>
   );
 }

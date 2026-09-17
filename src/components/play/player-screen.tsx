@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlayerEndedView } from "./player-ended-view";
 import { PlayerNameForm } from "./player-name-form";
@@ -16,6 +18,7 @@ interface PlayerScreenProps {
  * logic lives in `usePlayerRoom` — this component maps phases to views.
  */
 export function PlayerScreen({ sessionId }: PlayerScreenProps) {
+  const router = useRouter();
   const room = usePlayerRoom(sessionId);
 
   if (!room.storageChecked || room.phase === "joining") {
@@ -32,10 +35,11 @@ export function PlayerScreen({ sessionId }: PlayerScreenProps) {
 
   if (room.phase === "closed") {
     return (
-      <main className="flex min-h-dvh items-center justify-center p-6">
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6">
         <p className="text-sm text-destructive">
           Phòng đã đóng hoặc không tồn tại.
         </p>
+        <Button onClick={() => router.push("/play")}>Nhập mã khác</Button>
       </main>
     );
   }

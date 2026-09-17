@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "cn";
@@ -39,6 +40,7 @@ export function HostPodium({
   onRevealNext,
   onFinish,
 }: HostPodiumProps) {
+  const router = useRouter();
   const allRevealed = revealedCount >= 3;
   const nextRank = 3 - revealedCount;
 
@@ -84,9 +86,14 @@ export function HostPodium({
         </div>
 
         {finished ? (
-          <p className="text-sm text-muted-foreground">
-            Phòng đã đóng, kết quả đã được lưu.
-          </p>
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-muted-foreground">
+              Phòng đã đóng, kết quả đã được lưu.
+            </p>
+            <Button onClick={() => router.push("/quizzes")}>
+              Về trang quiz
+            </Button>
+          </div>
         ) : !allRevealed ? (
           <Button size="lg" onClick={onRevealNext}>
             Công bố hạng {nextRank}
