@@ -39,10 +39,6 @@ const saveGradesSchema = z.object({
   grades: z.array(gradeRowSchema).min(1, "Chưa có điểm nào"),
 });
 
-function countRegularScores(row: z.infer<typeof gradeRowSchema>) {
-  return [row.tx1, row.tx2, row.tx3, row.tx4].filter((v) => v != null).length;
-}
-
 /** Server Action: save or update the full 6-score grade sheet for a class/subject/semester. */
 export async function saveGradesBulk(
   input: unknown,
@@ -56,13 +52,6 @@ export async function saveGradesBulk(
     }
 
     const { classId, subjectId, semester, grades } = parsed.data;
-
-    // Enforce business rules per row.
-    for (const row of grades) {
-      if (countRegularScores(row) < 2) {
-        throw new Error("Mỗi học sinh cần ít nhất 2 điểm thường xuyên");
-      }
-    }
 
     const rows = grades.map((g) => ({
       classId,
@@ -222,15 +211,14 @@ export async function importGrades(
         );
       }
 
-      const regularCount = [row.scores.tx1, row.scores.tx2, row.scores.tx3, row.scores.tx4].filter(
-        (v) => v != null,
-      ).length;
-      if (regularCount > 0 && regularCount < 2) {
-        messages.push("Cần ít nhất 2 điểm thường xuyên");
-      }
-
-      const hasAnyScore =
-        regularCount > 0 || row.scores.gk != null || row.scores.ck != null;
+      const hasAnyScore = [
+        row.scores.tx1,
+        row.scores.tx2,
+        row.scores.tx3,
+        row.scores.tx4,
+        row.scores.gk,
+        row.scores.ck,
+      ].some((v) => v != null);
       if (!hasAnyScore) {
         messages.push("Không có điểm nào");
       }

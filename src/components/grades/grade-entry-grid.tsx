@@ -200,16 +200,6 @@ export function GradeEntryGrid({
         row.ck != null;
       if (!hasAnyScore) continue;
 
-      const regularCount = [row.tx1, row.tx2, row.tx3, row.tx4].filter(
-        (v) => v != null,
-      ).length;
-      if (regularCount < 2) {
-        toast.error(
-          `Học sinh ${studentFullName(s)} cần ít nhất 2 điểm thường xuyên`,
-        );
-        return;
-      }
-
       payload.push(row);
     }
 
