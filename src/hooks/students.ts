@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteStudent } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import { compareStudentNames } from "@lib/string";
 import { friendlyErrorMessage } from "@lib/utils";
@@ -68,4 +69,18 @@ export function usePaginatedStudents(
     isLoading: result.isLoading,
     error: result.error as Error | null,
   };
+}
+
+/** Mutation: delete a student and refresh the class roster. */
+export function useDeleteStudent(classId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (studentId: string) => {
+      const result = await deleteStudent(studentId);
+      if (!result.success) throw new Error(result.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students", classId] });
+    },
+  });
 }

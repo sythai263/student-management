@@ -28,3 +28,6 @@ export const updateStudentSchema = z.object({
 });
 
 export type UpdateStudentInput = z.infer<typeof updateStudentSchema>;
+
+/** Validation for the student id used when deleting a student. */
+export const deleteStudentSchema = z.uuid("Học sinh không hợp lệ");

@@ -8,13 +8,14 @@ import {
   type SubmitEventHandler,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { UserRound } from "lucide-react";
+import { Trash2, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -22,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { updateStudent } from "@lib/actions";
+import { useDeleteStudent } from "@hooks";
 import { compressImage, uploadDirect } from "@lib/image";
 import type { Student } from "@types";
 import { studentFullName } from "@lib/string";
@@ -36,7 +38,9 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const deleteStudent = useDeleteStudent(student?.classId ?? "");
 
   const [prevStudent, setPrevStudent] = useState(student);
 
@@ -44,6 +48,7 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
   if (prevStudent !== student) {
     setPrevStudent(student);
     setPreview(null);
+    setConfirming(false);
   }
 
   // Release object URLs created for the picked-file preview.
@@ -190,11 +195,65 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Đang lưu..." : "Lưu"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="text-destructive"
+              disabled={isPending}
+              onClick={() => setConfirming(true)}
+            >
+              <Trash2 /> Xóa
+            </Button>
+            <Button type="submit" className="flex-1" disabled={isPending}>
+              {isPending ? "Đang lưu..." : "Lưu"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
+
+      {/* Delete student — hard delete: attendance records and grades
+          cascade via FK, face vector + avatar are cleaned up too. */}
+      <Dialog
+        open={confirming}
+        onOpenChange={(open) => !open && setConfirming(false)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xóa học sinh</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc muốn xóa{" "}
+              <strong>{studentFullName(student)}</strong>? Toàn bộ điểm
+              danh và điểm số của học sinh sẽ bị xóa vĩnh viễn.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirming(false)}
+              disabled={deleteStudent.isPending}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() =>
+                deleteStudent.mutate(student.id, {
+                  onSuccess: () => {
+                    toast.success("Đã xóa học sinh");
+                    setConfirming(false);
+                    onClose();
+                  },
+                  onError: (err) => toast.error(err.message),
+                })
+              }
+              disabled={deleteStudent.isPending}
+            >
+              {deleteStudent.isPending ? "Đang xóa..." : "Xóa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

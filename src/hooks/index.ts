@@ -10,7 +10,11 @@ export {
   useRenameSchool,
   useDeleteSchool,
 } from "./schools";
-export { useStudents, usePaginatedStudents } from "./students";
+export {
+  useStudents,
+  usePaginatedStudents,
+  useDeleteStudent,
+} from "./students";
 export { useSubjects, useCreateSubject, useDeleteSubject, useSubjectCatalog } from "./subjects";
 export {
   useClassSubjects,

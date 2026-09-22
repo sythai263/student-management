@@ -1,5 +1,6 @@
 export { registerStudent } from "./register-student";
 export { updateStudent } from "./update-student";
+export { deleteStudent } from "./delete-student";
 export { createUploadUrl } from "./create-upload-url";
 export type { UploadUrl } from "./create-upload-url";
 export {

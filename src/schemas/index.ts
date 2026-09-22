@@ -1,4 +1,8 @@
-export { registerStudentSchema, updateStudentSchema } from "./student";
+export {
+  registerStudentSchema,
+  updateStudentSchema,
+  deleteStudentSchema,
+} from "./student";
 export type { RegisterStudentInput, UpdateStudentInput } from "./student";
 export {
   loginSchema,
