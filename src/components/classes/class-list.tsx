@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { ArrowDownAZ, ArrowDownZA, Trash2 } from "lucide-react";
 import {
   Card,
   CardDescription,
@@ -27,6 +27,7 @@ export function ClassList() {
   const { data: classes, isLoading, error } = useClasses();
   const deleteClassMutation = useDeleteClass();
   const [classToDelete, setClassToDelete] = useState<Class | null>(null);
+  const [sortAsc, setSortAsc] = useState(true);
 
   if (isLoading) {
     return <CardGridSkeleton />;
@@ -38,10 +39,33 @@ export function ClassList() {
     return <p className="text-muted-foreground">Chưa có lớp nào.</p>;
   }
 
+  const sortedClasses = [...classes].sort((a, b) => {
+    const cmp = a.classCode.localeCompare(b.classCode, "vi", {
+      numeric: true,
+    });
+    return sortAsc ? cmp : -cmp;
+  });
+
   return (
     <>
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label={sortAsc ? "Sắp xếp mã lớp Z-A" : "Sắp xếp mã lớp A-Z"}
+          onClick={() => setSortAsc((v) => !v)}
+        >
+          {sortAsc ? (
+            <ArrowDownAZ className="size-4" />
+          ) : (
+            <ArrowDownZA className="size-4" />
+          )}
+          Mã lớp
+        </Button>
+      </div>
       <section className="grid gap-4 sm:grid-cols-2">
-        {classes.map((c) => (
+        {sortedClasses.map((c) => (
           <Link key={c.id} href={`/classes/${c.id}`} className="relative group">
             <Card className="transition-colors hover:border-primary">
               <CardHeader>

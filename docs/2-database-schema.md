@@ -4,7 +4,7 @@
 
 ## 1. Table: classes
 - `id` (UUID, Primary Key)
-- `classCode` (Text, unique — e.g. '10A1')
+- `classCode` (Text, unique per teacher — `unique ("teacherId", "classCode")` — e.g. '10A1')
 - `name` (Text)
 - `schoolYear` (Text, e.g. '2025-2026')
 - `teacherId` (UUID, Foreign Key to auth.users.id)

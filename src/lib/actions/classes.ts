@@ -30,7 +30,12 @@ export async function createClass(
       .insert({ ...parsed.data, teacherId: user.id })
       .select()
       .single();
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (error.code === "23505") {
+        throw new Error(`Mã lớp "${parsed.data.classCode}" đã tồn tại`);
+      }
+      throw new Error(error.message);
+    }
     return data as Class;
   });
 
