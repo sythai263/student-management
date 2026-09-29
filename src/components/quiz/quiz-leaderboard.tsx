@@ -1,3 +1,10 @@
+import { Trophy } from "lucide-react";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
 import type { LeaderboardEntry } from "@types";
 
 interface QuizLeaderboardProps {
@@ -11,7 +18,16 @@ export function QuizLeaderboard({
   highlightPlayerId,
 }: QuizLeaderboardProps) {
   if (!entries.length) {
-    return <p className="text-sm text-muted-foreground">Chưa có điểm.</p>;
+    return (
+      <Empty className="gap-2 p-4">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Trophy />
+          </EmptyMedia>
+          <EmptyTitle>Chưa có điểm.</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
   }
   return (
     <ol className="w-full space-y-1">

@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Trophy } from "lucide-react";
 import { QUIZ_LEADERBOARD_ROW_H } from "@constants";
 import { cn } from "cn";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
 import type { LeaderboardEntry } from "@types";
 
 interface AnimatedLeaderboardProps {
@@ -27,7 +33,16 @@ export function AnimatedLeaderboard({
   const prevScore = new Map(prevEntries.map((e) => [e.playerId, e.score]));
 
   if (!entries.length) {
-    return <p className="text-sm text-muted-foreground">Chưa có điểm.</p>;
+    return (
+      <Empty className="gap-2 p-4">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Trophy />
+          </EmptyMedia>
+          <EmptyTitle>Chưa có điểm.</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
   }
   return (
     <div

@@ -1,8 +1,15 @@
 "use client";
 
 import { memo } from "react";
+import { Users } from "lucide-react";
 import { cn } from "cn";
 import { Badge } from "../ui/badge";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
 import { Button } from "../ui/button";
 import {
   ATTENDANCE_STATUS_CLASS,
@@ -102,7 +109,16 @@ export function AttendanceGrid({
   const updateMutation = useUpdateAttendance(sessionId);
 
   if (records.length === 0) {
-    return <p className="text-muted-foreground">Không có học sinh nào.</p>;
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Users />
+          </EmptyMedia>
+          <EmptyTitle>Không có học sinh nào.</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return (

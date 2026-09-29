@@ -2,9 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { BookOpen, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { CardGridSkeleton } from "../ui/card-grid-skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "../ui/empty";
 import {
   Card,
   CardDescription,
@@ -35,7 +42,19 @@ export function SubjectList() {
     return <p className="text-sm text-destructive">{error.message}</p>;
   }
   if (!subjects?.length) {
-    return <p className="text-muted-foreground">Chưa có môn học nào.</p>;
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <BookOpen />
+          </EmptyMedia>
+          <EmptyTitle>Chưa có môn học nào.</EmptyTitle>
+          <EmptyDescription>
+            Thêm môn học để nhập điểm và điểm danh.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return (

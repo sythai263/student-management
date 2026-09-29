@@ -1,30 +1,22 @@
 "use client";
 
-import { useState, type SubmitEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Pencil, Trash2 } from "lucide-react";
+import { CalendarCheck, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 import { ListSkeleton } from "../ui/list-skeleton";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { toast } from "sonner";
-import {
-  useAttendanceSessions,
-  useDeleteSession,
-  useMissingAttendanceCounts,
-  useRenameSession,
-} from "@hooks";
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
+import { useAttendanceSessions, useMissingAttendanceCounts } from "@hooks";
 import { sessionDisplayName } from "@lib/attendance-session";
 import type { AttendanceSession } from "@types";
+import { SessionRenameDialog } from "./session-rename-dialog";
+import { SessionDeleteDialog } from "./session-delete-dialog";
 
 interface SessionListProps {
   classId: string;
@@ -33,43 +25,9 @@ interface SessionListProps {
 export function SessionList({ classId }: SessionListProps) {
   const { data: sessions, isLoading, error } = useAttendanceSessions(classId);
   const { data: missingCounts } = useMissingAttendanceCounts(classId);
-  const renameSession = useRenameSession(classId);
-  const deleteSession = useDeleteSession(classId);
 
   const [renaming, setRenaming] = useState<AttendanceSession | null>(null);
   const [deleting, setDeleting] = useState<AttendanceSession | null>(null);
-  const [name, setName] = useState("");
-
-  function openRename(session: AttendanceSession) {
-    setName(sessionDisplayName(session));
-    setRenaming(session);
-  }
-
-  function onRenameSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    if (!renaming) return;
-    renameSession.mutate(
-      { sessionId: renaming.id, name },
-      {
-        onSuccess: () => {
-          toast.success("Đã đổi tên buổi điểm danh");
-          setRenaming(null);
-        },
-        onError: (err) => toast.error(err.message),
-      },
-    );
-  }
-
-  function onDeleteConfirm() {
-    if (!deleting) return;
-    deleteSession.mutate(deleting.id, {
-      onSuccess: () => {
-        toast.success("Đã xóa buổi điểm danh");
-        setDeleting(null);
-      },
-      onError: (err) => toast.error(err.message),
-    });
-  }
 
   return (
     <section className="space-y-3">
@@ -118,7 +76,7 @@ export function SessionList({ classId }: SessionListProps) {
                 variant="ghost"
                 size="icon"
                 aria-label="Đổi tên buổi điểm danh"
-                onClick={() => openRename(s)}
+                onClick={() => setRenaming(s)}
               >
                 <Pencil />
               </Button>
@@ -135,84 +93,29 @@ export function SessionList({ classId }: SessionListProps) {
             </li>
           );
         })}
-        {sessions?.length === 0 && (
-          <p className="text-muted-foreground">Chưa có buổi điểm danh nào.</p>
-        )}
       </ul>
 
-      {/* Rename session */}
-      <Dialog
-        open={renaming !== null}
-        onOpenChange={(open) => !open && setRenaming(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Đổi tên buổi điểm danh</DialogTitle>
-            <DialogDescription>
-              Đặt lại tên để dễ tìm kiếm hơn.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={onRenameSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="session-name">Tên buổi</Label>
-              <Input
-                id="session-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                maxLength={120}
-                autoFocus
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setRenaming(null)}
-              >
-                Hủy
-              </Button>
-              <Button type="submit" disabled={renameSession.isPending}>
-                {renameSession.isPending ? "Đang lưu..." : "Lưu"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {sessions?.length === 0 && (
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <CalendarCheck />
+            </EmptyMedia>
+            <EmptyTitle>Chưa có buổi điểm danh nào.</EmptyTitle>
+          </EmptyHeader>
+        </Empty>
+      )}
 
-      {/* Delete session — hard delete, no way back */}
-      <Dialog
-        open={deleting !== null}
-        onOpenChange={(open) => !open && setDeleting(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Xóa buổi điểm danh?</DialogTitle>
-            <DialogDescription>
-              Buổi &quot;{deleting ? sessionDisplayName(deleting) : ""}&quot; và
-              toàn bộ bản ghi điểm danh sẽ bị xóa vĩnh viễn. Hành động này
-              không thể hoàn tác.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => setDeleting(null)}
-            >
-              Hủy
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={deleteSession.isPending}
-              onClick={onDeleteConfirm}
-            >
-              {deleteSession.isPending ? "Đang xóa..." : "Xóa vĩnh viễn"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SessionRenameDialog
+        classId={classId}
+        session={renaming}
+        onClose={() => setRenaming(null)}
+      />
+      <SessionDeleteDialog
+        classId={classId}
+        session={deleting}
+        onClose={() => setDeleting(null)}
+      />
     </section>
   );
 }

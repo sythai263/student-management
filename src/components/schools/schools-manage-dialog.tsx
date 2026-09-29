@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, School, Trash2, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -122,9 +128,14 @@ export function SchoolsManageDialog({
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Đang tải...</p>
           ) : !schools?.length ? (
-            <p className="text-sm text-muted-foreground">
-              Chưa có trường nào.
-            </p>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <School />
+                </EmptyMedia>
+                <EmptyTitle>Chưa có trường nào.</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <ul className="divide-y rounded-md border">
               {schools.map((s) => (

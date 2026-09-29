@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Pencil, Plus, Star, Trash2 } from "lucide-react";
+import { LayoutTemplate, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import {
   Card,
@@ -11,6 +11,13 @@ import {
   CardTitle,
 } from "../ui/card";
 import { CardGridSkeleton } from "../ui/card-grid-skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "../ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -54,9 +61,17 @@ export function ReportCardTemplateList() {
       ) : error ? (
         <p className="text-sm text-destructive">{error.message}</p>
       ) : !templates?.length ? (
-        <p className="text-sm text-muted-foreground">
-          Chưa có mẫu nào — trang phiếu điểm sẽ dùng mẫu mặc định có sẵn của hệ thống.
-        </p>
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <LayoutTemplate />
+            </EmptyMedia>
+            <EmptyTitle>Chưa có mẫu nào.</EmptyTitle>
+            <EmptyDescription>
+              Trang phiếu điểm sẽ dùng mẫu mặc định có sẵn của hệ thống.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <section className="grid gap-4 sm:grid-cols-2">
           {templates.map((t) => (

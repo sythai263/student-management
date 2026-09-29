@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { BookOpen } from "lucide-react";
 import { buttonVariants } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Checkbox } from "../ui/checkbox";
 import { ListSkeleton } from "../ui/list-skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "../ui/empty";
 import {
   useSubjects,
   useClassSubjects,
@@ -59,9 +67,17 @@ export function ClassSubjectManager({ classId }: ClassSubjectManagerProps) {
             itemClassName="h-9"
           />
         ) : !subjects?.length ? (
-          <p className="text-sm text-muted-foreground">
-            Bạn chưa có môn học nào. Hãy thêm ở trang Môn học.
-          </p>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <BookOpen />
+              </EmptyMedia>
+              <EmptyTitle>Bạn chưa có môn học nào.</EmptyTitle>
+              <EmptyDescription>
+                Hãy thêm môn học ở trang Môn học trước.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {subjects.map((s) => {

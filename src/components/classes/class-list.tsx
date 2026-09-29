@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowDownAZ, ArrowDownZA, Trash2 } from "lucide-react";
+import { ArrowDownAZ, ArrowDownZA, School, Trash2 } from "lucide-react";
 import {
   Card,
   CardDescription,
@@ -11,6 +11,13 @@ import {
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { CardGridSkeleton } from "../ui/card-grid-skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "../ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +43,19 @@ export function ClassList() {
     return <p className="text-sm text-destructive">{error.message}</p>;
   }
   if (!classes?.length) {
-    return <p className="text-muted-foreground">Chưa có lớp nào.</p>;
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <School />
+          </EmptyMedia>
+          <EmptyTitle>Chưa có lớp nào.</EmptyTitle>
+          <EmptyDescription>
+            Tạo lớp đầu tiên để bắt đầu quản lý học sinh.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   const sortedClasses = [...classes].sort((a, b) => {

@@ -1,11 +1,17 @@
 "use client";
 
 import { useRef, useTransition, type ChangeEvent } from "react";
-import { Trash2 } from "lucide-react";
+import { PenLine, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Skeleton } from "../ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -118,9 +124,14 @@ export function SignatureManageDialog({
               </Button>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Chưa có chữ ký nào được lưu.
-            </p>
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <PenLine />
+                </EmptyMedia>
+                <EmptyTitle>Chưa có chữ ký nào được lưu.</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
           )}
 
           <div className="space-y-2">

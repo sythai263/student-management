@@ -3,10 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Play, Trash2 } from "lucide-react";
+import { ListChecks, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { CardGridSkeleton } from "../ui/card-grid-skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "../ui/empty";
 import {
   Card,
   CardDescription,
@@ -50,7 +57,19 @@ export function QuizList() {
     return <p className="text-sm text-destructive">{error.message}</p>;
   }
   if (!quizzes?.length) {
-    return <p className="text-muted-foreground">Chưa có quiz nào.</p>;
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ListChecks />
+          </EmptyMedia>
+          <EmptyTitle>Chưa có quiz nào.</EmptyTitle>
+          <EmptyDescription>
+            Tạo quiz để mở phòng ôn tập cho học sinh.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return (

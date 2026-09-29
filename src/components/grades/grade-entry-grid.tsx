@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, type FormEvent } from "react";
-import { MessageSquarePlus, Save } from "lucide-react";
+import { MessageSquarePlus, Save, Users } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -14,6 +14,13 @@ import {
   TableRow,
 } from "../ui/table";
 import { TableSkeleton } from "../ui/table-skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+  EmptyDescription,
+} from "../ui/empty";
 import { toast } from "sonner";
 import { useGrades, useSaveGradeComment, useSaveGrades, useStudents } from "@hooks";
 import { GRADE_SLOT_FULL_LABEL, GRADE_SLOTS } from "@constants";
@@ -228,7 +235,19 @@ export function GradeEntryGrid({
   }
 
   if (!students?.length) {
-    return <p className="text-muted-foreground">Lớp chưa có học sinh.</p>;
+    return (
+      <Empty className="border">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <Users />
+          </EmptyMedia>
+          <EmptyTitle>Lớp chưa có học sinh.</EmptyTitle>
+          <EmptyDescription>
+            Thêm học sinh vào lớp trước khi nhập điểm.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return (

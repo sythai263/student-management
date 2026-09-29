@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { Users } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -8,17 +10,12 @@ import { Pagination } from "../ui/pagination";
 import { ListSkeleton } from "../ui/list-skeleton";
 import { TableSkeleton } from "../ui/table-skeleton";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
-import { useDebounce, usePaginatedStudents } from "@hooks";
-import { studentFullName } from "@lib/string";
-import type { Student } from "@types";
-import { StudentEditDialog } from "./student-edit-dialog";
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
 import {
   Select,
   SelectContent,
@@ -26,10 +23,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { useDebounce, usePaginatedStudents } from "@hooks";
+import type { Student } from "@types";
+import { DataTable } from "../data-table";
+import { StudentCardList } from "./student-card-list";
+import { StudentEditDialog } from "./student-edit-dialog";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
+
+function studentColumns(rowOffset: number): ColumnDef<Student>[] {
+  return [
+    {
+      id: "stt",
+      header: "STT",
+      cell: ({ row }) => rowOffset + row.index + 1,
+      meta: { headerClassName: "w-16 whitespace-nowrap" },
+    },
+    {
+      accessorKey: "studentCode",
+      header: "Mã HS",
+      cell: ({ getValue }) => getValue<string | null>() ?? "—",
+      meta: { headerClassName: "whitespace-nowrap" },
+    },
+    {
+      accessorKey: "lastName",
+      header: "Họ",
+      meta: { headerClassName: "w-max whitespace-nowrap" },
+    },
+    {
+      id: "firstName",
+      header: "Tên",
+      cell: ({ row }) =>
+        row.original.firstName +
+        (row.original.nameSuffix ? ` (${row.original.nameSuffix})` : ""),
+      meta: { headerClassName: "w-max whitespace-nowrap" },
+    },
+    {
+      accessorKey: "dateOfBirth",
+      header: "Ngày sinh",
+      cell: ({ getValue }) => getValue<string | null>() ?? "—",
+    },
+    {
+      id: "face",
+      header: "Ảnh khuôn mặt",
+      cell: ({ row }) =>
+        row.original.awsFaceId ? (
+          <Badge>Đã có ảnh</Badge>
+        ) : (
+          <Badge variant="secondary">Chưa có ảnh</Badge>
+        ),
+    },
+  ];
+}
 
 interface StudentTableProps {
   classId: string;
@@ -115,80 +162,31 @@ export function StudentTable({ classId }: StudentTableProps) {
       ) : error ? (
         <p className="text-sm text-destructive">{error.message}</p>
       ) : students.length === 0 ? (
-        <p className="py-8 text-center text-sm text-muted-foreground">
-          Không có học sinh nào.
-        </p>
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <Users />
+            </EmptyMedia>
+            <EmptyTitle>Không có học sinh nào.</EmptyTitle>
+            {search ? (
+              <EmptyDescription>
+                Thử từ khóa khác hoặc thêm học sinh mới vào lớp.
+              </EmptyDescription>
+            ) : null}
+          </EmptyHeader>
+        </Empty>
       ) : (
         <>
-          {/* Mobile: compact card list — tables don't fit phone screens. */}
-          <ul className="space-y-2 sm:hidden">
-            {students.map((s) => (
-              <li key={s.id}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-2 rounded-md border p-3 text-left active:bg-muted"
-                  onClick={() => setEditing(s)}
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {studentFullName(s)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {s.studentCode ?? "—"}
-                      {s.dateOfBirth ? ` · ${s.dateOfBirth}` : ""}
-                    </p>
-                  </div>
-                  {s.awsFaceId ? (
-                    <Badge className="shrink-0">Đã có ảnh</Badge>
-                  ) : (
-                    <Badge variant="secondary" className="shrink-0">
-                      Chưa có ảnh
-                    </Badge>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
+          {/* Mobile: compact card list */}
+          <StudentCardList students={students} onSelect={setEditing} />
 
-          {/* Desktop: full table */}
+          {/* Desktop: full table — pagination stays server-side */}
           <div className="hidden sm:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-16 whitespace-nowrap">STT</TableHead>
-                  <TableHead className="whitespace-nowrap">Mã HS</TableHead>
-                  <TableHead className="w-max whitespace-nowrap">Họ</TableHead>
-                  <TableHead className="w-max whitespace-nowrap">Tên</TableHead>
-                  <TableHead>Ngày sinh</TableHead>
-                  <TableHead>Ảnh khuôn mặt</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((s, index) => (
-                  <TableRow
-                    key={s.id}
-                    className="cursor-pointer"
-                    onClick={() => setEditing(s)}
-                  >
-                    <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
-                    <TableCell>{s.studentCode ?? "—"}</TableCell>
-                    <TableCell>{s.lastName}</TableCell>
-                    <TableCell>
-                      {s.firstName}
-                      {s.nameSuffix ? ` (${s.nameSuffix})` : ""}
-                    </TableCell>
-                    <TableCell>{s.dateOfBirth ?? "—"}</TableCell>
-                    <TableCell>
-                      {s.awsFaceId ? (
-                        <Badge>Đã có ảnh</Badge>
-                      ) : (
-                        <Badge variant="secondary">Chưa có ảnh</Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={studentColumns((page - 1) * pageSize)}
+              data={students}
+              onRowClick={setEditing}
+            />
           </div>
         </>
       )}

@@ -15,7 +15,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
@@ -23,10 +22,10 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { toast } from "sonner";
 import { updateStudent } from "@lib/actions";
-import { useDeleteStudent } from "@hooks";
 import { compressImage, uploadDirect } from "@lib/image";
 import type { Student } from "@types";
 import { studentFullName } from "@lib/string";
+import { StudentDeleteDialog } from "./student-delete-dialog";
 
 interface StudentEditDialogProps {
   student: Student | null;
@@ -40,7 +39,6 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
   const [preview, setPreview] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const deleteStudent = useDeleteStudent(student?.classId ?? "");
 
   const [prevStudent, setPrevStudent] = useState(student);
 
@@ -212,48 +210,12 @@ export function StudentEditDialog({ student, onClose }: StudentEditDialogProps) 
         </form>
       </DialogContent>
 
-      {/* Delete student — hard delete: attendance records and grades
-          cascade via FK, face vector + avatar are cleaned up too. */}
-      <Dialog
+      <StudentDeleteDialog
+        student={student}
         open={confirming}
-        onOpenChange={(open) => !open && setConfirming(false)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Xóa học sinh</DialogTitle>
-            <DialogDescription>
-              Bạn có chắc muốn xóa{" "}
-              <strong>{studentFullName(student)}</strong>? Toàn bộ điểm
-              danh và điểm số của học sinh sẽ bị xóa vĩnh viễn.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirming(false)}
-              disabled={deleteStudent.isPending}
-            >
-              Hủy
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() =>
-                deleteStudent.mutate(student.id, {
-                  onSuccess: () => {
-                    toast.success("Đã xóa học sinh");
-                    setConfirming(false);
-                    onClose();
-                  },
-                  onError: (err) => toast.error(err.message),
-                })
-              }
-              disabled={deleteStudent.isPending}
-            >
-              {deleteStudent.isPending ? "Đang xóa..." : "Xóa"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        onOpenChange={setConfirming}
+        onDeleted={onClose}
+      />
     </Dialog>
   );
 }

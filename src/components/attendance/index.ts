@@ -8,3 +8,5 @@ export { RecordEditDialog } from "./record-edit-dialog";
 export { RollCallModal } from "./roll-call-modal";
 export { SupplementaryAttendance } from "./supplementary-attendance";
 export { SessionList } from "./session-list";
+export { SessionRenameDialog } from "./session-rename-dialog";
+export { SessionDeleteDialog } from "./session-delete-dialog";
