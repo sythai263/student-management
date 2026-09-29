@@ -28,7 +28,7 @@ The primary workflow is organized by subject first, then class.
 
 ## 3. Default Subject Catalog
 
-The global catalog of Vietnamese high-school subjects lives in the `subjectCatalog` table. It is created by migration `supabase/migrations/0005_subject_catalog.sql` and contains 13 standard subjects. Teachers pick from this catalog to create their own `subjects` rows (owned by `teacherId`); they can also create custom subjects not in the catalog.
+The global catalog of Vietnamese high-school subjects lives in the `subjectCatalog` table. It is created by migration `supabase/migrations/20260929000005_subject_catalog.sql` and contains 13 standard subjects. Teachers pick from this catalog to create their own `subjects` rows (owned by `teacherId`); they can also create custom subjects not in the catalog.
 
 Catalog items (code is for internal reference and can be blank):
 
@@ -77,22 +77,22 @@ This ensures the grade entry grid shows the student immediately when a subject i
 
 ## 7. Files Involved in the Implementation
 
-| Concern                     | Location                                                                |
-| --------------------------- | ----------------------------------------------------------------------- |
-| Default catalog (DB table)  | `supabase/migrations/0005_subject_catalog.sql` (table `subjectCatalog`) |
-| Subject catalog hook        | `src/hooks/subjects.ts` (`useSubjectCatalog`)                           |
-| Subject catalog schema      | `src/schemas/subjects.ts`                                               |
-| Subject actions             | `src/lib/actions/subjects.ts`                                           |
-| Class-subject actions       | `src/lib/actions/class-subjects.ts`                                     |
-| Class-subject hooks         | `src/hooks/class-subjects.ts`                                           |
-| Class-subject UI            | `src/components/classes/class-subject-manager.tsx`                      |
-| Student registration        | `src/lib/actions/register-student.ts`                                   |
-| Student import              | `src/lib/actions/import-students.ts`                                    |
-| Grade row initializer       | `src/lib/grades.ts` (`initializeGradesForClassStudents`)                |
-| Subject setup UI            | `src/app/subjects/page.tsx`, `src/components/subjects/*`                |
-| Subject-first class list    | `src/app/subjects/[id]/page.tsx`                                        |
-| Subject-scoped class detail | `src/app/classes/[id]/page.tsx` with `?subjectId`                       |
-| Locked grade dashboard      | `src/components/grades/grade-dashboard.tsx`                             |
+| Concern                     | Location                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------- |
+| Default catalog (DB table)  | `supabase/migrations/20260929000005_subject_catalog.sql` (table `subjectCatalog`) |
+| Subject catalog hook        | `src/hooks/subjects.ts` (`useSubjectCatalog`)                                     |
+| Subject catalog schema      | `src/schemas/subjects.ts`                                                         |
+| Subject actions             | `src/lib/actions/subjects.ts`                                                     |
+| Class-subject actions       | `src/lib/actions/class-subjects.ts`                                               |
+| Class-subject hooks         | `src/hooks/class-subjects.ts`                                                     |
+| Class-subject UI            | `src/components/classes/class-subject-manager.tsx`                                |
+| Student registration        | `src/lib/actions/register-student.ts`                                             |
+| Student import              | `src/lib/actions/import-students.ts`                                              |
+| Grade row initializer       | `src/lib/grades.ts` (`initializeGradesForClassStudents`)                          |
+| Subject setup UI            | `src/app/subjects/page.tsx`, `src/components/subjects/*`                          |
+| Subject-first class list    | `src/app/subjects/[id]/page.tsx`                                                  |
+| Subject-scoped class detail | `src/app/classes/[id]/page.tsx` with `?subjectId`                                 |
+| Locked grade dashboard      | `src/components/grades/grade-dashboard.tsx`                                       |
 
 ## 8. RLS Notes
 

@@ -40,24 +40,26 @@ DATABASE_URL="..." pnpm db:seed:remote
 
 `DATABASE_URL` = Supabase Dashboard → Connect → Direct connection.
 
-## 4. Supabase CLI (optional, for cloud migrations)
+## 4. Supabase CLI (cloud migrations)
 
 The repo layout already matches CLI conventions (`supabase/migrations/`, `supabase/seed.sql`). The CLI tracks applied migrations in `supabase_migrations.schema_migrations` — pushes only new files.
 
 ```bash
-pnpm add -D supabase
-pnpm supabase init                                     # creates supabase/config.toml
 pnpm supabase login
 pnpm supabase link --project-ref <project-ref>
-pnpm supabase db push                                  # apply pending migrations
-pnpm supabase migration list                           # local vs remote status
-pnpm supabase migration new <name>                     # new timestamped migration file
+pnpm db:migration:list                        # local vs remote status
+pnpm db:migration:new <name>                  # new timestamped migration file
+pnpm db:push                                  # apply pending migrations
+pnpm db:pull                                  # dump remote schema diff into a NEW migration file (only when remote drifted outside migrations)
+pnpm db:migration:repair --status applied|reverted <version...>
 ```
 
 Rules:
 - **Never run `supabase start`** — it spins up the CLI's own local stack and collides with docker-compose (ports 5433/8000/9000). Local dev stays on `pnpm docker:up`.
+- **Migration filenames are `YYYYMMDDHHMMSS_<name>.sql`** (the format `migration new` emits). Sequential numbers (`0001`, `0013`, ...) were dropped after two branches produced colliding versions; never hand-number migrations again.
 - `db push` does NOT seed — use `pnpm db:seed:remote` or SQL Editor.
-- If the cloud DB was partially migrated by hand, `db push` may fail — inspect state first, use `supabase migration repair` to reconcile.
+- If the cloud DB was partially migrated by hand or versions were renamed, `db push` may complain about missing/extra versions — inspect with `pnpm db:migration:list`, then reconcile with `pnpm db:migration:repair` (`applied` records a version without executing it; `reverted` drops a remote-only entry).
+- Hosted Supabase manages the `realtime`/`_realtime` schemas itself — `20260929000017_realtime_schemas.sql` is a no-op there (see its exception handler); it only does real work on the self-hosted stack.
 
 ## 5. Storage (S3: MinIO local / R2 prod)
 

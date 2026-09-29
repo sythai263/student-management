@@ -8,7 +8,7 @@
 - `name` (Text)
 - `schoolYear` (Text, e.g. '2025-2026')
 - `teacherId` (UUID, Foreign Key to auth.users.id)
-- `schoolId` (UUID, nullable, Foreign Key to teacherSchools.id, ON DELETE SET NULL — migration 0012)
+- `schoolId` (UUID, nullable, Foreign Key to teacherSchools.id, ON DELETE SET NULL — migration 20260929000012)
 - `createdAt` (Timestamptz)
 - RLS: insert/update require `teacherId = auth.uid()` AND (`schoolId` is null or belongs to the same teacher)
 
@@ -31,7 +31,7 @@ Note: the original portrait is uploaded under `tmp/students/` only for Rekogniti
 - `id` (UUID, Primary Key)
 - `classId` (UUID, Foreign Key to classes.id)
 - `sessionDate` (Date, default current_date)
-- `name` (Text, nullable — custom session name, migration 0007)
+- `name` (Text, nullable — custom session name, migration 20260929000007)
 - `imageKeys` (Text Array — object keys of the COMPRESSED display photos under `attendance/`; originals live under `tmp/attendance/` and are deleted after Rekognition)
 - `closed` (Boolean, default false — a closed session is read-only)
 - `createdAt` (Timestamptz)
@@ -54,7 +54,7 @@ Owned by a teacher and reused across all of that teacher's classes (a teacher te
 - `code` (Text, nullable, internal subject code)
 - `createdAt` (Timestamptz)
 
-## 6. Table: grades (redesigned — migration 0004)
+## 6. Table: grades (redesigned — migration 20260929000004)
 One row per `(classId, subjectId, semester, studentId)` with fixed score columns — replaces the old `scoreType`/`score`/`weight` model (dropped in 0004).
 - `id` (UUID, Primary Key)
 - `classId` (UUID, Foreign Key to classes.id)
@@ -72,7 +72,7 @@ One row per `(classId, subjectId, semester, studentId)` with fixed score columns
 - Indexes: (`classId`, `subjectId`, `semester`), (`studentId`), (`subjectId`)
 - RLS: ALL operations require BOTH `classes."teacherId"` AND `subjects."teacherId"` = `auth.uid()`
 
-## 6a. Table: gradeWeights (global reference — migration 0004)
+## 6a. Table: gradeWeights (global reference — migration 20260929000004)
 Maps each score slot to its coefficient: `tx1`..`tx4` weight 1, `gk` weight 2, `ck` weight 3.
 - `slot` (Text, Primary Key)
 - `weight` (Smallint, > 0)
@@ -89,7 +89,7 @@ A subject teacher teaches at MANY classes; a class has MANY subjects. Since `sub
 - Unique: (`classId`, `subjectId`)
 - RLS: insert requires BOTH the class and the subject to belong to `auth.uid()`
 
-## 8. Table: subjectCatalog (migration 0005)
+## 8. Table: subjectCatalog (migration 20260929000005)
 Global reference list of 13 Vietnamese high-school subjects. Teachers pick entries to create their own `subjects` rows.
 - `id` (UUID, Primary Key)
 - `name` (Text, unique — 'Toán', 'Vật lý'...)
@@ -97,14 +97,14 @@ Global reference list of 13 Vietnamese high-school subjects. Teachers pick entri
 - `createdAt` (Timestamptz)
 - RLS: select for everyone (`using (true)`)
 
-## 9. Table: teacherSignatures (migration 0010)
+## 9. Table: teacherSignatures (migration 20260929000010)
 At most one signature image per teacher, used when printing report cards.
 - `teacherId` (UUID, Primary Key, Foreign Key to auth.users.id)
 - `imageKey` (Text — MinIO/R2 key under `signatures/<teacherId>/`)
 - `updatedAt` (Timestamptz)
 - RLS: `auth.uid() = "teacherId"` on all operations
 
-## 10. Table: reportCardTemplates (migration 0011)
+## 10. Table: reportCardTemplates (migration 20260929000011)
 Teacher-designed report card layouts — ordered JSON blocks bound to a fixed field catalogue (no free-form HTML).
 - `id` (UUID, Primary Key)
 - `teacherId` (UUID, Foreign Key to auth.users.id)
@@ -114,7 +114,7 @@ Teacher-designed report card layouts — ordered JSON blocks bound to a fixed fi
 - `createdAt`, `updatedAt` (Timestamptz)
 - Index: (`teacherId`); RLS: `auth.uid() = "teacherId"` on all operations
 
-## 11. Table: teacherSchools (migration 0012)
+## 11. Table: teacherSchools (migration 20260929000012)
 Schools the teacher teaches at; classes optionally map to one so report cards fill the school name.
 - `id` (UUID, Primary Key)
 - `teacherId` (UUID, Foreign Key to auth.users.id)
@@ -123,7 +123,7 @@ Schools the teacher teaches at; classes optionally map to one so report cards fi
 - Unique: (`teacherId`, `name`); RLS: `auth.uid() = "teacherId"` on all operations
 
 ## 12. View: studentGradeSummaries
-Created with `security_invoker = true` so base-table RLS applies — teachers only see their own data. Redefined in migration 0004:
+Created with `security_invoker = true` so base-table RLS applies — teachers only see their own data. Redefined in migration 20260929000004:
 - `studentId`, `subjectId`, `classId`, `semester`
 - `averageScore` — placeholder (`null`); the weighted average is computed app-side (`src/lib/grade-utils.ts`) and stored on the `grades` row
 - `gradeCount` — number of non-null score slots (tx1..tx4, gk, ck)
@@ -134,9 +134,9 @@ select * from "studentGradeSummaries"
 where "classId" = $1 and "subjectId" = $2 and "semester" = $3;
 ```
 
-## 12a. View: sessionRecordCounts (migration 0014)
+## 12a. View: sessionRecordCounts (migration 20260929000014)
 `security_invoker = true`. One row per session: `sessionId`, `classId`, `recordCount` — powers the "cần điểm danh bổ sung" badge on the session list (`roster size - recordCount`) without fetching every record row.
 
-## 13. Helper functions (migration 0008)
+## 13. Helper functions (migration 20260929000008)
 - `remove_diacritics(text)` — lower-case + strip Vietnamese diacritics (unaccent in `extensions` schema, pinned `search_path`)
 - `search_students(classId, search, page, pageSize)` — diacritic-insensitive student search + pagination over `studentCode`/`lastName`/`firstName`, returns `{ students, total }`; granted to `authenticated`

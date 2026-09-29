@@ -36,7 +36,7 @@ import {
  *   5. Collect ExternalImageIds into a Map to dedupe students
  *      appearing in multiple photos; keep the best confidence.
  *      ExternalImageId is the student id — faces indexed before
- *      migration 0013 used studentCode, so both keys resolve.
+ *      migration 20260929000013 used studentCode, so both keys resolve.
  *   6. Insert attendanceRecords: CO_MAT if matched, VANG otherwise.
  */
 export async function groupAttendance(

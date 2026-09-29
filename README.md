@@ -53,7 +53,7 @@ pnpm install
 
 ### 2. Backend — chọn 1 trong 2
 
-**A. Supabase cloud**: tạo project, chạy `supabase/migrations/0001_init_schema.sql` trong SQL Editor.
+**A. Supabase cloud**: tạo project, chạy `supabase/migrations/20260929000001_init_schema.sql` trong SQL Editor.
 
 **B. Self-host (docker compose)**:
 
