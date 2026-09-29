@@ -9,3 +9,4 @@ export * from "./school";
 export * from "./signature";
 export * from "./student";
 export * from "./subject";
+export * from "./violation";

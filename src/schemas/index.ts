@@ -40,3 +40,5 @@ export { createSchoolSchema, renameSchoolSchema } from "./schools";
 export type { CreateSchoolInput, RenameSchoolInput } from "./schools";
 export { saveQuizSchema, joinQuizSchema, saveQuizResultsSchema } from "./quiz";
 export type { SaveQuizInput, QuizQuestionInput } from "./quiz";
+export { createViolationsSchema, deleteViolationSchema } from "./violation";
+export type { CreateViolationsInput } from "./violation";

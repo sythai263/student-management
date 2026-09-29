@@ -140,3 +140,13 @@ where "classId" = $1 and "subjectId" = $2 and "semester" = $3;
 ## 13. Helper functions (migration 20260929000008)
 - `remove_diacritics(text)` — lower-case + strip Vietnamese diacritics (unaccent in `extensions` schema, pinned `search_path`)
 - `search_students(classId, search, page, pageSize)` — diacritic-insensitive student search + pagination over `studentCode`/`lastName`/`firstName`, returns `{ students, total }`; granted to `authenticated`
+## 14. Table: studentViolations (migration 20260929115153)
+Class-rule violation records — one row per student per incident; the free-text
+`content` is typically composed from quick-pick presets (bỏ tiết, đi muộn, ...).
+- `id` (UUID, Primary Key)
+- `classId` (UUID, Foreign Key to classes.id, ON DELETE CASCADE)
+- `studentId` (UUID, Foreign Key to students.id, ON DELETE CASCADE)
+- `content` (Text)
+- `recordedAt` (Timestamptz — teacher-machine time sent by the client)
+- `createdAt` (Timestamptz)
+- RLS: accessible via owned class (`classes.teacherId = auth.uid()`); insert additionally requires `studentId` to belong to `classId`

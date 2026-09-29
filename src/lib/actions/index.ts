@@ -66,3 +66,4 @@ export {
 } from "./quiz";
 export type { HostSessionData } from "@types";
 export type { ActionResult } from "./action-utils";
+export { createViolations, deleteViolation } from "./violations";
