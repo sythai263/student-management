@@ -4,9 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "cn";
 import {
-  BookOpen,
-  Gamepad2,
-  GraduationCap,
   KeyRound,
   LogOut,
   PenLine,
@@ -15,8 +12,21 @@ import {
   User,
   UserPen,
 } from "lucide-react";
-import { ReactNode, useEffect, useRef, useState } from "react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { ReactNode, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+} from "@/components/ui/navigation-menu";
 import {
   ChangePasswordDialog,
   MfaManageDialog,
@@ -25,7 +35,7 @@ import {
 } from "@components/auth";
 import { SchoolsManageDialog } from "@components/schools";
 import { logout } from "@lib/actions";
-import { FEATURE_FLAGS } from "@constants";
+import { FEATURE_FLAGS, NAV_ITEMS } from "@constants";
 
 interface AppShellProps {
   children: ReactNode;
@@ -33,24 +43,11 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mfaOpen, setMfaOpen] = useState(false);
   const [signatureOpen, setSignatureOpen] = useState(false);
   const [schoolsOpen, setSchoolsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const onDocMouseDown = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDocMouseDown);
-    return () => document.removeEventListener("mousedown", onDocMouseDown);
-  }, [menuOpen]);
 
   const hideShell =
     pathname === "/login" ||
@@ -63,12 +60,6 @@ export function AppShell({ children }: AppShellProps) {
   if (hideShell) {
     return <>{children}</>;
   }
-
-  const navItems = [
-    { href: "/", label: "Môn học", icon: BookOpen },
-    { href: "/classes", label: "Lớp học", icon: GraduationCap },
-    { href: "/quizzes", label: "Quiz", icon: Gamepad2 },
-  ];
 
   // Navbar lines up with the page container — width varies per route.
   const contentMaxW =
@@ -97,107 +88,75 @@ export function AppShell({ children }: AppShellProps) {
             Quản lý học sinh
           </Link>
 
-          <nav className="ml-2 flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active =
-                item.href === "/"
-                  ? pathname === "/"
-                  : pathname?.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={buttonVariants({
-                    variant: active ? "secondary" : "ghost",
-                    size: "sm",
-                  })}
-                >
-                  <Icon className="size-4" />
-                  <span className="hidden sm:inline">{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          <NavigationMenu viewport={false} className="ml-2">
+            <NavigationMenuList className="gap-1">
+              {NAV_ITEMS.map((item) => {
+                const Icon = item.icon;
+                const active =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname?.startsWith(item.href);
+                return (
+                  <NavigationMenuItem key={item.href}>
+                    <NavigationMenuLink
+                      asChild
+                      active={!!active}
+                      className="data-active:bg-secondary"
+                    >
+                      <Link href={item.href}>
+                        <Icon className="size-4" />
+                        <span className="hidden sm:inline">{item.label}</span>
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                );
+              })}
+            </NavigationMenuList>
+          </NavigationMenu>
 
           <div className="flex-1" />
 
-          <div className="relative" ref={menuRef}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-label="Menu tài khoản"
-            >
-              <User className="size-5" />
-            </Button>
-
-            {menuOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-44 rounded-md border bg-popover p-1 shadow-md">
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setProfileOpen(true);
-                  }}
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Menu tài khoản"
                 >
+                  <User className="size-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onSelect={() => setProfileOpen(true)}>
                   <UserPen className="size-4" /> Thông tin tài khoản
-                </button>
+                </DropdownMenuItem>
                 {FEATURE_FLAGS.PASSWORD_LOGIN && (
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setPasswordOpen(true);
-                    }}
-                  >
+                  <DropdownMenuItem onSelect={() => setPasswordOpen(true)}>
                     <KeyRound className="size-4" /> Đổi mật khẩu
-                  </button>
+                  </DropdownMenuItem>
                 )}
                 {FEATURE_FLAGS.MFA_TOTP && (
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setMfaOpen(true);
-                    }}
-                  >
+                  <DropdownMenuItem onSelect={() => setMfaOpen(true)}>
                     <ShieldCheck className="size-4" /> Xác thực 2 lớp (MFA)
-                  </button>
+                  </DropdownMenuItem>
                 )}
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setSignatureOpen(true);
-                  }}
-                >
+                <DropdownMenuItem onSelect={() => setSignatureOpen(true)}>
                   <PenLine className="size-4" /> Chữ ký giáo viên
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setSchoolsOpen(true);
-                  }}
-                >
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSchoolsOpen(true)}>
                   <School className="size-4" /> Trường giảng dạy
-                </button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <form action={logout}>
-                  <button
-                    type="submit"
-                    className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-muted"
-                  >
-                    <LogOut className="size-4" /> Đăng xuất
-                  </button>
+                  <DropdownMenuItem asChild>
+                    <button type="submit">
+                      <LogOut className="size-4" /> Đăng xuất
+                    </button>
+                  </DropdownMenuItem>
                 </form>
-              </div>
-            )}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <ChangePasswordDialog
               open={passwordOpen}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ListSkeleton } from "@/components/ui/list-skeleton";
 import {
   useSubjects,
@@ -70,12 +71,10 @@ export function ClassSubjectManager({ classId }: ClassSubjectManagerProps) {
                   key={s.id}
                   className="flex items-center gap-2 rounded-md border p-2 hover:bg-muted/50"
                 >
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={checked}
-                    onChange={(e) => toggle(s.id, e.target.checked)}
+                    onCheckedChange={(v) => toggle(s.id, v)}
                     disabled={isBusy}
-                    className="size-4"
                   />
                   <span className="text-sm">
                     {s.name} {s.code ? `(${s.code})` : ""}

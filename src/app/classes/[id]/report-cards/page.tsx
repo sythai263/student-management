@@ -1,6 +1,7 @@
 import { ReportCardDashboard } from "@components/report-cards";
 import { PageHeader } from "@components/layout";
 import { requireTeacher } from "@lib/actions/action-utils";
+import { getTeacherSubjectName } from "@lib/data-subjects";
 
 interface ReportCardsPageProps {
   params: Promise<{ id: string }>;
@@ -15,22 +16,11 @@ export default async function ReportCardsPage({
   const { subjectId } = await searchParams;
   const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
 
-  const { supabase, user } = await requireTeacher();
+  const { supabase } = await requireTeacher();
   const { data: userData } = await supabase.auth.getUser();
   const teacherName =
     (userData.user?.user_metadata?.fullName as string | undefined) ?? "";
-
-  let subjectName: string | undefined;
-
-  if (activeSubjectId) {
-    const { data } = await supabase
-      .from("subjects")
-      .select("name")
-      .eq("id", activeSubjectId)
-      .eq("teacherId", user.id)
-      .single();
-    subjectName = data?.name;
-  }
+  const subjectName = await getTeacherSubjectName(activeSubjectId);
 
   return (
     <main className="mx-auto max-w-7xl space-y-8 p-8 print:max-w-none print:p-0">

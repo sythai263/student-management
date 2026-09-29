@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarCheck, Dices, GraduationCap, Printer, ShieldAlert, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
-import { requireTeacher } from "@lib/actions/action-utils";
+import { getTeacherSubjectName } from "@lib/data-subjects";
 import { ClassHeader, ClassSubjectManager } from "@components/classes";
 import { StudentTable, ImportStudentsForm } from "@components/students";
 
@@ -19,18 +19,7 @@ export default async function ClassDetailPage({
   const { subjectId } = await searchParams;
   const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
 
-  let subjectName: string | undefined;
-
-  if (activeSubjectId) {
-    const { supabase, user } = await requireTeacher();
-    const { data } = await supabase
-      .from("subjects")
-      .select("name")
-      .eq("id", activeSubjectId)
-      .eq("teacherId", user.id)
-      .single();
-    subjectName = data?.name;
-  }
+  const subjectName = await getTeacherSubjectName(activeSubjectId);
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-4 sm:space-y-8 sm:p-8">

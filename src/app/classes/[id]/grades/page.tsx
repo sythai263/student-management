@@ -1,6 +1,6 @@
 import { GradeDashboard } from "@components/grades";
 import { PageHeader } from "@components/layout";
-import { requireTeacher } from "@lib/actions/action-utils";
+import { getTeacherSubjectName } from "@lib/data-subjects";
 
 interface GradesPageProps {
   params: Promise<{ id: string }>;
@@ -15,18 +15,7 @@ export default async function GradesPage({
   const { subjectId } = await searchParams;
   const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
 
-  let subjectName: string | undefined;
-
-  if (activeSubjectId) {
-    const { supabase, user } = await requireTeacher();
-    const { data } = await supabase
-      .from("subjects")
-      .select("name")
-      .eq("id", activeSubjectId)
-      .eq("teacherId", user.id)
-      .single();
-    subjectName = data?.name;
-  }
+  const subjectName = await getTeacherSubjectName(activeSubjectId);
 
   return (
     <main className="mx-auto max-w-7xl space-y-8 p-8">

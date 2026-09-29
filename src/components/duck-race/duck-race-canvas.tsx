@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -397,15 +398,29 @@ export function DuckRaceCanvas({
         )}
       </div>
 
-      {finished && winnerName && !gradeOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-black/70 p-6 text-center backdrop-blur-sm">
-          <button
-            onClick={close}
+      <Dialog
+        open={finished && !!winnerName && !gradeOpen}
+        onOpenChange={(o) => {
+          if (!o) close();
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="inset-0 flex h-full max-w-none translate-x-0 translate-y-0 flex-col items-center justify-center gap-6 rounded-none bg-black/70 p-6 text-center text-white ring-0 backdrop-blur-sm sm:max-w-none"
+        >
+          <DialogTitle className="sr-only">Học sinh thắng cuộc</DialogTitle>
+          <DialogClose
+            render={
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                className="absolute top-4 right-4 rounded-full text-white/70 hover:bg-white/10 hover:text-white"
+              />
+            }
             aria-label="Đóng"
-            className="absolute top-4 right-4 rounded-full p-2 text-white/70 hover:bg-white/10 hover:text-white"
           >
             <X className="size-6" />
-          </button>
+          </DialogClose>
           <div className="animate-bounce rounded-3xl bg-gradient-to-br from-green-500 to-green-700 p-10 shadow-2xl">
             <p className="text-4xl font-bold text-white sm:text-6xl">
               Xin chúc mừng
@@ -431,8 +446,8 @@ export function DuckRaceCanvas({
               <Pencil className="size-5" /> Nhập điểm
             </Button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <RaceGradeModal
         open={gradeOpen}

@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
 import { pickReviewStudent } from "@lib/actions";
 import { DuckRaceCanvas } from "@components/duck-race";
 

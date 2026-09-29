@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEventHandler } from "react";
 import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -83,11 +84,9 @@ export function SubjectCatalogForm() {
                     key={c.id}
                     className="flex items-center gap-2 rounded-md border p-2 hover:bg-muted/50"
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={selected.includes(c.name)}
-                      onChange={(e) => toggle(c.name, e.target.checked)}
-                      className="size-4"
+                      onCheckedChange={(checked) => toggle(c.name, checked)}
                     />
                     <span className="text-sm">{c.name}</span>
                   </label>
