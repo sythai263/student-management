@@ -5,7 +5,7 @@ import "@fontsource/be-vietnam-pro/400.css";
 import "@fontsource/be-vietnam-pro/500.css";
 import "@fontsource/be-vietnam-pro/600.css";
 import "@fontsource/be-vietnam-pro/700.css";
-import { cn } from "@/lib/utils";
+import { cn } from "@lib/utils";
 import { QueryProvider } from "@components/providers";
 import { AppShell } from "@components/layout";
 import { Toaster } from "@components/ui/sonner";

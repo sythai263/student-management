@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
+import { Card, CardContent, CardHeader } from "@components/ui/card";
+import { Skeleton } from "@components/ui/skeleton";
+import { ListSkeleton } from "@components/ui/list-skeleton";
 
 export default function Loading() {
   return (

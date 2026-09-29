@@ -1,4 +1,5 @@
 import { pickReviewStudent } from "@lib/actions";
+import { firstParam } from "@lib/utils";
 import { DuckRaceCanvas } from "@components/duck-race";
 
 interface RacePageProps {
@@ -12,8 +13,7 @@ export default async function RacePage({
 }: RacePageProps) {
   const { id } = await params;
   const { subjectId } = await searchParams;
-  const activeSubjectId =
-    typeof subjectId === "string" ? subjectId : undefined;
+  const activeSubjectId = firstParam(subjectId);
 
   const result = await pickReviewStudent(id);
 

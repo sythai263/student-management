@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { CalendarCheck, Dices, GraduationCap, Printer, ShieldAlert, UserPlus } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@components/ui/button";
 import { getTeacherSubjectName } from "@lib/data-subjects";
+import { firstParam } from "@lib/utils";
 import { ClassHeader, ClassSubjectManager } from "@components/classes";
 import { StudentTable, ImportStudentsForm } from "@components/students";
 
@@ -17,8 +18,7 @@ export default async function ClassDetailPage({
 }: ClassDetailPageProps) {
   const { id } = await params;
   const { subjectId } = await searchParams;
-  const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
-
+  const activeSubjectId = firstParam(subjectId);
   const subjectName = await getTeacherSubjectName(activeSubjectId);
 
   return (

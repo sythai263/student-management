@@ -163,3 +163,13 @@ export function friendlyErrorMessage(err: unknown): string {
   if (VIETNAMESE_CHAR.test(raw)) return raw;
   return translateRawError(raw) ?? FALLBACK_ERROR_MESSAGE;
 }
+
+/**
+ * Next.js `searchParams` entries are `string | string[] | undefined` —
+ * pages usually want just the first scalar value.
+ */
+export function firstParam(
+  value: string | string[] | undefined,
+): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}

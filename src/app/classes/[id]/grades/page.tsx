@@ -1,6 +1,7 @@
 import { GradeDashboard } from "@components/grades";
 import { PageHeader } from "@components/layout";
 import { getTeacherSubjectName } from "@lib/data-subjects";
+import { firstParam } from "@lib/utils";
 
 interface GradesPageProps {
   params: Promise<{ id: string }>;
@@ -13,8 +14,7 @@ export default async function GradesPage({
 }: GradesPageProps) {
   const { id } = await params;
   const { subjectId } = await searchParams;
-  const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
-
+  const activeSubjectId = firstParam(subjectId);
   const subjectName = await getTeacherSubjectName(activeSubjectId);
 
   return (

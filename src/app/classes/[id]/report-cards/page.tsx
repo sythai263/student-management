@@ -2,6 +2,7 @@ import { ReportCardDashboard } from "@components/report-cards";
 import { PageHeader } from "@components/layout";
 import { requireTeacher } from "@lib/actions/action-utils";
 import { getTeacherSubjectName } from "@lib/data-subjects";
+import { firstParam } from "@lib/utils";
 
 interface ReportCardsPageProps {
   params: Promise<{ id: string }>;
@@ -14,7 +15,7 @@ export default async function ReportCardsPage({
 }: ReportCardsPageProps) {
   const { id } = await params;
   const { subjectId } = await searchParams;
-  const activeSubjectId = typeof subjectId === "string" ? subjectId : undefined;
+  const activeSubjectId = firstParam(subjectId);
 
   const { supabase } = await requireTeacher();
   const { data: userData } = await supabase.auth.getUser();

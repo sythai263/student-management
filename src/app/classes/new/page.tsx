@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@components/ui/card";
 import { PageHeader } from "@components/layout";
 import { CreateClassForm } from "@components/classes";
 
