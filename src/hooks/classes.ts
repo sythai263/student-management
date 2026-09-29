@@ -46,7 +46,10 @@ export function useClass(classId: string) {
 export function useDeleteClass() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: deleteClass,
+    mutationFn: async (classId: string) => {
+      const result = await deleteClass(classId);
+      if (!result.success) throw new Error(result.error);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["classes"] });
     },
