@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
@@ -66,7 +66,7 @@ export function QuizEditor({ quiz, questions }: QuizEditorProps) {
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     saveMutation.mutate(
       { id: quiz?.id, title, description, questions: items },

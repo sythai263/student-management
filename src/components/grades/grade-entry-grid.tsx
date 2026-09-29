@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type FormEventHandler } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { MessageSquarePlus, Save } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -165,7 +165,7 @@ export function GradeEntryGrid({
     );
   }
 
-  const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!students) return;
 

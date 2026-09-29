@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import {
@@ -24,7 +24,7 @@ export function JoinQuizForm() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleJoin(e: React.FormEvent) {
+  async function handleJoin(e: FormEvent) {
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) return;

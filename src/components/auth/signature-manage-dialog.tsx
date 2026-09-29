@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useRef, useTransition, type ChangeEvent } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -45,7 +45,7 @@ export function SignatureManageDialog({
   const inputRef = useRef<HTMLInputElement>(null);
   const padRef = useRef<SignaturePadHandle>(null);
 
-  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function onFileChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;

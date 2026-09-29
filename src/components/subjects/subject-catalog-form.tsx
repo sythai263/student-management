@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type FormEventHandler } from "react";
+import { useState, useTransition, type FormEvent } from "react";
 import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
@@ -31,7 +31,7 @@ export function SubjectCatalogForm() {
 
   const isLoading = subjectsLoading || catalogLoading;
 
-  const onSubmit: FormEventHandler<HTMLFormElement> = (e) => {
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     startTransition(async () => {
       const result = await createSubjectsFromCatalog(selected);
