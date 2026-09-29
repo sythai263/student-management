@@ -9,9 +9,25 @@ import {
   type ActionResult,
 } from "@lib/actions";
 import { friendlyErrorMessage } from "@lib/utils";
-import type { StudentViolationWithStudent } from "@types";
+import type { StudentViolationWithStudent, ViolationStat } from "@types";
 
 const violationsKey = (classId: string) => ["violations", classId] as const;
+
+/** Per-student violation counts — aggregated server-side by RPC. */
+export function useViolationStats(classId: string, limit = 8) {
+  return useQuery({
+    queryKey: [...violationsKey(classId), "stats", limit],
+    queryFn: async (): Promise<ViolationStat[]> => {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase.rpc("count_violations_by_student", {
+        p_class_id: classId,
+        p_limit: limit,
+      });
+      if (error) throw new Error(friendlyErrorMessage(error));
+      return (data ?? []) as ViolationStat[];
+    },
+  });
+}
 
 interface ViolationFilterParams {
   page: number;

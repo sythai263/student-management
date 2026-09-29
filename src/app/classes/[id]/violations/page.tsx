@@ -1,5 +1,9 @@
 import { PageHeader } from "@components/layout";
-import { ViolationForm, ViolationList } from "@components/violations";
+import {
+  ViolationForm,
+  ViolationList,
+  ViolationStats,
+} from "@components/violations";
 
 interface ViolationsPageProps {
   params: Promise<{ id: string }>;
@@ -15,6 +19,7 @@ export default async function ViolationsPage({ params }: ViolationsPageProps) {
         title="Học sinh vi phạm"
         actions={<ViolationForm classId={id} />}
       />
+      <ViolationStats classId={id} />
       <ViolationList classId={id} />
     </main>
   );

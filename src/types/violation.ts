@@ -18,3 +18,11 @@ export interface StudentViolationWithStudent extends StudentViolation {
     "studentCode" | "lastName" | "firstName" | "nameSuffix"
   > | null;
 }
+
+/** Row returned by the count_violations_by_student RPC. */
+export interface ViolationStat {
+  studentId: string;
+  studentName: string;
+  studentCode: string | null;
+  violationCount: number;
+}
