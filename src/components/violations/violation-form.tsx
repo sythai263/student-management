@@ -1,10 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Plus, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  useComboboxAnchor,
+} from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -54,41 +65,24 @@ export function ViolationForm({ classId }: ViolationFormProps) {
   const createMutation = useCreateViolations(classId);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Student[]>([]);
-  const [query, setQuery] = useState("");
   const [content, setContent] = useState("");
   const [recordedAt, setRecordedAt] = useState(nowForInput());
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const studentAnchor = useComboboxAnchor();
 
-  const suggestions = useMemo(() => {
-    const q = removeDiacritics(query.trim());
-    if (!q) return [];
-    const selectedIds = new Set(selected.map((s) => s.id));
-    return (students ?? [])
-      .filter((s) => !selectedIds.has(s.id))
-      .filter((s) =>
-        removeDiacritics(
-          `${s.lastName} ${s.firstName} ${s.studentCode ?? ""} ${s.nameSuffix ?? ""}`,
-        ).includes(q),
-      )
-      .slice(0, 8);
-  }, [query, students, selected]);
+  // Diacritic-insensitive search on name + code; already-picked students
+  // stay out of the suggestion list.
+  const studentFilter = (s: Student, q: string) =>
+    !selected.some((v) => v.id === s.id) &&
+    removeDiacritics(
+      `${s.lastName} ${s.firstName} ${s.studentCode ?? ""} ${s.nameSuffix ?? ""}`,
+    ).includes(removeDiacritics(q.trim()));
 
   const openDialog = () => {
     setSelected([]);
-    setQuery("");
     setContent("");
     setRecordedAt(nowForInput());
     setOpen(true);
   };
-
-  const addStudent = (s: Student) => {
-    setSelected((prev) => [...prev, s]);
-    setQuery("");
-    setShowSuggestions(true);
-  };
-
-  const removeStudent = (id: string) =>
-    setSelected((prev) => prev.filter((s) => s.id !== id));
 
   const items = contentItems(content);
   const appendPreset = (preset: string) => {
@@ -142,68 +136,52 @@ export function ViolationForm({ classId }: ViolationFormProps) {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="violation-student">Học sinh vi phạm</Label>
-              {selected.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {selected.map((s) => (
-                    <Badge key={s.id} variant="secondary" className="gap-1">
-                      {studentFullName(s)}
-                      {s.studentCode ? ` (${s.studentCode})` : ""}
-                      <button
-                        type="button"
-                        aria-label={`Bỏ ${studentFullName(s)}`}
-                        className="ml-0.5 rounded-full hover:text-destructive"
-                        onClick={() => removeStudent(s.id)}
-                      >
-                        <X className="size-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              <div className="relative">
-                <Input
-                  id="violation-student"
-                  value={query}
-                  onChange={(e) => {
-                    setQuery(e.target.value);
-                    setShowSuggestions(true);
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() =>
-                    setTimeout(() => setShowSuggestions(false), 150)
-                  }
-                  placeholder="Gõ họ tên hoặc mã học sinh để tìm..."
-                  autoComplete="off"
-                />
-                {showSuggestions && query.trim() && (
-                  <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-y-auto rounded-md border bg-popover shadow-md">
-                    {suggestions.map((s) => (
-                      <li key={s.id}>
-                        <button
-                          type="button"
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            addStudent(s);
-                          }}
-                        >
-                          {studentFullName(s)}
-                          {s.studentCode ? (
-                            <span className="ml-1 text-muted-foreground">
-                              ({s.studentCode})
-                            </span>
-                          ) : null}
-                        </button>
-                      </li>
-                    ))}
-                    {suggestions.length === 0 && (
-                      <li className="px-3 py-2 text-sm text-muted-foreground">
-                        Không tìm thấy học sinh.
-                      </li>
+              <Combobox
+                multiple
+                items={students ?? []}
+                value={selected}
+                onValueChange={setSelected}
+                isItemEqualToValue={(a, b) => a.id === b.id}
+                itemToStringLabel={studentFullName}
+                filter={studentFilter}
+                autoHighlight
+                limit={8}
+                autoComplete="off"
+              >
+                <ComboboxChips ref={studentAnchor}>
+                  <ComboboxValue>
+                    {(values: Student[]) => (
+                      <>
+                        {values.map((s) => (
+                          <ComboboxChip key={s.id}>
+                            {studentFullName(s)}
+                            {s.studentCode ? ` (${s.studentCode})` : ""}
+                          </ComboboxChip>
+                        ))}
+                      </>
                     )}
-                  </ul>
-                )}
-              </div>
+                  </ComboboxValue>
+                  <ComboboxChipsInput
+                    id="violation-student"
+                    placeholder="Gõ họ tên hoặc mã học sinh để tìm..."
+                  />
+                </ComboboxChips>
+                <ComboboxContent anchor={studentAnchor}>
+                  <ComboboxEmpty>Không tìm thấy học sinh.</ComboboxEmpty>
+                  <ComboboxList>
+                    {(s: Student) => (
+                      <ComboboxItem key={s.id} value={s}>
+                        {studentFullName(s)}
+                        {s.studentCode ? (
+                          <span className="ml-1 text-muted-foreground">
+                            ({s.studentCode})
+                          </span>
+                        ) : null}
+                      </ComboboxItem>
+                    )}
+                  </ComboboxList>
+                </ComboboxContent>
+              </Combobox>
             </div>
 
             <div className="space-y-2">
