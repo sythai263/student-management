@@ -5,6 +5,14 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ListSkeleton } from "@/components/ui/list-skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useDeleteViolation, useViolations } from "@hooks";
 import { studentFullName } from "@lib/string";
 
@@ -22,50 +30,57 @@ export function ViolationList({ classId }: ViolationListProps) {
   }
   if (!violations?.length) {
     return (
-      <p className="text-muted-foreground">
-        Chưa có học sinh nào vi phạm.
-      </p>
+      <p className="text-muted-foreground">Chưa có học sinh nào vi phạm.</p>
     );
   }
 
   return (
-    <ul className="divide-y rounded-md border">
-      {violations.map((v) => (
-        <li
-          key={v.id}
-          className="flex items-start justify-between gap-3 px-4 py-3"
-        >
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium">
-              {v.students ? studentFullName(v.students) : "—"}
-              {v.students?.studentCode ? (
-                <span className="ml-1 text-muted-foreground">
-                  ({v.students.studentCode})
-                </span>
-              ) : null}
-            </p>
-            <p className="text-sm">{v.content}</p>
-            <p className="text-xs text-muted-foreground">
-              {dayjs(v.recordedAt).format("HH:mm · DD/MM/YYYY")}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Xóa vi phạm"
-            disabled={deleteMutation.isPending}
-            onClick={() =>
-              deleteMutation.mutate(v.id, {
-                onSuccess: () => toast.success("Đã xóa vi phạm"),
-                onError: (err) => toast.error(err.message),
-              })
-            }
-          >
-            <Trash2 className="size-4 text-destructive" />
-          </Button>
-        </li>
-      ))}
-    </ul>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Học sinh</TableHead>
+            <TableHead>Nội dung vi phạm</TableHead>
+            <TableHead className="whitespace-nowrap">Thời điểm</TableHead>
+            <TableHead className="w-10" />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {violations.map((v) => (
+            <TableRow key={v.id}>
+              <TableCell className="font-medium whitespace-nowrap">
+                {v.students ? studentFullName(v.students) : "—"}
+                {v.students?.studentCode ? (
+                  <span className="ml-1 text-muted-foreground">
+                    ({v.students.studentCode})
+                  </span>
+                ) : null}
+              </TableCell>
+              <TableCell>{v.content}</TableCell>
+              <TableCell className="whitespace-nowrap text-muted-foreground">
+                {dayjs(v.recordedAt).format("HH:mm · DD/MM/YYYY")}
+              </TableCell>
+              <TableCell>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Xóa vi phạm"
+                  disabled={deleteMutation.isPending}
+                  onClick={() =>
+                    deleteMutation.mutate(v.id, {
+                      onSuccess: () => toast.success("Đã xóa vi phạm"),
+                      onError: (err) => toast.error(err.message),
+                    })
+                  }
+                >
+                  <Trash2 className="size-4 text-destructive" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
