@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 import { cn } from "cn";
 import type { LeaderboardEntry } from "@types";
 

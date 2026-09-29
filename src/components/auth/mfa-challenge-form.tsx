@@ -2,16 +2,16 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { OtpCodeInput } from "@/components/ui/otp-input";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import { OtpCodeInput } from "../ui/otp-input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "../ui/card";
 import { toast } from "sonner";
 import { logout } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";

@@ -3,8 +3,8 @@
 import { useState, useTransition, type FormEventHandler } from "react";
 import { Plus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -12,8 +12,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
+} from "../ui/dialog";
+import { ListSkeleton } from "../ui/list-skeleton";
 import { toast } from "sonner";
 import { createSubjectsFromCatalog } from "@lib/actions";
 import { useSubjectCatalog, useSubjects } from "@hooks";

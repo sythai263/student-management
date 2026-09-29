@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
+import { Button } from "../ui/button";
+import { CardGridSkeleton } from "../ui/card-grid-skeleton";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "../ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import { createQuizSession } from "@lib/actions";
 import { useQuizzes, useDeleteQuiz } from "@hooks";
 import type { Quiz } from "@types";

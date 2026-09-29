@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { cn } from "cn";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { ListSkeleton } from "../ui/list-skeleton";
 import {
   ATTENDANCE_STATUS_HOVER,
   ATTENDANCE_STATUS_LIST,

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Pagination } from "@/components/ui/pagination";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { Badge } from "../ui/badge";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Pagination } from "../ui/pagination";
+import { ListSkeleton } from "../ui/list-skeleton";
+import { TableSkeleton } from "../ui/table-skeleton";
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "../ui/table";
 import { useDebounce, usePaginatedStudents } from "@hooks";
 import { studentFullName } from "@lib/string";
 import type { Student } from "@types";
@@ -25,7 +25,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "../ui/select";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 const DEFAULT_PAGE_SIZE = 20;

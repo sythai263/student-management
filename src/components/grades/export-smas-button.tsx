@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { FileDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { fetchClass } from "@hooks/classes";
 import { GRADE_SLOTS, type GradeSlot } from "@constants";

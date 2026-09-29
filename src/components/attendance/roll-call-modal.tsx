@@ -2,16 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "cn";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
 import {
   ATTENDANCE_STATUS,
   ATTENDANCE_STATUS_CLASS,

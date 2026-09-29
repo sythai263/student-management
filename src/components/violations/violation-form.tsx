@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import {
   Combobox,
   ComboboxChip,
@@ -15,7 +15,7 @@ import {
   ComboboxList,
   ComboboxValue,
   useComboboxAnchor,
-} from "@/components/ui/combobox";
+} from "../ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -23,10 +23,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import { useCreateViolations, useStudents } from "@hooks";
 import { removeDiacritics, studentFullName } from "@lib/string";
 import type { Student } from "@types";

@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Cookies from "js-cookie";
 import confetti from "canvas-confetti";
 import { Pencil, Play, Timer, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import {
   Dialog,
   DialogClose,
@@ -14,10 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import type { RaceState, Student } from "@types";
 import { studentFullName } from "@lib/string";
-import { PageHeader } from "@components/layout";
+import { PageHeader } from "../layout";
 import {
   RACE_DURATION_COOKIE,
   DEFAULT_RACE_DURATION,

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import { ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { OtpCodeInput } from "@/components/ui/otp-input";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import { OtpCodeInput } from "../ui/otp-input";
+import { ListSkeleton } from "../ui/list-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
 import { TOTP_ISSUER } from "@constants";

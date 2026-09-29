@@ -2,15 +2,15 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { PageHeader } from "@components/layout";
+} from "../ui/select";
+import { PageHeader } from "../layout";
 import { useClass, useSchools, useUpdateClassSchool } from "@hooks";
 import { friendlyErrorMessage } from "@lib/utils";
 

@@ -2,9 +2,9 @@
 
 import { useState, useTransition, type FormEventHandler } from "react";
 import { MessageSquarePlus, Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Table,
   TableBody,
@@ -12,8 +12,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { TableSkeleton } from "@/components/ui/table-skeleton";
+} from "../ui/table";
+import { TableSkeleton } from "../ui/table-skeleton";
 import { toast } from "sonner";
 import { useGrades, useSaveGradeComment, useSaveGrades, useStudents } from "@hooks";
 import { GRADE_SLOT_FULL_LABEL, GRADE_SLOTS } from "@constants";

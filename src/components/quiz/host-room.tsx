@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 import { HostLobby } from "./host-lobby";
 import { HostPodium } from "./host-podium";
 import { HostQuestionCard } from "./host-question-card";

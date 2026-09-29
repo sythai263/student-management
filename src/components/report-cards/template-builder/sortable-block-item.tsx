@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2 } from "lucide-react";
 import { cn } from "cn";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../ui/button";
 import { REPORT_CARD_SAMPLE_VALUES } from "@lib/report-card";
 import type { ReportCardBlock } from "@types";
 import { BlockRenderer } from "../blocks";

@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
+import { buttonVariants } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Checkbox } from "../ui/checkbox";
+import { ListSkeleton } from "../ui/list-skeleton";
 import {
   useSubjects,
   useClassSubjects,

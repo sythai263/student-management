@@ -2,9 +2,9 @@
 
 import { useRef, useState, useTransition, type SubmitEventHandler } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { toast } from "sonner";
 import { groupAttendance } from "@lib/actions";
 import { compressImage, uploadDirect } from "@lib/image";

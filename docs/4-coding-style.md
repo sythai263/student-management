@@ -7,9 +7,11 @@ You must strictly follow these coding standards and architectural patterns based
 - **Cross-folder imports:** Must use the 2nd tier via absolute aliases[cite: 1]. 
   - ✅ DO: `import { LoginForm } from '@components/auth'`[cite: 1]
   - ✅ DO: `import { formatDateTime } from '@lib/format'`[cite: 1]
-  - ❌ DON'T: Use deep file paths or relative `../../`[cite: 1]
-  - ❌ DON'T: Use `@/components/...` or `@/hooks/...` in feature code[cite: 1] (Exception: shadcn primitives can use `@components/ui` or `@/components/ui`[cite: 1]).
-- **Same-folder relative imports:** Allowed inside a module boundary ONLY if routing through the barrel creates a circular dependency (e.g., `lib/actions/*.ts` importing `./tenants`)[cite: 1].
+  - ✅ DO (inside `src/components` only): use relative imports for sibling folders, 1–2 levels max — `from '../ui/select'`, `from '../students'`.
+  - ✅ DO (inside `src/components/ui`): keep the CLI-generated `@/components/ui/...` import style so regenerated files don't drift — do NOT rewrite them to `./`.
+  - ❌ DON'T: Use deep file paths like `@/components/...` or `@/hooks/...` in feature code outside `ui/`[cite: 1]
+  - ❌ DON'T: Use relative `../` outside `src/components`, or deeper than 2 levels — use the alias instead[cite: 1].
+- **Same-folder relative imports:** Allowed for sibling files inside the same module (e.g. `ui/` primitives) and inside a module boundary ONLY if routing through the barrel creates a circular dependency (e.g., `lib/actions/*.ts` importing `./tenants`)[cite: 1].
 - `@constants`, `@schemas`, and `@types` remain 1st-level barrels[cite: 1].
 
 ## 2. Component Declarations

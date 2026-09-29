@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 import { PlayerEndedView } from "./player-ended-view";
 import { PlayerNameForm } from "./player-name-form";
 import { PlayerQuestionView } from "./player-question-view";

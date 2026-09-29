@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
+import { Button } from "../ui/button";
+import { CardGridSkeleton } from "../ui/card-grid-skeleton";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "../ui/card";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import { toast } from "sonner";
 import { useSubjects, useDeleteSubject } from "@hooks";
 import type { Subject } from "@types";

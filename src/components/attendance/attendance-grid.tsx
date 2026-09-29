@@ -2,8 +2,8 @@
 
 import { memo } from "react";
 import { cn } from "cn";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   ATTENDANCE_STATUS_CLASS,
   ATTENDANCE_STATUS_HOVER,

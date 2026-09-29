@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 
 interface PageHeaderProps {
   title: ReactNode;

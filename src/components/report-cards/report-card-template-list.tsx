@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Pencil, Plus, Star, Trash2 } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
+} from "../ui/card";
+import { CardGridSkeleton } from "../ui/card-grid-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import { toast } from "sonner";
 import {
   useDeleteReportCardTemplate,

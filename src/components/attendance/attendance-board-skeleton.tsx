@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
+import { Skeleton } from "../ui/skeleton";
+import { ListSkeleton } from "../ui/list-skeleton";
 
 /** Placeholder matching AttendanceToolbar + AttendanceGrid while the session loads. */
 export function AttendanceBoardSkeleton() {

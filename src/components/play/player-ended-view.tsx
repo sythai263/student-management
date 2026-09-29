@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { QuizLeaderboard } from "@components/quiz";
+import { Button } from "../ui/button";
+import { QuizLeaderboard } from "../quiz";
 import type { LeaderboardEntry } from "@types";
 
 interface PlayerEndedViewProps {

@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useTransition, type SubmitEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { OtpCodeInput } from "@/components/ui/otp-input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { OtpCodeInput } from "../ui/otp-input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "../ui/card";
 import { toast } from "sonner";
 import { login, sendLoginOtp, verifyLoginOtp } from "@lib/actions";
 import { FEATURE_FLAGS } from "@constants";

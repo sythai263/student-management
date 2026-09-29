@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../ui/skeleton";
 import { useQuiz } from "@hooks";
 import { QuizEditor } from "./quiz-editor";
 

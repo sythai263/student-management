@@ -9,8 +9,8 @@ import {
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2, UserRound } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -18,9 +18,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "../ui/dialog";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { toast } from "sonner";
 import { updateStudent } from "@lib/actions";
 import { useDeleteStudent } from "@hooks";

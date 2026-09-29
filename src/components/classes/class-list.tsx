@@ -8,9 +8,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CardGridSkeleton } from "@/components/ui/card-grid-skeleton";
+} from "../ui/card";
+import { Button } from "../ui/button";
+import { CardGridSkeleton } from "../ui/card-grid-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import { toast } from "sonner";
 import { useClasses, useDeleteClass } from "@hooks";
 import type { Class } from "@types";

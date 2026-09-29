@@ -3,16 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import { joinQuizByPin } from "@lib/actions";
 import { savePlayerIdentity } from "@lib/quiz";
 import { QUIZ_PIN_LENGTH } from "@constants";

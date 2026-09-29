@@ -8,7 +8,7 @@ import {
   Sigma,
   Table,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../ui/button";
 import { createBlockId } from "@lib/report-card";
 import type { ReportCardBlock } from "@types";
 

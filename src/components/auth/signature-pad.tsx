@@ -11,7 +11,7 @@ import {
 import SignaturePadLib from "signature_pad";
 import { PenLine, RotateCcw } from "lucide-react";
 import { cn } from "cn";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import { exportSignaturePng } from "@lib/image";
 import { friendlyErrorMessage } from "@lib/utils";
 

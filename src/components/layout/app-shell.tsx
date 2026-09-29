@@ -13,27 +13,27 @@ import {
   UserPen,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../ui/dropdown-menu";
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-} from "@/components/ui/navigation-menu";
+} from "../ui/navigation-menu";
 import {
   ChangePasswordDialog,
   MfaManageDialog,
   SignatureManageDialog,
   UpdateProfileDialog,
-} from "@components/auth";
-import { SchoolsManageDialog } from "@components/schools";
+} from "../auth";
+import { SchoolsManageDialog } from "../schools";
 import { logout } from "@lib/actions";
 import { FEATURE_FLAGS, NAV_ITEMS } from "@constants";
 

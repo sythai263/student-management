@@ -2,9 +2,9 @@
 
 import { useRef, useState, useTransition, type SubmitEventHandler } from "react";
 import { FileUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "../ui/dialog";
 import { toast } from "sonner";
 import { useImportGrades } from "@hooks";
 import { friendlyErrorMessage } from "@lib/utils";

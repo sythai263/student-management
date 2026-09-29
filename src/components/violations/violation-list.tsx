@@ -3,8 +3,8 @@
 import dayjs from "dayjs";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { ListSkeleton } from "@/components/ui/list-skeleton";
+import { Button } from "../ui/button";
+import { ListSkeleton } from "../ui/list-skeleton";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "../ui/table";
 import { useDeleteViolation, useViolations } from "@hooks";
 import { studentFullName } from "@lib/string";
 
