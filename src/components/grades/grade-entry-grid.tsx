@@ -386,7 +386,7 @@ export function GradeEntryGrid({
                           updateField(s.id, slot, e.target.value)
                         }
                         onKeyDown={(e) => onCellKeyDown(e, index, colIndex)}
-                        className="h-7 w-16 text-center"
+                        className="mx-auto block size-10 rounded-sm px-0 text-center"
                       />
                     </TableCell>
                   ))}
