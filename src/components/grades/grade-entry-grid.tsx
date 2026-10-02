@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import {
+  useState,
+  useTransition,
+  type FormEvent,
+  type KeyboardEvent,
+} from "react";
 import { MessageSquarePlus, Save, Users } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -49,6 +54,9 @@ type ScoreInput = {
   note: string;
   comment: string;
 };
+
+/** Keyboard-navigable columns: the 6 score slots then the note field. */
+const NAV_COLUMNS = [...GRADE_SLOTS, "note"] as const;
 
 const EMPTY_INPUT: ScoreInput = {
   tx1: "",
@@ -146,6 +154,56 @@ export function GradeEntryGrid({
         }
         return next;
       });
+    }
+  }
+
+  function focusCell(rowIndex: number, colIndex: number) {
+    const student = students?.[rowIndex];
+    const col = NAV_COLUMNS[colIndex];
+    if (!student || !col) return;
+    document.getElementById(`${col}-${student.id}`)?.focus();
+  }
+
+  /** Excel-style navigation between cells of the grid. */
+  function onCellKeyDown(
+    e: KeyboardEvent<HTMLInputElement>,
+    rowIndex: number,
+    colIndex: number,
+  ) {
+    const lastRow = (students?.length ?? 0) - 1;
+    const lastCol = NAV_COLUMNS.length - 1;
+    let next: [number, number] | null = null;
+
+    switch (e.key) {
+      case "Enter":
+      case "ArrowDown":
+        next = [Math.min(rowIndex + 1, lastRow), colIndex];
+        break;
+      case "ArrowUp":
+        next = [Math.max(rowIndex - 1, 0), colIndex];
+        break;
+      case "ArrowRight":
+        // Move on only when the caret sits at the end of the text.
+        if (e.currentTarget.selectionStart === e.currentTarget.value.length) {
+          next =
+            colIndex === lastCol
+              ? [Math.min(rowIndex + 1, lastRow), 0]
+              : [rowIndex, colIndex + 1];
+        }
+        break;
+      case "ArrowLeft":
+        if (e.currentTarget.selectionStart === 0) {
+          next =
+            colIndex === 0
+              ? [Math.max(rowIndex - 1, 0), lastCol]
+              : [rowIndex, colIndex - 1];
+        }
+        break;
+    }
+
+    if (next) {
+      e.preventDefault();
+      focusCell(next[0], next[1]);
     }
   }
 
@@ -314,7 +372,7 @@ export function GradeEntryGrid({
                     {s.firstName}
                     {s.nameSuffix ? ` (${s.nameSuffix})` : ""}
                   </TableCell>
-                  {GRADE_SLOTS.map((slot) => (
+                  {GRADE_SLOTS.map((slot, colIndex) => (
                     <TableCell key={slot} className="p-1">
                       <Label htmlFor={`${slot}-${s.id}`} className="sr-only">
                         {GRADE_SLOT_FULL_LABEL[slot]} {studentFullName(s)}
@@ -327,6 +385,7 @@ export function GradeEntryGrid({
                         onChange={(e) =>
                           updateField(s.id, slot, e.target.value)
                         }
+                        onKeyDown={(e) => onCellKeyDown(e, index, colIndex)}
                         className="h-7 w-16 text-center"
                       />
                     </TableCell>
@@ -336,8 +395,12 @@ export function GradeEntryGrid({
                   </TableCell>
                   <TableCell className="p-1">
                     <Input
+                      id={`note-${s.id}`}
                       value={input.note}
                       onChange={(e) => updateField(s.id, "note", e.target.value)}
+                      onKeyDown={(e) =>
+                        onCellKeyDown(e, index, GRADE_SLOTS.length)
+                      }
                       placeholder="Ghi chú"
                       className="h-8"
                     />
