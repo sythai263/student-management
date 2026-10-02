@@ -28,9 +28,19 @@ jobs:
           chmod 600 ~/.config/rclone/rclone.conf
           rclone listremotes
 
+      - name: Preflight checks
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          RCLONE_REMOTE: ${{ vars.BACKUP_RCLONE_REMOTE || 'hoctap.id.vn_gg_drive:backups/student-management' }}
+        run: |
+          [ -n "$SUPABASE_DB_URL" ] || { echo "::error::Secret SUPABASE_DB_URL is not set"; exit 1; }
+          REMOTE="${RCLONE_REMOTE%%:*}:"
+          rclone listremotes | grep -qx "$REMOTE" \
+            || { echo "::error::Remote '$REMOTE' not in rclone.conf. Available: $(rclone listremotes | tr '\n' ' ')"; exit 1; }
+
       - name: Dump, upload, prune
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
-          RCLONE_REMOTE: ${{ vars.BACKUP_RCLONE_REMOTE || 'gdrive:backups/student-management' }}
+          RCLONE_REMOTE: ${{ vars.BACKUP_RCLONE_REMOTE || 'hoctap.id.vn_gg_drive:backups/student-management' }}
           RETENTION_DAYS: ${{ vars.BACKUP_RETENTION_DAYS || '30' }}
         run: bash scripts/backup-db.sh
