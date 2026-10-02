@@ -62,7 +62,14 @@ export async function sendLoginOtp(
         captchaToken: parsed.data.captchaToken,
       },
     });
-    if (error) throw new Error("Không gửi được mã — kiểm tra lại email");
+    if (error) {
+      // shouldCreateUser=false → gotrue rejects unknown emails with
+      // error_code "otp_disabled" / "user_not_found".
+      if (error.code === "otp_disabled" || error.code === "user_not_found") {
+        throw new Error("Tài khoản không tồn tại");
+      }
+      throw new Error("Không gửi được mã — kiểm tra lại email");
+    }
     return null;
   });
 }

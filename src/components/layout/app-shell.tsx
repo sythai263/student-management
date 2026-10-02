@@ -12,7 +12,7 @@ import {
   User,
   UserPen,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -27,6 +27,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "../ui/navigation-menu";
+import { FullPageLoader } from "./full-page-loader";
 import {
   ChangePasswordDialog,
   MfaManageDialog,
@@ -35,6 +36,7 @@ import {
 } from "../auth";
 import { SchoolsManageDialog } from "../schools";
 import { logout } from "@lib/actions";
+import { isShellHidden, shellContentMaxW } from "@lib/app-shell";
 import { FEATURE_FLAGS, NAV_ITEMS } from "@constants";
 
 interface AppShellProps {
@@ -48,31 +50,13 @@ export function AppShell({ children }: AppShellProps) {
   const [mfaOpen, setMfaOpen] = useState(false);
   const [signatureOpen, setSignatureOpen] = useState(false);
   const [schoolsOpen, setSchoolsOpen] = useState(false);
+  const [loggingOut, startLogout] = useTransition();
 
-  const hideShell =
-    pathname === "/login" ||
-    pathname === "/login/" ||
-    pathname === "/mfa-verify" ||
-    pathname?.startsWith("/play") ||
-    /\/quizzes\/host\//.test(pathname ?? "");
-
-  if (hideShell) {
+  if (isShellHidden(pathname)) {
     return <>{children}</>;
   }
 
-  // Navbar lines up with the page container — width varies per route.
-  const contentMaxW =
-    pathname?.endsWith("/grades") ||
-      pathname?.endsWith("/report-cards") ||
-      /\/attendance\/[^/]+$/.test(pathname ?? "")
-      ? "max-w-7xl"
-      : pathname?.endsWith("/students/new")
-        ? "max-w-2xl"
-        : ["/", "/classes", "/subjects", "/classes/new", "/quizzes", "/quizzes/new"].includes(
-          pathname ?? "",
-        )
-          ? "max-w-4xl"
-          : "max-w-5xl";
+  const contentMaxW = shellContentMaxW(pathname);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -144,13 +128,12 @@ export function AppShell({ children }: AppShellProps) {
                   <School className="size-4" /> Trường giảng dạy
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <form action={logout}>
-                  <DropdownMenuItem asChild>
-                    <button type="submit">
-                      <LogOut className="size-4" /> Đăng xuất
-                    </button>
-                  </DropdownMenuItem>
-                </form>
+                <DropdownMenuItem
+                  disabled={loggingOut}
+                  onSelect={() => startLogout(async () => logout())}
+                >
+                  <LogOut className="size-4" /> Đăng xuất
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -178,6 +161,8 @@ export function AppShell({ children }: AppShellProps) {
       <main className="min-w-0 flex-1 overflow-y-auto overflow-x-clip">
         {children}
       </main>
+
+      {loggingOut && <FullPageLoader label="Đang đăng xuất..." />}
     </div>
   );
 }
