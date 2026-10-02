@@ -1,25 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import Cookies from "js-cookie";
+import { useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
-import { Play, Timer } from "lucide-react";
+import { Play } from "lucide-react";
 import { Button } from "../ui/button";
 import type { RaceState, Student } from "@types";
 import { studentFullName } from "@lib/string";
-import { PageHeader } from "../layout";
-import {
-  RACE_DURATION_COOKIE,
-  DEFAULT_RACE_DURATION,
-  MIN_RACE_DURATION,
-  MAX_RACE_DURATION,
-} from "@constants";
-import { buildRace } from "@lib/duck-race";
+import { buildRace, getRaceDuration } from "@lib/duck-race";
 import { DuckIcon } from "./duck-icon";
 import { drawDuck } from "./draw-duck";
 import { renderDuckToImage } from "./render-duck-image";
 import { RaceGradeModal } from "./race-grade-modal";
-import { RaceDurationDialog } from "./race-duration-dialog";
 import { WinnerDialog } from "./winner-dialog";
 
 interface DuckRaceCanvasProps {
@@ -39,7 +30,6 @@ export function DuckRaceCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<RaceState | null>(null);
   const [started, setStarted] = useState(false);
-  const [duration, setDuration] = useState<number>(DEFAULT_RACE_DURATION);
   const [finished, setFinished] = useState(false);
   const [winnerName, setWinnerName] = useState<string | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(
@@ -48,28 +38,9 @@ export function DuckRaceCanvas({
   const [duckImages, setDuckImages] = useState<
     Record<string, HTMLImageElement>
   >({});
-  const [modalOpen, setModalOpen] = useState(false);
   const [gradeOpen, setGradeOpen] = useState(false);
   const confettiFired = useRef(false);
   const duckImagesReady = Object.keys(duckImages).length > 0;
-
-  const [, startTransition] = useTransition();
-
-  // Restore the saved race duration from a cookie — only readable
-  // client-side, applied as a non-urgent update.
-  useEffect(() => {
-    const saved = Cookies.get(RACE_DURATION_COOKIE);
-    if (saved) {
-      const parsed = parseInt(saved, 10);
-      if (
-        !isNaN(parsed) &&
-        parsed >= MIN_RACE_DURATION &&
-        parsed <= MAX_RACE_DURATION
-      ) {
-        startTransition(() => setDuration(parsed));
-      }
-    }
-  }, []);
 
   useEffect(() => {
     if (finished && winnerName && !confettiFired.current) {
@@ -138,6 +109,7 @@ export function DuckRaceCanvas({
     if (!ctx) return;
 
     const { width, height } = size;
+    const duration = getRaceDuration();
     // Scale the backing store by devicePixelRatio so the race stays sharp
     // on high-DPI phones (e.g. DPR 2-3 on 2K panels); drawing code below
     // keeps using CSS-pixel coordinates via setTransform.
@@ -285,7 +257,7 @@ export function DuckRaceCanvas({
 
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [started, finished, size, students, winnerId, duration]);
+  }, [started, finished, size, students, winnerId]);
 
   const start = () => {
     setStarted(true);
@@ -303,34 +275,8 @@ export function DuckRaceCanvas({
   };
 
   return (
-    <div className="flex h-dvh w-full flex-col overflow-hidden bg-black">
-      <div className="border-b border-white/10 px-2 py-2.5 sm:px-4">
-        <PageHeader
-          title="Kiểm tra bài cũ"
-          actions={
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setModalOpen(true)}
-                disabled={started}
-              >
-                <Timer />
-                <span className="hidden sm:inline">Cập nhật thời gian đua</span>
-              </Button>
-            </div>
-          }
-        />
-      </div>
-
-      <RaceDurationDialog
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        duration={duration}
-        onSave={setDuration}
-      />
-
-      <div ref={containerRef} className="relative flex-1">
+    <>
+      <div ref={containerRef} className="relative h-full">
         <canvas ref={canvasRef} className="block h-full w-full" />
         {!started && !finished && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4">
@@ -362,6 +308,6 @@ export function DuckRaceCanvas({
         studentId={winnerId}
         studentName={winnerName ?? undefined}
       />
-    </div>
+    </>
   );
 }

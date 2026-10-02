@@ -53,7 +53,6 @@ export function AppShell({ children }: AppShellProps) {
     pathname === "/login" ||
     pathname === "/login/" ||
     pathname === "/mfa-verify" ||
-    pathname?.endsWith("/race") ||
     pathname?.startsWith("/play") ||
     /\/quizzes\/host\//.test(pathname ?? "");
 

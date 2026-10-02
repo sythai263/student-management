@@ -1,10 +1,28 @@
+import Cookies from "js-cookie";
 import type { RaceState, Student } from "@types";
+import {
+  RACE_DURATION_COOKIE,
+  DEFAULT_RACE_DURATION,
+  MIN_RACE_DURATION,
+  MAX_RACE_DURATION,
+} from "@constants";
 import { studentFullName } from "./string";
 
 type Scenario = 0 | 1 | 2;
 
 export function randomBetween(min: number, max: number) {
   return Math.random() * (max - min) + min;
+}
+
+/** Duration (seconds) shared by the review games — stored in a cookie. */
+export function getRaceDuration(): number {
+  const saved = Cookies.get(RACE_DURATION_COOKIE);
+  if (!saved) return DEFAULT_RACE_DURATION;
+  const parsed = parseInt(saved, 10);
+  if (isNaN(parsed) || parsed < MIN_RACE_DURATION || parsed > MAX_RACE_DURATION) {
+    return DEFAULT_RACE_DURATION;
+  }
+  return parsed;
 }
 
 export function buildRace(

@@ -19,20 +19,18 @@ export default async function RacePage({
 
   if (!result.success) {
     return (
-      <main className="flex h-screen w-screen items-center justify-center p-8">
+      <div className="flex h-full items-center justify-center p-8">
         <p className="text-sm text-destructive">{result.error}</p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="flex h-dvh flex-col bg-black">
-      <DuckRaceCanvas
-        classId={id}
-        subjectId={activeSubjectId}
-        students={result.data.students}
-        winnerId={result.data.winnerId}
-      />
-    </main>
+    <DuckRaceCanvas
+      classId={id}
+      subjectId={activeSubjectId}
+      students={result.data.students}
+      winnerId={result.data.winnerId}
+    />
   );
 }
