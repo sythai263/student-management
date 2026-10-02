@@ -6,7 +6,8 @@ import { Play } from "lucide-react";
 import { Button } from "../ui/button";
 import type { Student } from "@types";
 import { studentFullName } from "@lib/string";
-import { getRaceDuration, randomBetween } from "@lib/duck-race";
+import { duckPlayerColor, getRaceDuration, randomBetween } from "@lib/duck-race";
+import { DUCK_COLORS } from "@constants";
 import { drawDuck } from "./draw-duck";
 import { renderDuckToImage } from "./render-duck-image";
 import { RaceGradeModal } from "./race-grade-modal";
@@ -91,7 +92,7 @@ export function DuckCatchCanvas({
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const colors = students.map((_, i) => `hsl(${(i * 137) % 360}, 75%, 55%)`);
+    const colors = students.map((_, i) => duckPlayerColor(i));
     const unique = Array.from(new Set(colors));
     const map: Record<string, HTMLImageElement> = {};
 
@@ -150,7 +151,7 @@ export function DuckCatchCanvas({
       1.1,
       Math.max(0.45, (penR * 2) / (Math.sqrt(students.length) * 160)),
     );
-    const colors = students.map((_, i) => `hsl(${(i * 137) % 360}, 75%, 55%)`);
+    const colors = students.map((_, i) => duckPlayerColor(i));
     const winnerIndex = Math.max(
       0,
       students.findIndex((s) => s.id === winnerId),
@@ -189,13 +190,13 @@ export function DuckCatchCanvas({
     simRef.current = sim;
 
     const drawNet = (x: number, y: number) => {
-      ctx.strokeStyle = "#facc15";
+      ctx.strokeStyle = DUCK_COLORS.net;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.arc(x, y, CATCHER_RADIUS, 0, Math.PI * 2);
       ctx.stroke();
       // Net mesh
-      ctx.strokeStyle = "rgba(250,204,21,0.45)";
+      ctx.strokeStyle = DUCK_COLORS.netMesh;
       ctx.lineWidth = 1;
       for (const off of [-14, 0, 14]) {
         ctx.beginPath();
@@ -207,7 +208,7 @@ export function DuckCatchCanvas({
         ctx.lineTo(x + off, y + CATCHER_RADIUS);
         ctx.stroke();
       }
-      ctx.fillStyle = "#facc15";
+      ctx.fillStyle = DUCK_COLORS.net;
       ctx.font = "bold 12px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
@@ -218,15 +219,15 @@ export function DuckCatchCanvas({
       const state = simRef.current;
       if (!state) return;
 
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = DUCK_COLORS.stage;
       ctx.fillRect(0, 0, width, height);
 
       // The circular pen — ducks can never leave it.
-      ctx.fillStyle = "rgba(250,204,21,0.04)";
+      ctx.fillStyle = DUCK_COLORS.penFill;
       ctx.beginPath();
       ctx.arc(cx, cy, penR, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = "#b45309";
+      ctx.strokeStyle = DUCK_COLORS.penRing;
       ctx.lineWidth = 4;
       ctx.stroke();
 
@@ -243,7 +244,7 @@ export function DuckCatchCanvas({
         if (!image) continue;
         if (isCaught) {
           // Glow behind the caught duck.
-          ctx.fillStyle = "rgba(250,204,21,0.25)";
+          ctx.fillStyle = DUCK_COLORS.caughtGlow;
           ctx.beginPath();
           ctx.arc(d.x, d.y, 34 * duckScale, 0, Math.PI * 2);
           ctx.fill();

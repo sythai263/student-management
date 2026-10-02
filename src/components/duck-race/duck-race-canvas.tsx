@@ -6,7 +6,8 @@ import { Play } from "lucide-react";
 import { Button } from "../ui/button";
 import type { RaceState, Student } from "@types";
 import { studentFullName } from "@lib/string";
-import { buildRace, getRaceDuration } from "@lib/duck-race";
+import { buildRace, duckPlayerColor, getRaceDuration } from "@lib/duck-race";
+import { DUCK_COLORS } from "@constants";
 import { DuckIcon } from "./duck-icon";
 import { drawDuck } from "./draw-duck";
 import { renderDuckToImage } from "./render-duck-image";
@@ -64,7 +65,7 @@ export function DuckRaceCanvas({
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const colors = students.map((_, i) => `hsl(${(i * 137) % 360}, 75%, 55%)`);
+    const colors = students.map((_, i) => duckPlayerColor(i));
     const unique = Array.from(new Set(colors));
     const map: Record<string, HTMLImageElement> = {};
 
@@ -125,7 +126,7 @@ export function DuckRaceCanvas({
     const roadBottom = height - 60;
     const laneHeight = (roadBottom - roadTop) / laneCount;
     const duckScale = Math.min((laneHeight * 0.55) / 56, 1.2);
-    const colors = students.map((_, i) => `hsl(${(i * 137) % 360}, 75%, 55%)`);
+    const colors = students.map((_, i) => duckPlayerColor(i));
 
     const race = buildRace(students, winnerId, trackLength, duration);
     stateRef.current = race;
@@ -145,11 +146,11 @@ export function DuckRaceCanvas({
       if (cameraX < 0) cameraX = 0;
 
       // Black race background — the whole race screen runs on black.
-      ctx.fillStyle = "#000000";
+      ctx.fillStyle = DUCK_COLORS.stage;
       ctx.fillRect(0, 0, width, height);
 
       // Lane dividers
-      ctx.strokeStyle = "#334155";
+      ctx.strokeStyle = DUCK_COLORS.laneDivider;
       ctx.lineWidth = 1;
       for (let lane = 0; lane <= laneCount; lane++) {
         const y = roadTop + lane * laneHeight;
@@ -160,10 +161,10 @@ export function DuckRaceCanvas({
       }
 
       // Distance markers on the track — dashed ticks every 10m of a 100m race.
-      ctx.strokeStyle = "#475569";
+      ctx.strokeStyle = DUCK_COLORS.markerTick;
       ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
-      ctx.fillStyle = "#64748b";
+      ctx.fillStyle = DUCK_COLORS.markerText;
       ctx.font = "11px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
@@ -179,26 +180,26 @@ export function DuckRaceCanvas({
       ctx.setLineDash([]);
 
       // Start line
-      ctx.strokeStyle = "#22c55e";
+      ctx.strokeStyle = DUCK_COLORS.startLine;
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(worldStart - cameraX, roadTop);
       ctx.lineTo(worldStart - cameraX, roadBottom);
       ctx.stroke();
-      ctx.fillStyle = "#22c55e";
+      ctx.fillStyle = DUCK_COLORS.startLine;
       ctx.textAlign = "center";
       ctx.font = "bold 14px sans-serif";
       ctx.fillText("XUẤT PHÁT", worldStart - cameraX, roadTop - 10);
 
       // Finish line
       const finishX = worldStart + state.trackLength;
-      ctx.strokeStyle = "#ef4444";
+      ctx.strokeStyle = DUCK_COLORS.finishLine;
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(finishX - cameraX, roadTop);
       ctx.lineTo(finishX - cameraX, roadBottom);
       ctx.stroke();
-      ctx.fillStyle = "#ef4444";
+      ctx.fillStyle = DUCK_COLORS.finishLine;
       ctx.fillText("VỀ ĐÍCH", finishX - cameraX, roadTop - 10);
 
       // Draw ducks sorted by x so front ones overlap back ones

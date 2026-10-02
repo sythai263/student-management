@@ -1,3 +1,5 @@
+import { DUCK_COLORS } from "@constants";
+
 export function drawDuck(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -27,9 +29,9 @@ export function drawDuck(
   const metrics = ctx.measureText(name);
   const textW = metrics.width;
   const nameY = y - h / 2 - 4;
-  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.fillStyle = DUCK_COLORS.nameTagBg;
   ctx.fillRect(cx - textW / 2 - 3, nameY - duckFont - 3, textW + 6, duckFont + 6);
-  ctx.fillStyle = "#000";
+  ctx.fillStyle = DUCK_COLORS.nameTagText;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
   ctx.fillText(name, cx, nameY);

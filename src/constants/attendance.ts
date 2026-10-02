@@ -39,20 +39,27 @@ export const ATTENDANCE_STATUS_SHORT_LABEL: Record<AttendanceStatus, string> = {
 
 /** Status colors (pastel) — applied on top of the `outline` variant of Badge/Button. */
 export const ATTENDANCE_STATUS_CLASS: Record<AttendanceStatus, string> = {
-  CO_MAT: "border-green-500/30 bg-green-500/15 text-green-400",
-  VANG: "border-red-500/30 bg-red-500/15 text-red-400",
-  VANG_PHEP: "border-white/20 bg-white/10 text-zinc-100",
-  BO_TIET: "border-orange-500/30 bg-orange-500/15 text-orange-400",
-  DI_MUON: "border-orange-300/30 bg-orange-300/10 text-orange-300",
+  CO_MAT: "border-success/30 bg-success/15 text-success",
+  VANG: "border-destructive/30 bg-destructive/15 text-destructive",
+  VANG_PHEP: "border-foreground/20 bg-foreground/10 text-foreground",
+  BO_TIET: "border-warning/40 bg-warning/15 text-warning",
+  DI_MUON: "border-warning/30 bg-warning/10 text-warning/80",
 };
 
-/** Hover tint for status pickers — previews the status color before selecting. */
+/** Hover previews the status color — solid fill + contrasting text.
+ *  `enabled:` raises specificity to beat the outline variant's
+ *  `dark:border-input`/`dark:bg-input/30`; `bg` also needs `dark:` to beat
+ *  `dark:hover:bg-input/50`. */
 export const ATTENDANCE_STATUS_HOVER: Record<AttendanceStatus, string> = {
-  CO_MAT: "hover:border-green-500/30 hover:bg-green-500/15 hover:text-green-400",
-  VANG: "hover:border-red-500/30 hover:bg-red-500/15 hover:text-red-400",
-  VANG_PHEP: "hover:border-white/20 hover:bg-white/10 hover:text-zinc-100",
-  BO_TIET: "hover:border-orange-500/30 hover:bg-orange-500/15 hover:text-orange-400",
-  DI_MUON: "hover:border-orange-300/30 hover:bg-orange-300/10 hover:text-orange-300",
+  CO_MAT:
+    "enabled:hover:border-success enabled:hover:bg-success enabled:hover:text-white dark:enabled:hover:bg-success",
+  VANG: "enabled:hover:border-destructive enabled:hover:bg-destructive enabled:hover:text-white dark:enabled:hover:bg-destructive",
+  VANG_PHEP:
+    "enabled:hover:border-foreground enabled:hover:bg-foreground enabled:hover:text-background dark:enabled:hover:bg-foreground",
+  BO_TIET:
+    "enabled:hover:border-warning enabled:hover:bg-warning enabled:hover:text-warning-foreground dark:enabled:hover:bg-warning",
+  DI_MUON:
+    "enabled:hover:border-warning enabled:hover:bg-warning enabled:hover:text-warning-foreground dark:enabled:hover:bg-warning",
 };
 
 /** Filter-tab labels including the "all" option. */

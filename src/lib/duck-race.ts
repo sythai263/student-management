@@ -14,6 +14,11 @@ export function randomBetween(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
+/** Stable per-player duck tint — hues spaced ~137° apart on the wheel. */
+export function duckPlayerColor(index: number): string {
+  return `hsl(${(index * 137) % 360}, 75%, 55%)`;
+}
+
 /** Duration (seconds) shared by the review games — stored in a cookie. */
 export function getRaceDuration(): number {
   const saved = Cookies.get(RACE_DURATION_COOKIE);

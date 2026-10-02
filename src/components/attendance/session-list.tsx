@@ -65,7 +65,7 @@ export function SessionList({ classId }: SessionListProps) {
                 {missing > 0 && (
                   <Badge
                     variant="outline"
-                    className="border-amber-500/30 bg-amber-500/15 text-amber-400"
+                    className="border-warning/30 bg-warning/15 text-warning"
                   >
                     {missing} bổ sung
                   </Badge>

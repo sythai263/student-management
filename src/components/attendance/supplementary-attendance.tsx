@@ -75,7 +75,7 @@ export function SupplementaryAttendance({
               </div>
               <Badge
                 variant="outline"
-                className="shrink-0 border-amber-500/30 bg-amber-500/15 px-1.5 py-0 text-[10px] text-amber-400"
+                className="shrink-0 border-warning/30 bg-warning/15 px-1.5 py-0 text-[10px] text-warning"
               >
                 Mới
               </Badge>

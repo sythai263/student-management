@@ -48,11 +48,11 @@ export function WinnerDialog({
         >
           <X className="size-6" />
         </DialogClose>
-        <div className="animate-bounce rounded-3xl bg-gradient-to-br from-green-500 to-green-700 p-10 shadow-2xl">
-          <p className="text-4xl font-bold text-white sm:text-6xl">
+        <div className="animate-bounce rounded-3xl bg-primary p-10 text-primary-foreground shadow-2xl">
+          <p className="text-4xl font-bold sm:text-6xl">
             Xin chúc mừng
           </p>
-          <p className="mt-6 break-words text-5xl font-extrabold text-white sm:text-8xl">
+          <p className="mt-6 break-words text-5xl font-extrabold sm:text-8xl">
             {winnerName}
           </p>
         </div>
