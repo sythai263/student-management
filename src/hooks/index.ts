@@ -23,6 +23,7 @@ export {
 } from "./class-subjects";
 export {
   useGrades,
+  useHonorRoll,
   useSaveGrades,
   useSaveGradeComment,
   useImportGrades,

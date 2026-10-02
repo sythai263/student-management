@@ -3,8 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { importGrades, saveGradeComment, saveGradesBulk } from "@lib/actions";
 import { createSupabaseBrowserClient } from "@lib/supabase/client";
+import { studentFullName } from "@lib/string";
 import { friendlyErrorMessage } from "@lib/utils";
-import type { GradeWithStudent, Student } from "@types";
+import type { GradeWithStudent, HonorRollEntry } from "@types";
 
 const gradesKey = (classId: string, subjectId: string, semester: number) => [
   "grades",
@@ -32,6 +33,64 @@ export function useGrades(
         .order("createdAt", { ascending: true });
       if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as GradeWithStudent[];
+    },
+    enabled: !!classId && !!subjectId && semester > 0,
+  });
+}
+
+/**
+ * Honor roll: rank students by the weighted count of high (>= 9)
+ * scores — each TX counts 1, a GK counts 2, a CK counts 3.
+ */
+export function useHonorRoll(
+  classId: string,
+  subjectId: string,
+  semester: number,
+  limit = 5,
+) {
+  return useQuery({
+    queryKey: [...gradesKey(classId, subjectId, semester), "honor-roll", limit],
+    queryFn: async (): Promise<HonorRollEntry[]> => {
+      const supabase = createSupabaseBrowserClient();
+      const { data, error } = await supabase
+        .from("grades")
+        .select(
+          "studentId, tx1, tx2, tx3, tx4, gk, ck, students(studentCode, lastName, firstName, nameSuffix)",
+        )
+        .eq("classId", classId)
+        .eq("subjectId", subjectId)
+        .eq("semester", semester)
+        .or("tx1.gte.9,tx2.gte.9,tx3.gte.9,tx4.gte.9,gk.gte.9,ck.gte.9");
+      if (error) throw new Error(friendlyErrorMessage(error));
+
+      const entries = (data ?? []).map((row) => {
+        const g = row as unknown as Pick<
+          GradeWithStudent,
+          "studentId" | "tx1" | "tx2" | "tx3" | "tx4" | "gk" | "ck" | "students"
+        >;
+        const tx9 = [g.tx1, g.tx2, g.tx3, g.tx4].filter(
+          (v) => Number(v) >= 9,
+        ).length;
+        const gk9 = Number(g.gk) >= 9 ? 1 : 0;
+        const ck9 = Number(g.ck) >= 9 ? 1 : 0;
+        return {
+          studentId: g.studentId,
+          studentCode: g.students?.studentCode ?? null,
+          studentName: g.students ? studentFullName(g.students) : "—",
+          tx9,
+          gk9,
+          ck9,
+          score: tx9 + gk9 * 2 + ck9 * 3,
+        } satisfies HonorRollEntry;
+      });
+
+      return entries
+        .sort(
+          (a, b) =>
+            b.score - a.score ||
+            a.studentName.localeCompare(b.studentName, "vi"),
+        )
+        .slice(0, limit);
     },
     enabled: !!classId && !!subjectId && semester > 0,
   });

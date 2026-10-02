@@ -4,6 +4,7 @@ import { buttonVariants } from "@components/ui/button";
 import { getTeacherSubjectName } from "@lib/data-subjects";
 import { firstParam } from "@lib/utils";
 import { ClassHeader, ClassSubjectManager } from "@components/classes";
+import { HonorRoll } from "@components/grades";
 import { StudentTable, ImportStudentsForm } from "@components/students";
 
 interface ClassDetailPageProps {
@@ -84,6 +85,12 @@ export default async function ClassDetailPage({
           <Dices /> Kiểm tra bài
         </Link>
       </div>
+
+      <HonorRoll
+        classId={id}
+        subjectId={activeSubjectId}
+        subjectName={subjectName}
+      />
 
       <StudentTable classId={id} />
     </main>

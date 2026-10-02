@@ -21,6 +21,13 @@ export const GRADE_SLOT_FULL_LABEL: Record<GradeSlot, string> = {
   ck: "Điểm cuối kỳ",
 };
 
+/** Labels for the three grade groups used in aggregated stats. */
+export const GRADE_GROUP_LABEL = {
+  tx: "Điểm thường xuyên",
+  gk: "Điểm giữa kỳ",
+  ck: "Điểm cuối kỳ",
+} as const;
+
 export const GRADE_SLOT_WEIGHT: Record<GradeSlot, number> = {
   tx1: 1,
   tx2: 1,

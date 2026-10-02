@@ -37,6 +37,21 @@ export interface StudentGradeSummary {
   gradeCount: number;
 }
 
+/** One honor-roll row — ranked by weighted count of high (>= 9) scores. */
+export interface HonorRollEntry {
+  studentId: string;
+  studentCode: string | null;
+  studentName: string;
+  /** Number of >= 9 scores across tx1..tx4 (weight 1 each). */
+  tx9: number;
+  /** 1 if gk >= 9 (weight 2). */
+  gk9: number;
+  /** 1 if ck >= 9 (weight 3). */
+  ck9: number;
+  /** Weighted total: tx9 * 1 + gk9 * 2 + ck9 * 3. */
+  score: number;
+}
+
 export interface GradeWithStudent extends Grade {
   students: Pick<
     Student,
