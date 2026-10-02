@@ -3,12 +3,14 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z.email("Email không hợp lệ"),
   password: z.string().min(6, "Mật khẩu tối thiểu 6 ký tự"),
+  captchaToken: z.string().min(1).optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
 export const sendOtpSchema = z.object({
   email: z.email("Email không hợp lệ"),
+  captchaToken: z.string().min(1).optional(),
 });
 
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;

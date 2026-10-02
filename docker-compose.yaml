@@ -58,6 +58,11 @@ services:
       GOTRUE_SMTP_ADMIN_EMAIL: admin@localhost
       GOTRUE_SMTP_SENDER_NAME: "Student Management"
       GOTRUE_RATE_LIMIT_EMAIL_SENT: "100"
+      # Cloudflare Turnstile CAPTCHA — set CAPTCHA_ENABLED=true +
+      # TURNSTILE_SECRET_KEY in .env to enforce captcha on auth endpoints.
+      GOTRUE_SECURITY_CAPTCHA_ENABLED: ${CAPTCHA_ENABLED:-false}
+      GOTRUE_SECURITY_CAPTCHA_PROVIDER: turnstile
+      GOTRUE_SECURITY_CAPTCHA_SECRET: ${TURNSTILE_SECRET_KEY:-}
       # TOTP MFA
       GOTRUE_MFA_ENABLED: "true"
       GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"

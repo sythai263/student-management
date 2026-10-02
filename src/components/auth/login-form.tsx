@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition, type SubmitEvent } from "react";
+import { useRef, useState, useTransition, type SubmitEvent } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -29,6 +30,16 @@ export function LoginForm() {
   const [code, setCode] = useState("");
   const [isPending, startTransition] = useTransition();
 
+  // Turnstile CAPTCHA — tokens are single-use, reset after each attempt.
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const captchaRef = useRef<TurnstileInstance>(null);
+  const [captchaToken, setCaptchaToken] = useState<string>();
+
+  function resetCaptcha() {
+    captchaRef.current?.reset();
+    setCaptchaToken(undefined);
+  }
+
   function verifyCode(token: string) {
     startTransition(async () => {
       const result = await verifyLoginOtp({ email, token });
@@ -40,10 +51,12 @@ export function LoginForm() {
     e.preventDefault();
     startTransition(async () => {
       if (mode === "password") {
-        const result = await login({ email, password });
+        const result = await login({ email, password, captchaToken });
+        resetCaptcha();
         if (!result.success) toast.error(result.error ?? "Đăng nhập thất bại");
       } else if (!otpSent) {
-        const result = await sendLoginOtp({ email });
+        const result = await sendLoginOtp({ email, captchaToken });
+        resetCaptcha();
         if (!result.success) {
           toast.error(result.error);
         } else {
@@ -116,7 +129,27 @@ export function LoginForm() {
             )
           )}
 
-          <Button type="submit" className="w-full" disabled={isPending}>
+          {siteKey && (
+            <Turnstile
+              ref={captchaRef}
+              siteKey={siteKey}
+              onSuccess={setCaptchaToken}
+              onExpire={() => setCaptchaToken(undefined)}
+              onError={() => setCaptchaToken(undefined)}
+              options={{ refreshExpired: "auto" }}
+            />
+          )}
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={
+              isPending ||
+              (mode === "password" || !otpSent
+                ? !!siteKey && !captchaToken
+                : false)
+            }
+          >
             {isPending
               ? "Đang xử lý..."
               : mode === "password"
@@ -141,10 +174,11 @@ export function LoginForm() {
               <button
                 type="button"
                 className="text-muted-foreground hover:underline disabled:opacity-50"
-                disabled={isPending}
+                disabled={isPending || (!!siteKey && !captchaToken)}
                 onClick={() =>
                   startTransition(async () => {
-                    const result = await sendLoginOtp({ email });
+                    const result = await sendLoginOtp({ email, captchaToken });
+                    resetCaptcha();
                     if (!result.success) {
                       toast.error(result.error);
                     } else {

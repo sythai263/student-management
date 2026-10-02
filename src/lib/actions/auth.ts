@@ -25,7 +25,11 @@ export async function login(input: unknown): Promise<ActionResult<null>> {
     }
 
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      options: { captchaToken: parsed.data.captchaToken },
+    });
     if (error) throw new Error("Email hoặc mật khẩu không đúng");
     return null;
   });
@@ -55,6 +59,7 @@ export async function sendLoginOtp(
       options: {
         shouldCreateUser: false,
         emailRedirectTo: `${origin}/auth/confirm`,
+        captchaToken: parsed.data.captchaToken,
       },
     });
     if (error) throw new Error("Không gửi được mã — kiểm tra lại email");
