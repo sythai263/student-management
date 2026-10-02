@@ -14,7 +14,9 @@ export function useClasses() {
       const supabase = createSupabaseBrowserClient();
       const { data, error } = await supabase
         .from("classes")
-        .select("*, school:teacherSchools(name)")
+        .select(
+          "*, school:teacherSchools(name), classSubjects(subjectId, subjects(name, code))",
+        )
         .order("createdAt", { ascending: false });
       if (error) throw new Error(friendlyErrorMessage(error));
       return (data ?? []) as Class[];

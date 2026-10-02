@@ -91,10 +91,7 @@ export function AppShell({ children }: AppShellProps) {
             <NavigationMenuList className="gap-1">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
-                const active =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname?.startsWith(item.href);
+                const active = pathname?.startsWith(item.href);
                 return (
                   <NavigationMenuItem key={item.href}>
                     <NavigationMenuLink

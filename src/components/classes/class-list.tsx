@@ -45,6 +45,76 @@ export function ClassList() {
     return sortAsc ? cmp : -cmp;
   });
 
+  // Group classes by subject — a class assigned to many subjects appears
+  // in each group, and its link carries that subject's context.
+  const subjectGroups = new Map<
+    string,
+    { id: string; name: string; classes: Class[] }
+  >();
+  const unassigned: Class[] = [];
+  for (const c of sortedClasses) {
+    const subs = (c.classSubjects ?? []).filter((cs) => cs.subjects?.name);
+    if (subs.length === 0) {
+      unassigned.push(c);
+      continue;
+    }
+    for (const cs of subs) {
+      const group = subjectGroups.get(cs.subjectId) ?? {
+        id: cs.subjectId,
+        name: cs.subjects?.name ?? "",
+        classes: [],
+      };
+      group.classes.push(c);
+      subjectGroups.set(cs.subjectId, group);
+    }
+  }
+  const groups = [...subjectGroups.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "vi"),
+  );
+  if (unassigned.length > 0) {
+    groups.push({ id: "", name: "Chưa gán môn", classes: unassigned });
+  }
+
+  const renderCard = (c: Class, subjectId?: string) => (
+    <Link
+      key={subjectId ? `${subjectId}-${c.id}` : c.id}
+      href={
+        subjectId
+          ? `/classes/${c.id}?subjectId=${subjectId}`
+          : `/classes/${c.id}`
+      }
+      className="relative group"
+    >
+      <Card className="transition-colors hover:border-primary">
+        <CardHeader>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <CardTitle>{c.classCode}</CardTitle>
+              <CardDescription>
+                {c.name} · Năm học {c.schoolYear}
+                {c.school?.name ? ` · ${c.school.name}` : ""}
+              </CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="opacity-0 group-hover:opacity-100 focus:opacity-100"
+              aria-label={`Xóa lớp ${c.name}`}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setClassToDelete(c);
+              }}
+            >
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+    </Link>
+  );
+
   return (
     <>
       <PageHeader
@@ -91,39 +161,18 @@ export function ClassList() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <section className="grid gap-4 sm:grid-cols-2">
-          {sortedClasses.map((c) => (
-            <Link key={c.id} href={`/classes/${c.id}`} className="relative group">
-              <Card className="transition-colors hover:border-primary">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <CardTitle>{c.classCode}</CardTitle>
-                      <CardDescription>
-                        {c.name} · Năm học {c.schoolYear}
-                        {c.school?.name ? ` · ${c.school.name}` : ""}
-                      </CardDescription>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-sm"
-                      className="opacity-0 group-hover:opacity-100 focus:opacity-100"
-                      aria-label={`Xóa lớp ${c.name}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setClassToDelete(c);
-                      }}
-                    >
-                      <Trash2 className="size-4 text-destructive" />
-                    </Button>
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
+        <div className="space-y-6">
+          {groups.map((g) => (
+            <section key={g.id || "unassigned"} className="space-y-3">
+              <h2 className="text-sm font-medium text-muted-foreground">
+                {g.id ? `Môn ${g.name}` : g.name} ({g.classes.length})
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {g.classes.map((c) => renderCard(c, g.id || undefined))}
+              </div>
+            </section>
           ))}
-        </section>
+        </div>
       )}
 
       <Dialog
