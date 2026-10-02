@@ -62,11 +62,21 @@ services:
       GOTRUE_MFA_ENABLED: "true"
       GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
       GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
-      # Magic-link email shows both the OTP code and a direct link to
+      # Email templates show both the OTP code and a direct link to
       # the app's /auth/confirm route (skips the auth /verify hop).
       # GoTrue fetches templates over HTTP — served by the `templates` svc.
       GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://templates:8080/magic-link.html
       GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: "Mã đăng nhập"
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://templates:8080/confirm-signup.html
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: "Xác nhận đăng ký tài khoản"
+      GOTRUE_MAILER_TEMPLATES_INVITE: http://templates:8080/invite.html
+      GOTRUE_MAILER_SUBJECTS_INVITE: "Lời mời tạo tài khoản"
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://templates:8080/reset-password.html
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: "Đặt lại mật khẩu"
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: http://templates:8080/email-change.html
+      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: "Xác nhận thay đổi email"
+      GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION: http://templates:8080/reauthentication.html
+      GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: "Mã xác thực lại"
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
       interval: 5s
