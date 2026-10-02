@@ -28,14 +28,15 @@ fi
 mkdir -p "$BACKUP_DIR"
 
 echo ">> Dumping database to $FILE"
-if command -v pg_dump >/dev/null 2>&1; then
-  pg_dump "$DATABASE_URL" -Fc -Z9 --no-owner --no-privileges -f "$BACKUP_DIR/$FILE"
-elif command -v docker >/dev/null 2>&1; then
+if command -v docker >/dev/null 2>&1; then
+  # Prefer docker: runner pg_dump may be older than the server major version.
   docker run --rm -e DATABASE_URL -v "$BACKUP_DIR:/out" postgres:17-alpine \
     sh -c 'pg_dump "$DATABASE_URL" -Fc -Z9 --no-owner --no-privileges -f /out/db.dump'
   mv "$BACKUP_DIR/db.dump" "$BACKUP_DIR/$FILE"
+elif command -v pg_dump >/dev/null 2>&1; then
+  pg_dump "$DATABASE_URL" -Fc -Z9 --no-owner --no-privileges -f "$BACKUP_DIR/$FILE"
 else
-  echo "ERROR: need pg_dump (postgresql-client) or docker" >&2
+  echo "ERROR: need docker or pg_dump (postgresql-client >= server major)" >&2
   exit 1
 fi
 
