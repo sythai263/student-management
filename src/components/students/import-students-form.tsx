@@ -88,11 +88,11 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
 
   function downloadTemplate() {
     const rows = [
-      "STT,Họ đệm,Tên,Ngày sinh",
-      "1,Nguyễn Văn,An,2010-03-15",
-      "2,Trần Thị,Bình,15/03/2010",
-      "3,Lê Hoàng,Cường,",
-      "4,Phạm Minh,Đức,2010-01-20",
+      "STT,Mã học sinh,Họ và tên,Ngày sinh",
+      "1,38000936-00-3095,Nguyễn Văn An,2010-03-15",
+      "2,38000936-00-3096,Trần Thị Bình,15/03/2010",
+      "3,38000936-00-3097,Lê Hoàng Cường,",
+      "4,38000936-00-3098,Phạm Minh Đức,2010-01-20",
     ];
     const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -126,11 +126,19 @@ export function ImportStudentsForm({ classId }: ImportStudentsFormProps) {
           </DialogHeader>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="csv">Tệp danh sách học sinh (.csv)</Label>
-              <Input id="csv" ref={fileRef} type="file" accept=".csv,text/csv" />
+              <Label htmlFor="csv">
+                Tệp danh sách học sinh (.csv, .xlsx)
+              </Label>
+              <Input
+                id="csv"
+                ref={fileRef}
+                type="file"
+                accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              />
               <p className="text-xs text-muted-foreground">
-                Tệp 4 cột: STT, Họ đệm, Tên, Ngày sinh — mã HS tự cấp theo
-                mã lớp. Chấp nhận cả tệp 2 cột: STT, Họ và tên.
+                Tệp 4 cột: STT, Mã HS, Họ và tên, Ngày sinh — hoặc 5 cột:
+                STT, Mã HS, Họ đệm, Tên, Ngày sinh. Mã HS trong tệp sẽ cập
+                nhật cho học sinh cùng tên; để trống sẽ tự cấp theo mã lớp.
               </p>
             </div>
             <div className="space-y-2">
