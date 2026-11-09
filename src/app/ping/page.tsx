@@ -1,6 +1,6 @@
-import dayjs from "dayjs";
 import { Activity } from "lucide-react";
 import { pingKeepAlive } from "@lib/data-keep-alive";
+import { LocalTime } from "@components/ping";
 import {
   Card,
   CardContent,
@@ -31,12 +31,10 @@ export default async function PingPage() {
             <span className="size-2 rounded-full bg-emerald-500" />
             Đang hoạt động
           </p>
-          <time
-            dateTime={lastPingedAt}
+          <LocalTime
+            iso={lastPingedAt}
             className="text-muted-foreground block text-sm"
-          >
-            {dayjs(lastPingedAt).format("HH:mm:ss · DD/MM/YYYY")}
-          </time>
+          />
         </CardContent>
       </Card>
     </main>
