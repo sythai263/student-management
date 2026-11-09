@@ -1,10 +1,11 @@
-import { createSupabaseAdminClient, createSupabaseServerClient } from "@lib/supabase";
+import { createSupabaseAdminClient } from "@lib/supabase";
 import { KEEP_ALIVE_KEY } from "@constants";
 
 /**
- * Bump the heartbeat row — called by the unauthenticated /api/ping cron
- * endpoint, so writes go through the service-role client (no write
- * policies exist on keepAlive). Upsert self-heals a missing row.
+ * Bump the heartbeat row — called by /api/ping (cron) and the /ping
+ * status page, both unauthenticated, so writes go through the
+ * service-role client (no write policies exist on keepAlive).
+ * Upsert self-heals a missing row.
  */
 export async function pingKeepAlive(): Promise<string> {
   const supabase = createSupabaseAdminClient();
@@ -14,15 +15,4 @@ export async function pingKeepAlive(): Promise<string> {
     .upsert({ key: KEEP_ALIVE_KEY, lastPingedAt });
   if (error) throw new Error(error.message);
   return lastPingedAt;
-}
-
-/** Read the last heartbeat for the public /ping status page. */
-export async function getLastKeepAlivePing(): Promise<string | null> {
-  const supabase = await createSupabaseServerClient();
-  const { data } = await supabase
-    .from("keepAlive")
-    .select("lastPingedAt")
-    .eq("key", KEEP_ALIVE_KEY)
-    .maybeSingle();
-  return data?.lastPingedAt ?? null;
 }

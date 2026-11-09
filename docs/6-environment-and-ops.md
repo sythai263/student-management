@@ -63,7 +63,7 @@ Rules:
 
 ## 5. Keep-alive cron (Supabase Cloud free tier)
 
-Free-tier projects pause after ~1 week idle. An external cron (cron-job.org) hits `GET https://<domain>/api/ping` on a schedule (e.g. every 6h); the route bumps the `keepAlive` row via the service-role key. `/ping` is a public status page showing the last heartbeat. Both paths are in `PUBLIC_PATHS` (`src/lib/supabase/middleware.ts`).
+Free-tier projects pause after ~1 week idle. An external cron (cron-job.org) hits `GET https://<domain>/api/ping` on a schedule (e.g. every 6h); the route bumps the `keepAlive` row via the service-role key. `/ping` is a generic public status page (current time + "đang hoạt động") that doesn't reveal the stack — it also bumps the row on every visit, so it can serve as a second cron target. Both paths are in `PUBLIC_PATHS` (`src/lib/supabase/middleware.ts`).
 
 ## 6. Storage (S3: MinIO local / R2 prod)
 

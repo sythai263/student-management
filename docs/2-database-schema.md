@@ -155,4 +155,4 @@ Class-rule violation records — one row per student per incident; the free-text
 Heartbeat row bumped by the public `GET /api/ping` endpoint (pointed at by cron-job.org) so the free-tier Supabase project never idles into a pause. Global ops data — not per-teacher.
 - `key` (Text, Primary Key — seeded with `'ping'`)
 - `lastPingedAt` (Timestamptz)
-- RLS: select is public (`using (true)`) so `/ping` renders anonymously; writes are service-role only (no write policies)
+- RLS: select is public (`using (true)`); writes are service-role only (no write policies)

@@ -3,7 +3,6 @@ export * from "./class";
 export * from "./class-subject";
 export * from "./duck-race";
 export * from "./grade";
-export * from "./keep-alive";
 export * from "./quiz";
 export * from "./report-card-template";
 export * from "./school";
