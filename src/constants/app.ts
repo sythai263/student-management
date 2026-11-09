@@ -10,11 +10,15 @@ export const NAV_ITEMS = [
   { href: "/quizzes", label: "Quiz", icon: Gamepad2 },
 ] as const;
 
+/** keepAlive row key bumped by the /api/ping cron endpoint. */
+export const KEEP_ALIVE_KEY = "ping";
+
 /** Routes rendered bare — no navbar shell (exact matches). */
 export const SHELL_HIDDEN_ROUTES: readonly string[] = [
   "/login",
   "/login/",
   "/mfa-verify",
+  "/ping",
 ];
 
 /** Route prefixes rendered bare — student quiz play screens. */

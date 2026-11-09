@@ -61,7 +61,11 @@ Rules:
 - If the cloud DB was partially migrated by hand or versions were renamed, `db push` may complain about missing/extra versions — inspect with `pnpm db:migration:list`, then reconcile with `pnpm db:migration:repair` (`applied` records a version without executing it; `reverted` drops a remote-only entry).
 - Hosted Supabase manages the `realtime`/`_realtime` schemas itself — `20260929000017_realtime_schemas.sql` is a no-op there (see its exception handler); it only does real work on the self-hosted stack.
 
-## 5. Storage (S3: MinIO local / R2 prod)
+## 5. Keep-alive cron (Supabase Cloud free tier)
+
+Free-tier projects pause after ~1 week idle. An external cron (cron-job.org) hits `GET https://<domain>/api/ping` on a schedule (e.g. every 6h); the route bumps the `keepAlive` row via the service-role key. `/ping` is a public status page showing the last heartbeat. Both paths are in `PUBLIC_PATHS` (`src/lib/supabase/middleware.ts`).
+
+## 6. Storage (S3: MinIO local / R2 prod)
 
 The bucket is **fully private** — no public access, no custom domain:
 
